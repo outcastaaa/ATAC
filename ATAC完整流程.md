@@ -46,8 +46,10 @@ ATAC-seq可用于：
 
 
 ## 数据分析具体流程：  
-![数据分析](../ATAC/pictures/%E6%95%B0%E6%8D%AE%E5%88%86%E6%9E%90%E6%B5%81%E7%A8%8B.jpg)  
+![数据分析](../ATAC/pictures/%E6%95%B0%E6%8D%AE%E5%88%86%E6%9E%90%E6%B5%81%E7%A8%8B.jpg)    
 ![分析流程](../ATAC/pictures/%E5%85%B7%E4%BD%93%E5%88%86%E6%9E%90%E6%AD%A5%E9%AA%A4.png)  
+
+
 
 预处理（Pre-analysis）包括比对前的质量控制 QC（Pre-alignment QC）、比对（Alignment）、比对后处理（Post alignment processing）、QC。  
 核心分析（Core analysis）包括 Peak calling。  
