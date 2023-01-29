@@ -46,8 +46,8 @@ ATAC-seq可用于：
 
 
 ## 数据分析具体流程：  
-![数据分析](../ATAC/pictures/%E6%95%B0%E6%8D%AE%E5%88%86%E6%9E%90%E6%B5%81%E7%A8%8B.jpg)    
-![分析流程](../ATAC/pictures/%E5%85%B7%E4%BD%93%E5%88%86%E6%9E%90%E6%AD%A5%E9%AA%A4.png)  
+![shujufenxi](../ATAC/pictures/%E6%95%B0%E6%8D%AE%E5%88%86%E6%9E%90%E6%B5%81%E7%A8%8B.jpg)    
+![fenxiliuc](../ATAC/pictures/%E5%85%B7%E4%BD%93%E5%88%86%E6%9E%90%E6%AD%A5%E9%AA%A4.png)  
 
 
 
@@ -130,8 +130,8 @@ Inconsistencies in the underlying annotation exist at regions where assembly has
 ## 评估ATAC-seq质量的方法
 还有其他需要评估的特定于 ATAC-seq 的质量度量。通常，一个成功的 ATAC-seq 实验应该生成一个片段大小分布图，其峰值与无核小体区域 (nucleosome-free regions: NFR) (<100 bp) 和单、二、三核小体 (~ 200、400、600 bp) (Fig. 1b) 相对应，呈递减和周期性。来自 NFR 的片段预计会在基因的转录起始位点 (transcription start site, TSS) 附近富集，而来自核小体结合区域的片段预计会在 TSS 附近被耗尽，在 TSS 附近的侧翼区域会有少量富集 (Fig. 1c)。  
 
-![1b](../ATAC/pictures/1b.png)  
-![1c](../ATAC/pictures/1c.png)  
+![b](../ATAC/pictures/1b.png)  
+![c](../ATAC/pictures/1c.png)  
 b: 片段大小在 100bp 和 200bp 左右有明显的富集，表示没有核小体结合和单核小体结合的片段。  
 
 c：TSS 富集可视化可以看出，没有核小体结合的片段在 TSS 处富集，而但核小体结合的片段在 TSS 上缺失，在 TSS 两侧富集。
