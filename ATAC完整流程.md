@@ -47,17 +47,53 @@ ATAC-seq可用于：
 
 数据分析具体流程：  
 ![数据分析](../ATAC/pictures/%E6%95%B0%E6%8D%AE%E5%88%86%E6%9E%90%E6%B5%81%E7%A8%8B.jpg)  
+![分析流程](../ATAC/pictures/%E5%85%B7%E4%BD%93%E5%88%86%E6%9E%90%E6%AD%A5%E9%AA%A4.png)  
+
+预处理（Pre-analysis）包括比对前的质量控制 QC（Pre-alignment QC）、比对（Alignment）、比对后处理（Post alignment processing）、QC。
+核心分析（Core analysis）包括 Peak calling。
+高级分析（Advance analysis）包括 Peak、motif、footprint、nucleosome 分析。
+多组学整合包括与 ChIP-seq、RNA-seq 数据的整合以及调控网络的重建。
 
 
-ATAC-Seq与其他方法不同的一点是需要过滤去除线粒体（如果是植物，还需要过滤叶绿体），因为线粒体DNA是裸露的，也可以被Tn5酶识别切割。
 
-# raw FASTQ cutadapt
 
-# FASTQ mapping with bowtie2
 
-# mapping result sort as BAM
+# pre-alinment QC# raw FASTQ cutadapt
+  FastQC可用于可视化测序数据中的`碱基质量评分`、`GC含量`、序列长度分布、序列重复水平、k-mer的过度表达，及`引物、接头的污染`。  
 
-# remove PCR duplication  
+## 去除接头序列 
+cutadapt     trimmomatic
+
+
+
+# alignment # FASTQ mapping with bowtie2
+
+ BWA-MEM [44] and Bowtie2  
+
+通常情况下，比对率大于80%视为比对成功。
+对于哺乳动物物种，开放染色质检测和差异分析的建议最小mapped reads数为5000万，基于经验和计算估计的TF足迹为2亿。
+
+
+
+# Post-alignment processing # mapping result sort as BAM # remove PCR duplication
+unique mapping reads/rates唯一比对的reads或比例、duplicated read percentages 重复的reads百分比 fragment size distribution 和片段大小分布
+
+
+Picard and SAMtools
+
+去除没有匹配到的、匹配得分较低的、重复的reads；去除线粒体中染色质可及区域及ENCODE blacklisted regions。
+
+1. ATAC-Seq与其他方法不同的一点是需要过滤去除线粒体（如果是植物，还需要过滤叶绿体），因为线粒体DNA是裸露的，也可以被Tn5酶识别切割。  
+2. ENCODE blacklisted区域   
+Inconsistencies in the underlying annotation exist at regions where assembly has been difficult. For instance, repetitive regions may be collapsed or under-represented in the reference sequence relative to the actual underlying genomic sequence. Resulting analysis of these regions can lead to inaccurate interpretation, as there may be significant enrichment of signal because of amplification of noise.
+在人基因组手动注释中发现，这种区域多为particularly rRNA, alpha satellites, and other simple repeats，长度covering on average 45 kb with the largest being 1.4 Mb。[参考文献The ENCODE Blacklist: Identification of Problematic Regions of the Genome](https://mp.weixin.qq.com/s/SS640LNI5QcvChmZNGEOmw)  
+
+3. PCR过程中由于偏好性扩增出现的重复reads
+
+## 评估ATAC-seq质量的方法
+还有其他需要评估的特定于 ATAC-seq 的质量度量。通常，一个成功的 ATAC-seq 实验应该生成一个片段大小分布图，其峰值与无核小体区域 (nucleosome-free regions: NFR) (<100 bp) 和单、二、三核小体 (~ 200、400、600 bp) (Fig. 1b) 相对应，呈递减和周期性。来自 NFR 的片段预计会在基因的转录起始位点 (transcription start site, TSS) 附近富集，而来自核小体结合区域的片段预计会在 TSS 附近被耗尽，在 TSS 附近的侧翼区域会有少量富集 (Fig. 1c)。这些可以通过 ATACseqQC工具进行评估。最后，分别对正链和负链的 reads 进行 + 4bp 和 -5bp 的移位（目标DNA最后产生9bp的重复在ATAC-seq后续分析里要处理。这个长度近似于一个完整的DNA螺旋[参考文章](https://www.jianshu.com/p/13779b89e76b)），以解释 Tn5 转座酶修复损伤 DNA 所产生的 9bp 的重复，并实现 TF footprint 和 motif 相关分析的碱基对分辨率。  
+
+# 上面FastQC➔ trimmomatic➔BWA-MEM➔ATACseqQC
 
 # peak calling 
 
@@ -70,12 +106,14 @@ ATAC-Seq与其他方法不同的一点是需要过滤去除线粒体（如果是
 活动区域分析： 为了比较两个或多个样本之间的峰，将重叠的峰分组为“活动区域”，这是由最上游峰的起始坐标和最下游峰的终止坐标定义的专有度量。
 
 
-MACS2 进行 Peak calleing
-csaw 进行差异 Peak 分析
-MEME suite 进行 motif 检测和富集
-ChIPseeker 进行注释和可视化
-HMMRATAC 进行核小体检测
-HINT-ATAC 进行足迹分析
+
+
+ 作者建议研究人员可以建立一个有效的工作流程，结合 FastQC、trimmomatic 和 BWA-MEM 进行预处理，MACS2 进行 Peak calleing。对于高级分析，作者建议使用 csaw 进行差异 Peak 分析，使用 MEME suite 进行 motif 检测和富集，使用 ChIPseeker 进行注释和可视化，使用 HMMRATAC 进行核小体检测，使用 HINT-ATAC 进行足迹分析。如果 RNA-seq 数据可用，可以使用 PECA 方法重建调控网络。
+
+
+
+
+
 
 第1篇：ATAC-seq的背景介绍以及与ChIP-Seq的异同
 
