@@ -1,9 +1,29 @@
 
 # ATAC-seq分析
-- [ATAC-seq分析](#ATAC-seq分析)
-- [introduction](#introduction)
-- [Purpose](#purpose)
-- [Data downloading](#data-downloading)
+
+- [0.Introduction](#0.Introduction)
+- [1.Prepare](#1.Prepare)
+- [2.biotools](#2.biotools)
+    - [2.0 mangement](#20-mangement)
+    - [2.1 sratoolkit](#21-sratoolkit)
+    - [2.2 fastqc](#22-fastqc)
+    - [2.3 multiqc](#23-multiqc)
+    - [2.4 cutadapt](#24-cutadapt)
+    - [2.5 trimmomatic](#25-trimmomatic)
+    - [2.6 hisat2](#26-hisat2)
+    - [sortmerna](#sortmerna)
+    - [2.7 samtools](#27-samtools)
+    - [2.8 HTseq](#28-htseq)
+    - [2.9 R](#29-r)
+    - [2.10 Rstudio](#210-rstudio)
+    - [2.11 parallel](#211-parallel)
+    - [StringTie[可选]](#stringtie可选)
+
+
+
+
+
+
 	- [Sequencing data](#sequencing-data)
 	- [Reference genome data](#reference-genome-data)
 - [Quality control and trimming](#quality-control-and-trimming)
@@ -23,7 +43,7 @@
 
 
 
-# ATAC-seq introduction  
+# 0.Introduction  
 
 ATAC-seq（Assay for Transposase-Accessible Chromatin with high throughput sequencing） 是2013年由斯坦福大学William J. Greenleaf和Howard Y. Chang实验室开发的用于研究染色质可及性（通常也理解为染色质的开放性）的方法，原理是通过转座酶Tn5容易结合在开放染色质的特性，然后对Tn5酶捕获到的DNA序列进行测序。  
 
@@ -45,8 +65,7 @@ ATAC-seq可用于：
 [具体看该文章](https://github.com/outcastaaa/ATAC/blob/main/review%20of%20ATAC-seq.md)  
 
 
-## 数据分析具体流程：  
-![数据分析简图](../ATAC/pictures/%E6%95%B0%E6%8D%AE%E5%88%86%E6%9E%90%E6%B5%81%E7%A8%8B.jpg)    
+## 数据分析具体流程：    
 ![数据分析详图](../ATAC/pictures/%E5%85%B7%E4%BD%93%E5%88%86%E6%9E%90%E6%AD%A5%E9%AA%A4.png)  
 
 
@@ -55,6 +74,163 @@ ATAC-seq可用于：
 核心分析（Core analysis）包括 Peak calling。  
 高级分析（Advance analysis）包括 Peak、motif、footprint、nucleosome 分析。  
 多组学整合包括与 ChIP-seq、RNA-seq 数据的整合以及调控网络的重建。  
+
+# 1.Prepare  
+```bash
+#将目录建在d盘 
+cd /mnt/d 
+# 建立目录
+mkdir biosoft  
+mkdir ATAC    
+cd ./ATAC
+mkdir genome sequence output
+```
+结果：  
+```
+@xxx:/mnt/d/ATAC$ tree
+.
+├── genome
+├── output
+└── sequence
+
+3 directories, 0 files
+```
+
+# 2.biotools 
+## 2.0 mangement  
+
+Linux brew  
+来源[wang-q Ubuntu -](https://github.com/wang-q/ubuntu#install-linuxbrew)
+
+## 2.1 sratoolkit   
+* 使用brew安装  
+```bash
+@xxx:~$ brew install sratoolkit
+```
+## 2.2 fastqc  
+* 使用brew安装  
+```bash
+@xxx:~$ brew install fastqc
+```
+## 2.3 multiqc 
+``` bash
+# 使用python的安装器安装
+pip install multiqc
+```
+
+## 2.5 质量修剪  
+* Trim Galore
+```
+cd /mnt/d/biosoft
+# 先挂载到d盘相应文件
+
+wget https://github.com/FelixKrueger/TrimGalore/archive/0.6.3.tar.gz -O TrimGalore.gz
+
+gzip -d TrimGalore.gz
+```
+! [作者GitHub](https://github.com/FelixKrueger/TrimGalore)已经更新至2021年7月的0.6.6版本
+```
+# Install Trim Galore
+curl -fsSL https://github.com/FelixKrueger/TrimGalore/archive/0.6.6.tar.gz -o TrimGalore.tar.gz
+tar xvzf TrimGalore.tar.gz
+
+# Run Trim Galore
+~/TrimGalore-0.6.6/trim_galore
+```
+结果：  
+```
+xuruizhi@DESKTOP-HI65AUV:/mnt/d/biosoft$ curl -fsSL https://github.com/FelixKrueger/TrimGalore/archive/0.6.6.tar.gz -o TrimGalore.tar.gz
+xuruizhi@DESKTOP-HI65AUV:/mnt/d/biosoft$ ls
+TrimGalore.tar.gz  Trimmomatic-0.38  Trimmomatic-0.38.zip  hisat2-2.2.1  sortmerna-2.1  sortmerna-2.1.tar.gz  wget-log
+xuruizhi@DESKTOP-HI65AUV:/mnt/d/biosoft$ tar xvzf TrimGalore.tar.gz
+TrimGalore-0.6.6/
+TrimGalore-0.6.6/.travis.yml
+TrimGalore-0.6.6/Changelog.md
+。。。
+```
+`！师兄的办法会得到一个单独的TrimGalore文件；作者的办法会得到包括trim_galore及其license在内的一个文件夹`
+
+* fastp  
+* trimmomatic  
+```
+cd /mnt/d/biosoft
+# 先挂载到d盘相应文件 
+
+wget http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/Trimmomatic-0.38.zip
+unzip Trimmomatic-0.38.zip
+
+cd Trimmomatic-0.38
+
+# 导入临时环境变量
+export PATH="$(pwd):$PATH"
+```
+## 2.6 hisat2  
+
+1. [hisat2官网更改](https://daehwankimlab.github.io/hisat2/)
+2. 右侧download下载,直接点击下载即可，不需要回到终端再下载。下载完成后剪切到d/biosoft文件夹内解压
+```
+Version: HISAT2 2.2.1
+Release Date: 7/24/2020
+
+Linux_x86_64	https://cloud.biohpc.swmed.edu/index.php/s/oTtGWbWjaxsQ2Ho/download
+```
+3. 回到终端写入环境
+```
+
+# 导入临时环境变量
+$ export PATH="~/biosoft/hisat2-2.1.0:$PATH"
+
+# 测试是否可用
+$ hisat2 -h
+
+xuruizhi@DESKTOP-HI65AUV:/mnt/d/biosoft$  hisat2 -h
+HISAT2 version 2.2.1 by Daehwan Kim (infphilo@gmail.com, www.ccb.jhu.edu/people/infphilo)
+Usage:
+```
+
+
+## 2.7 samtools
+最新版本为1.16  
+本地下载时，在配制这步出错，使用`brew install samtools`安装
+
+## 2.8 HTseq
+```
+pip install -i https://pypi.tuna.tsinghua.edu.cn/simple HTseq
+```
+
+## 2.9 R
+最新版本4.2.1_2  
+先进入官网，用清华镜像源下载合适版本的R，再`brew install r`
+
+```
+xuruizhi@DESKTOP-HI65AUV:~$ brew install r
+HOMEBREW_BREW_GIT_REMOTE set: using https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/brew.git for Homebrew/brew Git remote.
+HOMEBREW_CORE_GIT_REMOTE set: using https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/homebrew-core.git for Homebrew/core Git remote.
+Running `brew update --auto-update`...
+Warning: r 4.2.1_2 is already installed and up-to-date.
+To reinstall 4.2.1_2, run:
+  brew reinstall r
+  ```
+* !R 安装时多次尝试，RStudio都识别不到，因此直接在官网选择`Download R for Windows; install R for the first time`下载安装包即可；注意可以将两个文件放在同一个文件夹内  
+[参考](https://blog.csdn.net/m0_49354332/article/details/116059239)  
+
+
+## 2.10 Rstudio
+进入网站：`https://www.rstudio.com/products/rstudio/download/`  
+R studio 可以在 Windows 下安装;
+选择版本下载,下载完成之后双击安装。  
+`
+Windows 10/11	   
+RStudio-2022.07.1-554.exe
+`
+## 2.11 parallel  
+```
+brew install parallel
+```
+
+
+
+
 
 # 数据下载
 
@@ -75,12 +251,12 @@ FastQC可用于可视化测序数据中的`碱基质量评分`、`GC含量`、�
 Trim Galore可以自动检测接头序列，质控和去除接头两个步骤一起,适用于多种组学去接头  
 
 ```
-mkdir -p ../adapter/
+mkdir -p ../trim/
 
-trim_galore -o /mnt/d/methylation/output/adapter/ --fastqc /mnt/d/methylation/data/sequence/*.fastq.gz
+trim_galore -o /mnt/d/ATAC/output/trim/ --fastqc /mnt/d/ATAC/sequence/*.fastq.gz
 
 # 整合质控结果
-cd /mnt/d/methylation/output/adapter
+cd /mnt/d/ATAC/output/trim/
 multiqc .
 ```
 
@@ -116,7 +292,7 @@ unique mapping reads/rates唯一比对的reads或比例、duplicated read percen
 去除没有匹配到的、匹配得分较低的、重复的reads；去除线粒体中染色质可及区域及ENCODE blacklisted regions。
 
 1. ATAC-Seq与其他方法不同的一点是需要过滤去除线粒体（如果是植物，还需要过滤叶绿体），因为线粒体DNA是裸露的，也可以被Tn5酶识别切割。  
-2. ENCODE blacklisted区域   
+2. ENCODE blacklisted区域：基因中的重复序列，微卫星序列等，该片段GC含量不稳定，会特异性富集，会呈现假阳性   
 Inconsistencies in the underlying annotation exist at regions where assembly has been difficult. For instance, repetitive regions may be collapsed or under-represented in the reference sequence relative to the actual underlying genomic sequence. Resulting analysis of these regions can lead to inaccurate interpretation, as there may be significant enrichment of signal because of amplification of noise.
 在人基因组手动注释中发现，这种区域多为particularly rRNA, alpha satellites, and other simple repeats，长度covering on average 45 kb with the largest being 1.4 Mb。[参考文献The ENCODE Blacklist: Identification of Problematic Regions of the Genome](https://mp.weixin.qq.com/s/SS640LNI5QcvChmZNGEOmw)  
 
@@ -127,16 +303,22 @@ Inconsistencies in the underlying annotation exist at regions where assembly has
 
 
 
-## 评估ATAC-seq质量的方法
+# ATAC-seq质量评估
+
+## ATACseqQC:给出国歌质量评估度量值，包括FRiP
 还有其他需要评估的特定于 ATAC-seq 的质量度量。通常，一个成功的 ATAC-seq 实验应该生成一个片段大小分布图，其峰值与无核小体区域 (nucleosome-free regions: NFR) (<100 bp) 和单、二、三核小体 (~ 200、400、600 bp) (Fig. 1b) 相对应，呈递减和周期性。来自 NFR 的片段预计会在基因的转录起始位点 (transcription start site, TSS) 附近富集，而来自核小体结合区域的片段预计会在 TSS 附近被耗尽，在 TSS 附近的侧翼区域会有少量富集 (Fig. 1c)。  
 
-![b](../ATAC/pictures/1b.png)  
+![b](../ATAC/pictures/1b.png)    
+b: 片段大小在 100bp 和 200bp 左右有明显的富集，表示没有核小体结合和单核小体结合的片段。
 ![c](../ATAC/pictures/1c.png)  
-b: 片段大小在 100bp 和 200bp 左右有明显的富集，表示没有核小体结合和单核小体结合的片段。  
+  c：TSS 富集可视化可以看出，没有核小体结合的片段在 TSS 处富集，而但核小体结合的片段在 TSS 上缺失，在 TSS 两侧富集。  
 
-c：TSS 富集可视化可以看出，没有核小体结合的片段在 TSS 处富集，而但核小体结合的片段在 TSS 上缺失，在 TSS 两侧富集。
 
-这些可以通过 ATACseqQC工具进行评估。最后，分别对正链和负链的 reads 进行 + 4bp 和 -5bp 的移位（目标DNA最后产生9bp的重复在ATAC-seq后续分析里要处理。这个长度近似于一个完整的DNA螺旋[参考文章](https://www.jianshu.com/p/13779b89e76b)），以解释 Tn5 转座酶修复损伤 DNA 所产生的 9bp 的重复，并实现 TF footprint 和 motif 相关分析的碱基对分辨率。  
+
+这些可以通过 ATACseqQC工具进行评估。最后，分别对正链和负链的 reads 进行 + 4bp 和 -5bp 的移位（目标DNA最后产生9bp的重复在ATAC-seq后续分析里要处理。这个长度近似于一个完整的DNA螺旋[参考文章](https://www.jianshu.com/p/13779b89e76b)），以解释 Tn5 转座酶修复损伤 DNA 所产生的 9bp 的重复，并实现 TF footprint 和 motif 相关分析的碱基对分辨率。 
+## IDR：样本内的重复性检测，合并一致性peaks
+
+## phantompeakqualtools：评估实验中信噪比、富集信号等
 
 # 上面FastQC➔ trimmomatic➔BWA-MEM➔ATACseqQC
 
@@ -173,6 +355,10 @@ wigToBigWig ${name}.bg $chrom_info ${name}.bw
 awk 'BEGIN {OFS = "\t"} ; {if ($6 == "+") print $1, $2 + 4, $2 + 5; else print $1, $3 - 6, $3 - 5}' ${name}.bed > ${name}.Tn5.bed
 ```
 
+# shift
+ATAC-seq关心的是在哪里切断，断点才是peak的中心，所以使用shift模型，--shift -75或-100.  
+
+
 
 # peak calling 
 
@@ -180,7 +366,7 @@ ATAC-seq 数据分析的第二个主要步骤是识别开放区域（也称为 P
 
   
 
-# Peak different ial analysis
+# Peak differential analysis
 
 csaw 是通过将 edgeR 框架扩展到将基因组分 bin 而开发的。滑动窗口方法被认为可以对基因组中的 reads 进行更多的无偏估计，但是需要严格的 FDR 控制才能正确合并相邻窗口。
 
@@ -198,7 +384,7 @@ csaw 是通过将 edgeR 框架扩展到将基因组分 bin 而开发的。滑动
 
 MEME-CentriMo 是一个广泛使用的 web 应用程序，它可以生成可视化报告，而 **chromVAR ** 可以作为 scATAC-seq 的替代方案。
 
-到目前为止所提到的所有工具都间接地从 Peak 区域内发现的 motif 来预测假定的 TFBSs。这种 TFBSs 可能包含大量的误报，并且可能是不完整的和混淆的。这是因为并不是所有的 TFs 都有相同的 motif，来自同一家族的 TFs 可以共享非常相似的 motif [125]。此外，预测的富集或活性变化可能具有微不足道的生物学意义，这妨碍了基于序列的 motif 分析结果的解释
+到目前为止所提到的所有工具都间接地从 Peak 区域内发现的 motif 来预测假定的 TFBSs。这种 TFBSs 可能包含大量的误报，并且可能是不完整的和混淆的。这是因为并不是所有的 TFs 都有相同的 motif，来自同一家族的 TFs 可以共享非常相似的 motif。此外，预测的富集或活性变化可能具有微不足道的生物学意义，这妨碍了基于序列的 motif 分析结果的解释
 
 # Footprints
 
