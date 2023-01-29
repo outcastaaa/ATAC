@@ -46,8 +46,8 @@ ATAC-seq可用于：
 
 
 ## 数据分析具体流程：  
-![shujufenxi](../ATAC/pictures/%E6%95%B0%E6%8D%AE%E5%88%86%E6%9E%90%E6%B5%81%E7%A8%8B.jpg)    
-![fenxiliuc](../ATAC/pictures/%E5%85%B7%E4%BD%93%E5%88%86%E6%9E%90%E6%AD%A5%E9%AA%A4.png)  
+![数据分析简图](../ATAC/pictures/%E6%95%B0%E6%8D%AE%E5%88%86%E6%9E%90%E6%B5%81%E7%A8%8B.jpg)    
+![数据分析详图](../ATAC/pictures/%E5%85%B7%E4%BD%93%E5%88%86%E6%9E%90%E6%AD%A5%E9%AA%A4.png)  
 
 
 
