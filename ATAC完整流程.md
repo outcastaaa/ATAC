@@ -23,7 +23,7 @@
 
 
 
-# introduction  
+# ATAC-seq introduction  
 
 ATAC-seq（Assay for Transposase-Accessible Chromatin with high throughput sequencing） 是2013年由斯坦福大学William J. Greenleaf和Howard Y. Chang实验室开发的用于研究染色质可及性（通常也理解为染色质的开放性）的方法，原理是通过转座酶Tn5容易结合在开放染色质的特性，然后对Tn5酶捕获到的DNA序列进行测序。  
 
@@ -45,41 +45,71 @@ ATAC-seq可用于：
 [具体看该文章](https://github.com/outcastaaa/ATAC/blob/main/review%20of%20ATAC-seq.md)  
 
 
-数据分析具体流程：  
+## 数据分析具体流程：  
 ![数据分析](../ATAC/pictures/%E6%95%B0%E6%8D%AE%E5%88%86%E6%9E%90%E6%B5%81%E7%A8%8B.jpg)  
 ![分析流程](../ATAC/pictures/%E5%85%B7%E4%BD%93%E5%88%86%E6%9E%90%E6%AD%A5%E9%AA%A4.png)  
 
-预处理（Pre-analysis）包括比对前的质量控制 QC（Pre-alignment QC）、比对（Alignment）、比对后处理（Post alignment processing）、QC。
-核心分析（Core analysis）包括 Peak calling。
-高级分析（Advance analysis）包括 Peak、motif、footprint、nucleosome 分析。
-多组学整合包括与 ChIP-seq、RNA-seq 数据的整合以及调控网络的重建。
+预处理（Pre-analysis）包括比对前的质量控制 QC（Pre-alignment QC）、比对（Alignment）、比对后处理（Post alignment processing）、QC。  
+核心分析（Core analysis）包括 Peak calling。  
+高级分析（Advance analysis）包括 Peak、motif、footprint、nucleosome 分析。  
+多组学整合包括与 ChIP-seq、RNA-seq 数据的整合以及调控网络的重建。  
+
+# 数据下载
 
 
 
+# Pre-alinment
+
+## quality control checking
+
+1. 目的：whether the sequencing quality is qualified or not
+2. 使用软件：`FastQC`  
+FastQC可用于可视化测序数据中的`碱基质量评分`、`GC含量`、序列长度分布、序列重复水平、k-mer的过度表达，及`引物、接头的污染`。
 
 
-# pre-alinment QC# raw FASTQ cutadapt
-  FastQC可用于可视化测序数据中的`碱基质量评分`、`GC含量`、序列长度分布、序列重复水平、k-mer的过度表达，及`引物、接头的污染`。  
+## pre-alinment QC
+1. 目的：adapters and low quality reads trimming
+2. 使用软件：`Trim Galore`  
+Trim Galore可以自动检测接头序列，质控和去除接头两个步骤一起,适用于多种组学去接头  
 
-## 去除接头序列 
-cutadapt     trimmomatic
+```
+mkdir -p ../adapter/
+
+trim_galore -o /mnt/d/methylation/output/adapter/ --fastqc /mnt/d/methylation/data/sequence/*.fastq.gz
+
+# 整合质控结果
+cd /mnt/d/methylation/output/adapter
+multiqc .
+```
+
+ 
 
 
 
-# alignment # FASTQ mapping with bowtie2
+# alignment 
+1. 目的：将质控后的reads比对到目的基因组上
+2. 使用软件： BWA-MEM or Bowtie2，本流程采用`BWA`
 
- BWA-MEM [44] and Bowtie2  
+ 
 
 通常情况下，比对率大于80%视为比对成功。
 对于哺乳动物物种，开放染色质检测和差异分析的建议最小mapped reads数为5000万，基于经验和计算估计的TF足迹为2亿。
 
 
 
-# Post-alignment processing # mapping result sort as BAM # remove PCR duplication
+# Post-alignment processing 
+
+## mapping result sort as BAM 
+
+## remove duplicate reads
+1. 目的：将质控后的reads比对到目的基因组上
+2. 使用软件： Picard and SAMtools，本流程采用`Picard`
+
+
 unique mapping reads/rates唯一比对的reads或比例、duplicated read percentages 重复的reads百分比 fragment size distribution 和片段大小分布
 
 
-Picard and SAMtools
+
 
 去除没有匹配到的、匹配得分较低的、重复的reads；去除线粒体中染色质可及区域及ENCODE blacklisted regions。
 
@@ -89,6 +119,11 @@ Inconsistencies in the underlying annotation exist at regions where assembly has
 在人基因组手动注释中发现，这种区域多为particularly rRNA, alpha satellites, and other simple repeats，长度covering on average 45 kb with the largest being 1.4 Mb。[参考文献The ENCODE Blacklist: Identification of Problematic Regions of the Genome](https://mp.weixin.qq.com/s/SS640LNI5QcvChmZNGEOmw)  
 
 3. PCR过程中由于偏好性扩增出现的重复reads
+## calculate insert size
+
+
+
+
 
 ## 评估ATAC-seq质量的方法
 还有其他需要评估的特定于 ATAC-seq 的质量度量。通常，一个成功的 ATAC-seq 实验应该生成一个片段大小分布图，其峰值与无核小体区域 (nucleosome-free regions: NFR) (<100 bp) 和单、二、三核小体 (~ 200、400、600 bp) (Fig. 1b) 相对应，呈递减和周期性。来自 NFR 的片段预计会在基因的转录起始位点 (transcription start site, TSS) 附近富集，而来自核小体结合区域的片段预计会在 TSS 附近被耗尽，在 TSS 附近的侧翼区域会有少量富集 (Fig. 1c)。  
