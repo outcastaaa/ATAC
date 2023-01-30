@@ -1,4 +1,7 @@
 # SRA toolkit
+[或跳转到该处](https://github.com/outcastaaa/bioinformatics-learning/blob/main/RNA-seq/Tools/SRA%20toolkit.md)  
+
+
 ## 一、前言
 
 1. 目的：  测序成本的降低和测序速度的增加导致提交到Sequence Read Archive (SRA)的数据呈爆炸性增长，于是NCBI推出了SRAtoolkit技术来对数据进行压缩，以减少存储成本； 
@@ -20,7 +23,7 @@ To reinstall 3.0.0, run:
 brew安装完成之后，
 输入vdb-config --interactive     
  #会出现一个框架，按字母x键退出，然后就可以使用啦  
-![tu](../pictures/1.png)  
+[更改安装地址页面](https://github.com/outcastaaa/bioinformatics-learning/blob/main/RNA-seq/pictures/1.png)    
 
 输入 fastq-dump出现如下代码，则说明安装完成  
 ```
@@ -35,7 +38,8 @@ Use option --help for more information
 /home/linuxbrew/.linuxbrew/Cellar/sratoolkit/3.0.0/bin/fastq-dump.3.0.0 : 3.0.0
 ```
 2. 网上的方法：
-[地址,以Ubuntu64位举例安装](https://blog.csdn.net/weixin_45214599/article/details/114847650)  
+[地址,以Ubuntu64位举例安装](https://blog.csdn.net/weixin_45214599/article/details/114847650)   
+
 3. 更改存储路径  
 有时候需要从NCBI下载数据来完成所输入的命令，不同系统环境下默认的存储路径如下∶  
 ```
@@ -44,12 +48,14 @@ Mac OS X: /Users/[user_name]/ncbi/public
 Windows: C:\Users\[user_name]\ncbi\public
 ```
 我们可以使用 SRA Toolkit（2.4以上版本支持）配置工具来改变默认的存储路径，cd命令进入bin文件夹后，输入命令`./vdb-config-i`出现配置界面，如下图所示∶  
-![tu](../pictures/2.png)  
+[更改安装地址页面1](https://github.com/outcastaaa/bioinformatics-learning/blob/main/RNA-seq/pictures/2.png)  
+
+
 
 这里只有两个主要功能：设置下载权限（Enable Remote Access）和存储目录（Enable Local File Caching），用tab键选择项目，space和enter键进入设置，其中下载权限是默认开启的，如果要改变存储路径，则进入Enable Local File Caching，如下图所示：  
-![tu](../pictures/3.png)  
+[更改安装地址页面2](https://github.com/outcastaaa/bioinformatics-learning/blob/main/RNA-seq/pictures/3.png)  
 将存储地址改为home/xuruizhi/data文件  
-![4](../pictures/4.png)    
+[更改安装地址页面3](https://github.com/outcastaaa/bioinformatics-learning/blob/main/RNA-seq/pictures/4.png)    
 
 ## 三、SRA Toolkit 使用方法
 1. fastq-dump  
