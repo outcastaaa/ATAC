@@ -243,7 +243,7 @@ Node Development and Function (https://pubmed.ncbi.nlm.nih.gov/33044128/)，2020
 
 [GSE页面](https://github.com/outcastaaa/ATAC/blob/main/pictures/GSE.png)  
 
-[SRA页面](https://github.com/outcastaaa/ATAC/blob/main/pictures/SRA.png)    
+[SRA Run Selector页面](https://github.com/outcastaaa/ATAC/blob/main/pictures/SRA.png)    
 
 
 
