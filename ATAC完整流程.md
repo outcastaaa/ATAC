@@ -4,12 +4,13 @@
 - [0.Introduction](#0.Introduction)
 - [1.Prepare](#1.Prepare)
 - [2.biotools](#2.biotools)
-    - [2.0 mangement](#20-mangement)
+    - [2.0 management](#20-management)
     - [2.1 sratoolkit](#21-sratoolkit)
     - [2.2 fastqc](#22-fastqc)
     - [2.3 multiqc](#23-multiqc)
-    - [2.4 cutadapt](#24-cutadapt)
-    - [2.5 trimmomatic](#25-trimmomatic)
+    - [2.4 TrimGalore](#24-TrimGalore)
+
+
     - [2.6 hisat2](#26-hisat2)
     - [sortmerna](#sortmerna)
     - [2.7 samtools](#27-samtools)
@@ -66,14 +67,15 @@ ATAC-seq可用于：
 
 
 ## 数据分析具体流程：    
-![数据分析详图](../ATAC/pictures/%E5%85%B7%E4%BD%93%E5%88%86%E6%9E%90%E6%AD%A5%E9%AA%A4.png)  
-
-
-
 预处理（Pre-analysis）包括比对前的质量控制 QC（Pre-alignment QC）、比对（Alignment）、比对后处理（Post alignment processing）、QC。  
 核心分析（Core analysis）包括 Peak calling。  
 高级分析（Advance analysis）包括 Peak、motif、footprint、nucleosome 分析。  
-多组学整合包括与 ChIP-seq、RNA-seq 数据的整合以及调控网络的重建。  
+多组学整合包括与 ChIP-seq、RNA-seq 数据的整合以及调控网络的重建。    
+
+![liuc](../ATAC/pictures/%E6%95%B0%E6%8D%AE%E5%88%86%E6%9E%90%E6%B5%81%E7%A8%8B.jpg)    
+![1](../ATAC/pictures/%E5%85%B7%E4%BD%93%E5%88%86%E6%9E%90%E6%AD%A5%E9%AA%A4.png)  
+
+
 
 # 1.Prepare  
 ```bash
@@ -97,7 +99,10 @@ mkdir genome sequence output
 ```
 
 # 2.biotools 
-## 2.0 mangement  
+软件详细用法记录在github的[biotools](https://github.com/outcastaaa/ATAC/tree/main/biotools)文件夹中。  
+
+
+## 2.0 management  
 
 Linux brew  
 来源[wang-q Ubuntu -](https://github.com/wang-q/ubuntu#install-linuxbrew)
@@ -118,18 +123,12 @@ Linux brew
 pip install multiqc
 ```
 
-## 2.5 质量修剪  
-* Trim Galore
-```
-cd /mnt/d/biosoft
-# 先挂载到d盘相应文件
+## 2.4 TrimGalore  
 
-wget https://github.com/FelixKrueger/TrimGalore/archive/0.6.3.tar.gz -O TrimGalore.gz
-
-gzip -d TrimGalore.gz
-```
 ! [作者GitHub](https://github.com/FelixKrueger/TrimGalore)已经更新至2021年7月的0.6.6版本
-```
+```bash
+cd /mnt/d/biosoft
+
 # Install Trim Galore
 curl -fsSL https://github.com/FelixKrueger/TrimGalore/archive/0.6.6.tar.gz -o TrimGalore.tar.gz
 tar xvzf TrimGalore.tar.gz
