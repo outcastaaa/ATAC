@@ -237,10 +237,13 @@ Node Development and Function (https://pubmed.ncbi.nlm.nih.gov/33044128/)，2020
 
 2. 登录NCBI网站查找所需数据    
 
-登录[NCBI官网](https://www.ncbi.nlm.nih.gov/)搜索GSE编号，可看到本文所用测序技术为为RNA-seq及ATAC-seq。 点击	`SRP256236`,查看每个样本的编号；点击`Send results to Run selector`，下载所需数据。
-![GSE](../ATAC/pictures/GSE.png)  
+登录[NCBI官网](https://www.ncbi.nlm.nih.gov/)搜索GSE编号，可看到本文所用测序技术为为RNA-seq及ATAC-seq。 点击	`SRP256236`,查看每个样本的编号；点击`Send results to Run selector`，下载所需数据。  
 
-![SRA](../ATAC/pictures/SRA.png)    
+
+
+[GSE页面](https://github.com/outcastaaa/ATAC/blob/main/pictures/GSE.png)  
+
+[SRA页面](https://github.com/outcastaaa/ATAC/blob/main/pictures/SRA.png)    
 
 
 
