@@ -22,14 +22,15 @@
     - [StringTie[可选]](#stringtie可选)
 
 - [3.Data](#3.Data)
-    - [3.1 sratoolkit](#31-sratoolkit)
-    - [3.2 fastqc](#32-fastqc)
-
-
+    - [3.1 sequence](#31-sequence)
+    - [3.2 genome](#32-genome)
+- [4.Pre alinment](#4.Prealinment)
+    - [4.1 quality_control_checking](#41-quality_control_checking)
+    - [4.2 pre-alinment_QC](#42-pre-alinment_QC)
 
 	- [Sequencing data](#sequencing-data)
 	- [Reference genome data](#reference-genome-data)
-- [Quality control and trimming](#quality-control-and-trimming)
+
 - [Methylation analysis](#methylation-analysis)
 	- [Genome indexing](#genome-indexing)
 	- [Read alignment](#read-alignment)
@@ -88,7 +89,7 @@ cd /mnt/d
 mkdir biosoft  
 mkdir ATAC    
 cd ./ATAC
-mkdir genome sequence qc align clean motif peaks
+mkdir genome sequence qc align motif peaks
 #查看结构
 @xxx:/mnt/d/ATAC$ tree
 ```
@@ -103,15 +104,21 @@ Linux brew
 来源[wang-q Ubuntu -](https://github.com/wang-q/ubuntu#install-linuxbrew)
 
 ## 2.1 sratoolkit   
-* 使用brew安装  
+* 使用brew安装
 ```bash
 @xxx:~$ brew install sratoolkit
 ```
+* [详细使用](https://github.com/outcastaaa/bioinformatics-learning/blob/main/RNA-seq/Tools/SRA%20toolkit.md)  
+
+
 ## 2.2 fastqc  
 * 使用brew安装  
 ```bash
 @xxx:~$ brew install fastqc
 ```
+* [详细使用](https://github.com/outcastaaa/bioinformatics-learning/blob/main/RNA-seq/Tools/fastqc.md)  
+
+
 ## 2.3 multiqc 
 ``` bash
 # 使用python的安装器安装
@@ -131,33 +138,11 @@ tar xvzf TrimGalore.tar.gz
 # Run Trim Galore
 ~/TrimGalore-0.6.6/trim_galore
 ```
-结果：  
-```
-xuruizhi@DESKTOP-HI65AUV:/mnt/d/biosoft$ curl -fsSL https://github.com/FelixKrueger/TrimGalore/archive/0.6.6.tar.gz -o TrimGalore.tar.gz
-xuruizhi@DESKTOP-HI65AUV:/mnt/d/biosoft$ ls
-TrimGalore.tar.gz  Trimmomatic-0.38  Trimmomatic-0.38.zip  hisat2-2.2.1  sortmerna-2.1  sortmerna-2.1.tar.gz  wget-log
-xuruizhi@DESKTOP-HI65AUV:/mnt/d/biosoft$ tar xvzf TrimGalore.tar.gz
-TrimGalore-0.6.6/
-TrimGalore-0.6.6/.travis.yml
-TrimGalore-0.6.6/Changelog.md
-。。。
-```
-`！师兄的办法会得到一个单独的TrimGalore文件；作者的办法会得到包括trim_galore及其license在内的一个文件夹`
+* [详细使用](https://github.com/outcastaaa/bioinformatics-learning/blob/main/RNA-seq/Tools/trim_galore.md)  
 
-* fastp  
-* trimmomatic  
-```
-cd /mnt/d/biosoft
-# 先挂载到d盘相应文件 
 
-wget http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/Trimmomatic-0.38.zip
-unzip Trimmomatic-0.38.zip
 
-cd Trimmomatic-0.38
 
-# 导入临时环境变量
-export PATH="$(pwd):$PATH"
-```
 ## 2.6 hisat2  
 
 1. [hisat2官网更改](https://daehwankimlab.github.io/hisat2/)
@@ -227,7 +212,7 @@ brew install parallel
 
 
 # 3.Data
-## 3.1 sequence data
+## 3.1 sequence
 
 1. 文中查找GEO数据库编号  
 
@@ -249,7 +234,7 @@ Node Development and Function (https://pubmed.ncbi.nlm.nih.gov/33044128/)，2020
 
 3. 下载ATAC-seq数据
 
-* 这里只下载ATAC-seq数据中的四个，`SRR11539111 SRR11539112 SRR11539115 SRR11539116`，先下载本页面的`Metadata`和`Accession List`，里面包含了数据详细信息，这两个文件下载到`/mnt/d/ATAC/sequence`。  
+* 这里只下载ATAC-seq数据中的四个，`SRR11539111(RC1) SRR11539112(PC2) SRR11539115(RACM1) SRR11539116(RACM2)`，先下载本页面的`Metadata`和`Accession List`，里面包含了数据详细信息，这两个文件下载到`/mnt/d/ATAC/sequence`。  
 ```bash
 @xx:/mnt/d/ATAC/sequence$ ls
 SRR_Acc_List.txt  SraRunTable.txt
@@ -279,124 +264,51 @@ vdb-config --interactive
 ```bash
 #查看下载情况
 @xx:~/data/sra$ ls -lh
-
+total 15G
+-rw-r--r-- 1 xuruizhi xuruizhi 3.7G Jan 30 18:17 SRR11539111.sra
+-rw-r--r-- 1 xuruizhi xuruizhi 4.0G Jan 30 18:29 SRR11539112.sra
+-rw-r--r-- 1 xuruizhi xuruizhi 3.7G Jan 30 18:39 SRR11539115.sra
+-rw-r--r-- 1 xuruizhi xuruizhi 3.3G Jan 30 18:49 SRR11539116.sra
 ```
 
-⑤  格式转换  
-下载得到`.sra`文件，使用SRAtoolkit工具包的`fastq-dump`工具，使用它来进行格式转化
+4. 格式转换   
+
+下载得到`.sra`文件，使用SRAtoolkit工具包的`fastq-dump`工具来进行格式转化
+```bash
+cd ~/data/sra
+parallel -j 4 "    
+    fastq-dump --split-3 --gzip {1}    
+" ::: $(ls *.sra)     
+# 用parallel多线程加快速度，并行任务数为4；将sra文件转化为fastq文件之后压缩为gz文件；:::后接对象
+
+rm *.sra
+ln -s *.fastq.gz /mnt/d/ATAC/sequence/
 ```
-xuruizhi@DESKTOP-HI65AUV:~/data/sra$ ls
-SRR2190795.sra  SRR2240183.sra  SRR2240185.sra  SRR2240187.sra
-SRR2240182.sra  SRR2240184.sra  SRR2240186.sra  SRR2240228.sra
 
-
-$ parallel -j 4 "    # 用parallel多线程加快速度，并行任务数为4
-    fastq-dump --split-3 --gzip {1}    # 将sra文件转化为fastq文件之后压缩为gz文件
-" ::: $(ls *.sra)     # :::后接对象
-
-# ls *.sra代表，列举出任何以.sra结尾的文件
---gzip 将转换出的fastq文件以gz格式输出，可以节省空间
---split-3 把pair-end测序分成两个文件输出，可用于双端测序转化为两个文件，本文举例为单端测序，删掉不影响
--O 输出文件夹名，不加直接放在该文件夹
-
-
-# 删除sra文件
-$ rm *.sra
-```
-结果：  
-```
-Academic tradition requires you to cite works you base your article on.
-If you use programs that use GNU Parallel to process data for an article in a
-scientific publication, please cite:
-
-  Tange, O. (2022, July 22). GNU Parallel 20220722 ('Roe vs Wade').
-  Zenodo. https://doi.org/10.5281/zenodo.6891516
-
-This helps funding further development; AND IT WON'T COST YOU A CENT.
-If you pay 10000 EUR you should feel free to use GNU Parallel without citing.
-
-More about funding GNU Parallel and the citation notice:
-https://www.gnu.org/software/parallel/parallel_design.html#citation-notice
-
-To silence this citation notice: run 'parallel --citation' once.
-
-Read 15107730 spots for SRR2190795.sra
-Written 15107730 spots for SRR2190795.sra
-Read 17622974 spots for SRR2240183.sra
-Written 17622974 spots for SRR2240183.sra
-Read 19779076 spots for SRR2240184.sra
-Written 19779076 spots for SRR2240184.sra
-Read 24510465 spots for SRR2240182.sra
-Written 24510465 spots for SRR2240182.sra
-Read 11837415 spots for SRR2240186.sra
-Written 11837415 spots for SRR2240186.sra
-Read 23017882 spots for SRR2240185.sra
-Written 23017882 spots for SRR2240185.sra
-Read 19519976 spots for SRR2240187.sra
-Written 19519976 spots for SRR2240187.sra
-Read 17296729 spots for SRR2240228.sra
-Written 17296729 spots for SRR2240228.sra
-```
 网上找到的另一种循环语句的方法  [https://www.jianshu.com/p/bdfa8f7e5a61](https://www.jianshu.com/p/bdfa8f7e5a61)
-
-```
-#定义存放输出数据的文件夹，需要先创建这个文件夹‘fastq’
-mkdir fastq
-fqdir=/trainee2/Mar7/rna/project/fastq
-
+```bash
 #转换单个文件
+fqdir=~/project/fastq
 fastq-dump --gzip --split-3 -X 25000 -O ${fqdir} SRR1039510
-
 
 #批量转换，将样本名写成文件——sample.ID，echo是打印命令，while循环的意义是生成脚本
 cat sample.ID | while read id
 do
- echo "fastq-dump --gzip --split-3 -X 25000 -O ${fqdir} ${id}
+ echo "fastq-dump --gzip --split-3 -X 25000 -O ${fqdir} ${id}"
 done >sra2fq.sh
 # 提交后台运行命令，脚本文件后缀为.sh，日志文件后缀为.log，运行脚本的命令为sh
-nohup sh sra2fq.sh>sra2fq.log &
+nohup sh sra2fq.sh>sra2fq.log & 
 
 #查看输出的fastq的gz压缩文件，用zless命令
-zless -S SRR1039510_1.fastq.gz
+zless -S SRRxxx.fastq.gz
 ```
 
 
-
-
-⑥ `parallel`用法补充 [parallel](https://www.jianshu.com/p/cc54a72616a1)  
-```
-Usage:
-
-parallel [options] [command [arguments]] < list_of_arguments
-parallel [options] [command [arguments]] (::: arguments|:::: argfile(s))...
-cat ... | parallel --pipe [options] [command [arguments]]
-
-常用选项：
-::: 后面接参数
-:::: 后面接文件
--j、--jobs   并行任务数
--N  每次输入的参数数量
---xargs会在一行中输入尽可能多的参数
--xapply 从每一个源获取一个参数（或文件一行）
---header  把每一行输入中的第一个值做为参数名
--m   表示每个job不重复输出“背景”（context）
--X   与-m相反，会重复输出“背景文本”
--q  保护后面的命令
---trim  lr 去除参数两头的空格，只能去除空格，换行符和tab都不能去除
---keep-order/-k   强制使输出与参数保持顺序 --keep-order/-k
---tmpdir/ --results   都是保存文件，但是后者可以有结构的保存
---delay  延迟每个任务启动时间
---halt  终止任务
---pipe    该参数使得我们可以将输入（stdin）分为多块（block）
---block  参数可以指定每块的大小
-```
-
-
-⑦ 格式介绍  
-```
+5. 格式介绍  
+```bash
 # 查看下载好的gz文件
-   cd ~/data/sra
-   gzip -d -c SRR2190795.fastq.gz | head -n 20
+cd ~/data/sra
+ gzip -d -c SRR11539111_1.fastq.gz | head -n 8
 
 # gzip
 -c或--stdout或--to-stdout 　把压缩后的文件输出到标准输出设备，不去更动原始文件。
@@ -404,480 +316,104 @@ cat ... | parallel --pipe [options] [command [arguments]]
 ```
 结果：  
 
+```bash
+# FASTQ格式文件中每个Read由四行描述
+# 第一行以“@”开头，随后为lllumina测序识别符(Sequence ldentifiers) 和描述文字 (选择性音分) 
+# 第二行是碱基序列
+# 第三行以“+”开头，随后为lllumina测序识别符 (选择性部分) 
+# 第四行是对应序列的测序质量的ASCII码
+@SRR11539111.1 1 length=100
+NCTTGAACATTATCTATGCATTTCTCGCCATTAGCATTCATCGTATCTGAGTTACTTACTATGTTGAATCCAATGTCTAATTGGTTGATATATATTTCTA
++SRR11539111.1 1 length=100
+#AAAFJJJJJFFAJJJJAJJFF7F<JJJJFAJJJJJJFJJJJJJJ7JJJ7J--<FAFJJJFF-F-<FFFAAF7AA-7AJ<JFFJF-A--7A<-AA-FAJJ
+@SRR11539111.2 2 length=100
+NGTCATTACAAGCCCTTCAGATCTAACCCCATGAACCAGAGAAGTGTGAGGAACAGTGATGGGCACTTTACACTGCACAGCAAGACTATAGAGGCTTGAA
++SRR11539111.2 2 length=100
+#A<AFJJJJJJJJJJJJ<JJJFFJFJJJJJJJAJJJJJJJJJJJFFJJJFFJJJJJ7JJJFAFFJFJFJJJJJJJFAJJJJJJJJJJJAJ<-F7JFJJJ-
 ```
-@SRR2190795.1 HWI-ST1147:240:C5NY7ACXX:1:1101:1320:2244 length=100
-ATGCTGGGGGCATTAGCATTGGGTACTGAATTATTTTCAGTAAGAGGGAAAGAATCCATCTCCNNNNNNNNNNNNNNNNNNNNNNAAANAAAAATAAAAT
-+SRR2190795.1 HWI-ST1147:240:C5NY7ACXX:1:1101:1320:2244 length=100
-CCCFFFFFHHHHHJIJJJJJJJJDHHJJJIJJJJJIJJJJJJJJJJJJJJJJJJJJJJJJJHH#####################################
-@SRR2190795.2 HWI-ST1147:240:C5NY7ACXX:1:1101:1598:2247 length=100
-AACTTCGGTTCTCTACTAGGAGTATGCCTCATAGTACAAATCCTCACAGGCTTATTCCTAGCANNNNNNNNNNNNNNNNNNNNNNTAACAGCATTTTCAT
-+SRR2190795.2 HWI-ST1147:240:C5NY7ACXX:1:1101:1598:2247 length=100
-@@@7D8+@A:1CFG<C:23<:E<;FF<BHIIEHG:?:??CDF<9DCGGG?1?FEG@@<@CA#######################################
-@SRR2190795.3 HWI-ST1147:240:C5NY7ACXX:1:1101:1641:2250 length=100
-AGAAGGTCTTAGATCAGAAGGAGCACAGACTGGATGGTCGTGTCATTGACCCTAAAAAGGCTANNNNNNNNNNNNNNNNNNNNNTGAAGAAAATCTTTGT
-+SRR2190795.3 HWI-ST1147:240:C5NY7ACXX:1:1101:1641:2250 length=100
-BC@FFFDDHHHHHJJJJJJJJJJJJJJJJJJJJIJJJFHGHHEGHIIIHJIJJIJJIJIJJID#####################################
-@SRR2190795.4 HWI-ST1147:240:C5NY7ACXX:1:1101:1851:2233 length=100
-GGGATTTCATGGCCTCCACGTAATTATTGGCTCAACTTTCCTAATTGTCTGTCTACTACGACANNNNNNNNNNNNNNNNNNNNNNNNNNNNNNTNNCNNN
-+SRR2190795.4 HWI-ST1147:240:C5NY7ACXX:1:1101:1851:2233 length=100
-@@?DDBDDFFDDDGHGGGGI?B;FFHGHA@FEHGHDDGHEGGFGHIGEHIIHIGGBGACD6AH#####################################
-@SRR2190795.5 HWI-ST1147:240:C5NY7ACXX:1:1101:1957:2243 length=100
-CAGCCATTGTGGCTCCCGATGGCTTTGACATCATTGACATGACAGCCGGAGGTCAGATAAACTNNNNNNNNNNNNNNNNNNNNNNATCNGTGGCAAAGGT
-+SRR2190795.5 HWI-ST1147:240:C5NY7ACXX:1:1101:1957:2243 length=100
-@CCFFFFFHHHHAHJJJIJJJJJJIJJIGGGIFIJIIHIIGGJJJJJJJFHIGIJHHHHHHFC#####################################
-```
-![p5](../RNA-seq/pictures/P5.webp)
+格式转换原因：
 ```
 1、sra数据
-sra数据是SRA数据库用于储存二代测序数据的原始数据的一种压缩格式，这种数据格式不能直接进行处理，需要转换成fastq才能进行质控以及去adapt等处理——相当于解压缩
+sra数据是SRA数据库用于储存二代测序数据的原始数据的一种压缩格式，这种数据格式不能直接进行处理，需要转换成fastq才能进行质控以及去adapt等处理——相当于解压缩。
 
 2、fastq文件（简称fq文件）
-高通量测序得到的原始图像数据文件，经过碱基识别（base calling）分析转化为原始测序序列（sequenced reads），称之为raw data或raw reads，结果以fastq（简称fq）文件格式存储
-
+高通量测序得到的原始图像数据文件，经过碱基识别（base calling）分析转化为原始测序序列（sequenced reads），称之为raw data或raw reads，结果以fastq（简称fq）文件格式存储。
 链接：https://www.jianshu.com/p/bdfa8f7e5a61    
 
 3. 为何转格式、将fq文件压缩？
-因为sra是二进制文件，在Linux下如果用less去查看，它会显示这是个二进制文件，你是否确定打开它。一般我们分析测序数据，是用fastq文件打开分析，所以就需要转格式。没压缩的fq文件通常十几个G，文件一多硬盘就爆炸，所以希望能够以压缩好的gz文件存储，通常只有原始文件的1/8左右，只有原始SRA文件的2倍左右。如果利用gzip命令，处理是单线程，压缩起来很慢，因此需要parallel多线程提高速度
-
+因为sra是二进制文件，在Linux下如果用less去查看，它会显示这是个二进制文件，你是否确定打开它。一般我们分析测序数据，是用fastq文件打开分析，所以就需要转格式。没压缩的fq文件通常十几个G，文件一多硬盘就爆炸，所以希望能够以压缩好的gz文件存储，通常只有原始文件的1/8左右，只有原始SRA文件的2倍左右。如果利用gzip命令，处理是单线程，压缩起来很慢，因此需要parallel多线程提高速度。
 ```
 
-  
-
-⑧ 一些尝试记录  
-```
-# 如果直接在随便一个文件夹下转换格式，不会成功
-xuruizhi@DESKTOP-HI65AUV:~$ fastq-dump --split-3 SRR2190795.sra
-2022-08-24T11:57:06 fastq-dump.3.0.0 err: item not found while constructing within virtual database module - the path 'SRR2190795.sra' cannot be opened as database or table
-fastq-dump quit with error code 3
-
-# 在存储sra文件的文件夹下去转换，ok
-xuruizhi@DESKTOP-HI65AUV:~$ cd ~/data/sra
-
-xuruizhi@DESKTOP-HI65AUV:~/data/sra$ fastq-dump --split-3 SRR2190795.sra
-Read 15107730 spots for SRR2190795.sra
-Written 15107730 spots for SRR2190795.sra
-
-xuruizhi@DESKTOP-HI65AUV:~/data/sra$ ls
-SRR2190795.fastq  SRR2240182.sra  SRR2240184.sra  SRR2240186.sra  SRR2240228.sra
-SRR2190795.sra    SRR2240183.sra  SRR2240185.sra  SRR2240187.sra
-```
-
-## genome data
+## 3.2 genome
 
 1. [Ensemble网址](https://asia.ensembl.org/)  
 在左侧`All genomes`中，选择物种`Rat`; 在左侧`Download DNA sequence (FASTA)` 下载基因组序列数据; 在右侧的`Download GTF or GFF3 (files for genes, cDNAs, ncRNA, proteins)`下载基因注释文件     
 
-![P1](../RNA-seq/pictures/P1.png) 
 
 
-2. ensemble中[基因组数据集命名方式](http://ftp.ensembl.org/pub/release-107/fasta/rattus_norvegicus/dna/README)  
 
-* 这些文件始终按照以下模式命名：
+
+# 4.Pre-alinment
+
+## 4.1 quality_control_checking  
+
+1. 目的：whether the sequencing quality is qualified or not    
+
+2. 使用软件：`FastQC`,  `multiqc`  
+FastQC可用于可视化测序数据中的`碱基质量评分`、`GC含量`、序列长度分布、序列重复水平、k-mer的过度表达，及`引物、接头的污染`。  
+3. 代码
+```bash
+# 新建目录  
+mkdir /mnt/d/ATAC/fastqc
+
+# ！注意！一定在存储fastqc.gz的文件夹路径下执行下面的命令
+cd ~/data/sra
+fastqc -t 4 -o /mnt/d/ATAC/fastqc/ *.gz
+
+cd /mnt/d/ATAC/fastqc/
+multiqc .
 ```
-   <species>.<assembly>.<sequence type>.<id type>.<id>.fa.gz
-例：
-    Rattus_norvegicus.mRatBN7.2.dna.nonchromosomal.fa.gz  
-    Rattus_norvegicus.mRatBN7.2.dna.primary_assembly.1.fa.gz
-    Rattus_norvegicus.mRatBN7.2.dna_sm.toplevel.fa.gz
+4. 结果：分析看[该文章](https://github.com/outcastaaa/bioinformatics-learning/blob/main/RNA-seq/Tools/fastqc.md)  
 
+可看到，四个样本拆分得到的8个测序数据：   
 
-<species>：物种的系统名称。
+`sequence quality`都很高，前期因为使用默认参数进行base calling, 所以这部分碱基的质量一般有些较低也不影响，下一步trim掉即可；  
+`Per base sequence content`前期波动，后期都很平稳。使用转座酶片段化的文库在读取开始位置都有内在偏差。这种偏差与绝对序列无关，而是在读数的 5' 末端提供了许多不同 K-mer 的富集。 虽然这是一个真正的技术偏差，但它不可以通过trimming来纠正的，并且在大多数情况下不会对下游分析产生不利影响。  
+`Per sequence GC content`和上面原因一样，建库偏差导致GC含量和预测不同。
+`Sequence Duplication Levels`更specific的子集富集或低复杂性污染物在图的右侧产生尖峰，蓝线中存在红线中消失，可以被去重。  
+`Adapter Content`报错是因为含有ATAC-seq转座酶序列，后续去接头即可。  
 
-<assembly>：程序集构建名称。
 
-<sequence type>：
-  * 'dna' - unmasked未屏蔽的基因组 DNA 序列。
-  * 'dna_rm' - masked掩蔽的基因组 DNA。使用 RepeatMasker 工具检测散布的 重复和低复杂性区域，并通过用“N”替换重复来掩盖。
-  * 'dna_sm' -  soft-masked软掩蔽基因组 DNA。所有重复和低复杂性区域都已替换为 其核酸碱基的小写版本
 
-<id 类型> 以下之一：
-  * 'chromosome' - Ensembl 中大多数物种的顶级坐标系top-level coordinate system
-  * 'nonchromosomal' - 包含尚未分配到染色体的 DNA
-  * 'seqlevel' - 这通常是sequence scaffolds、块chunks或克隆clones。
-     -- 'scaffold' - 短的测序reads（通常来自whole genome shotgun, WGS）组装成较大的序列contigs，但尚未组装成染色体。需要更多的基因组测序来缩小gaps并建立 a tiling path。
-     -- 'chunk' - 虽然 contig 序列可以组装成更大区块，有时必须人为地将它们分解为更小的块，称为'chunks'。这是由于注释中的限制pipeline 和 MySQL 有限的记录大小，用于存储序列和注释信息。
-     -- 'clone' - 通常这是最小的序列单位。它通常与一个 BAC 克隆的序列或一个 BAC 克隆的序列区域相同，后者形成了tiling path.
-<id>：实际的序列标识符。根据 <id type> <id>
-          可以代表A chromosome, a scaffold, a contig, a clone的名称..
-          seqlevel 文件的字段为空
 
-fa：这些目录中的所有文件都代表FASTA数据库文件
 
-gz：所有文件都使用 GNU Zip 压缩以提高存储效率。
-```
-* TOPLEVEL    
 
-这些文件包含了 在 Ensembl 模式中标记为toplevel的所有序列区域。 这包括染色体chromsomes、未组装成染色体not assembled into chromosomes的区域和 N 填充的单倍型haplotype/补丁patch区域。
-
-* PRIMARY ASSEMBLY  
-
-初级组装包含所有toplevel序列区域，不包括单倍型和补丁。  
-该文件最适合用于`序列相似性搜索`，因为其中补丁和单倍型序列会混淆分析。 如果primary assembly文件不存在，则表明没有单倍型/补丁区域，此时与“toplevel”文件相同。
-
-* special 注意  
-一些染色体是单倍体，例如人类的X和Y染色体  
-为了比对时能正确输出报告，这些单倍体的assembly和patch区域都会补上同等数量的N   
-例如： A patch region with a start position of 1,000,001 will have 1e6 N's added，因这样对齐程序将报告相对于
-整个染色体。
-
-人类已对 Y 染色体进行了测序，并对 Y 上的伪常染色体区域pseudoautosomal region (PAR) 进行了注释。 根据定义，PAR 区域在 X 和 Y 染色体上是相同的。 Y染色体文件包含Y染色体减去这些重复的 PAR 区域，即 Y 的唯一部分。  
-
-
-3. 基因组下载代码：  
-目前大鼠的基因组测序版本到了7.2  
-可以直接在网页下载，也可用代码  
-```
-# 下载
-cd /mnt/d/project/rat/genome
-wget http://ftp.ensembl.org/pub/release-107/fasta/rattus_norvegicus/dna/Rattus_norvegicus.mRatBN7.2.dna.toplevel.fa.gz
-gzip -d Rattus_norvegicus.mRatBN7.2.dna.toplevel.fa.gz
-
-# 改名（方便后面使用，名字太长一来不方便输入，二来可能会输错）
-mv Rattus_norvegicus.mRatBN7.2.dna.toplevel.fa mRatBN7.2.fa
-```
-4. 对下载的基因组数据进行整理  
-
-！ 和师兄的演示不一样的原因：因为师兄下载的测序版本是6，[旧版本](http://ftp.ensembl.org/pub/release-104/fasta/rattus_norvegicus/dna/)    
-`下载的数据id类型是chromosome，新版本是PRIMARY ASSEMBLY`  
-
-![tu](https://github.com/eternal-bug/RNA/blob/master/pic/Rat_genome.png)  
-
-
-* 下载得到的基因组文件可以查看一下包含哪些染色体，确认文件是否下载正确。
-```
-cat mRatBN7.2.fa | grep "^>"
-```
-* 结果：除了1-20号+X+Y+MT之外还有很多别的ID名。这些都是scaffold
-```
->19 dna:primary_assembly primary_assembly:mRatBN7.2:19:1:57337602:1 REF
->20 dna:primary_assembly primary_assembly:mRatBN7.2:20:1:54435887:1 REF
->X dna:primary_assembly primary_assembly:mRatBN7.2:X:1:152453651:1 REF
->Y dna:primary_assembly primary_assembly:mRatBN7.2:Y:1:18315841:1 REF
->MT dna:primary_assembly primary_assembly:mRatBN7.2:MT:1:16313:1 REF
->MU150191.1 dna:primary_assembly primary_assembly:mRatBN7.2:MU150191.1:1:1794995:1 REF
-
->JACYVU010000493.1 dna:primary_assembly primary_assembly:mRatBN7.2:JACYVU010000493.1:1:444596:1 REF
->MU150193.1 dna:primary_assembly primary_assembly:mRatBN7.2:MU150193.1:1:383091:1 REF
-```
-* 每一条primary_assembly的名称后面还跟了一些描述信息，这些描述信息就是当前组装版本，长度等等信息，但是这个信息会妨碍后面写脚本统计或者一些分析，所以这里最好去掉  
-```
-# 首先将之前的名称更改一下
-mv mRatBN7.2.fa mRatBN7.2.raw.fa
-
-# 然后去除染色体编号后的描述信息
-$ cat mRatBN7.2.raw.fa | perl -n -e 'if(m/^>(.+?)(?:\s|$)/){ print ">$1\n";}else{print}' > mRatBN7.2.fa
-#单行匹配，如果匹配到了 开头>多个字母空格或者$，将  >多个字母  打印出来
-
-# 删除
-$ rm mRatBN7.2.raw.fa
-```  
-结果：
-```
->19
->20
->X
->Y
->MT
->MU150191.1
->MU150189.1
->MU150194.1
->MU150190.1
->MU150195.1
->JACYVU010000493.1
->MU150193.1
->MU150196.1
->MU150197.1
->JACYVU010000705.1
->JACYVU010000706.1
->MU150192.1
->JACYVU010000707.1
-```
-
-* 可以使用脚本统计每一条染色体的长度  
-```
-cat mRatBN7.2.fa | perl -n -e '
-    s/\r?\n//;     #\r∶perl语言的转义，回车；删除回车
-    if(m/^>(.+?)\s*$/){
-        $title = $1;
-        push @t, $title; 
-    }elsif(defined $title){   #计算第二行数目
-        $title_len{$title} += length($_);
-    }
-    END{
-        for my $title (@t){
-            print "$title","\t","$title_len{$title}","\n";
-        }
-    }
-'
-```
-结果：  
-```
-。。。
-19      57337602
-20      54435887
-X       152453651
-Y       18315841
-MT      16313
-MU150191.1      1794995
-MU150189.1      1402623
-MU150194.1      648519
-MU150190.1      573231
-MU150195.1      529129
-JACYVU010000493.1       444596
-。。。
-```  
-* 以染色体1 举例  
-```
-cat mRatBN7.2.fa | perl -n -e '
-  if(m/^>/){
-    if(m/>1$/){
-      $title = 1;
-    }else{
-      $title = 0;
-    }
-  }else{
-    push @s, $_ if $title;  #title=1，即一号染色体
-  }
-  END{
-    printf ">1\n%s", join("", @s);
-  }
-' > mRatBN7.2.chr1.fa
-```
-5. 下载基因组索引文件 - [可选]
-
-方法1. 在[hisat2 官网](https://daehwankimlab.github.io/hisat2/download/#r-norvegicus)上可以找到现成的已经建立好索引的大鼠基因组文件, 点击`	https://genome-idx.s3.amazonaws.com/hisat/rn6_genome.tar.gz`, 下载到了`D:\database`文件夹内   
-或通过代码下载  
-```
-cd /mnt/d/database
-wget https://genome-idx.s3.amazonaws.com/hisat/rn6_genome.tar.gz
-gzip -d rn6.tar
-```
-
-方法2. 自己用命令基于之前下载的基因组文件自行建立   
-
-
-6.  下载注释信息  
-```
-# 下载 gff3 格式
-cd /mnt/d/project/rat/annotation
-wget http://ftp.ensembl.org/pub/release-107/gff3/rattus_norvegicus/Rattus_norvegicus.mRatBN7.2.107.gff3.gz
-gzip -d Rattus_norvegicus.mRatBN7.2.107.gff3.gz
-# 同样的也改名
-mv Rattus_norvegicus.mRatBN7.2.107.gff3 mRatBN7.2.gff
-# 使用head查看部分
-head mRatBN7.2.gff
-
-# gff查看结果：
-xuruizhi@DESKTOP-HI65AUV:/mnt/d/project/rat/annotation$ head mRatBN7.2.gff
-##gff-version 3
-##sequence-region   1 1 260522016
-##sequence-region   10 1 107211142
-##sequence-region   11 1 86241447
-##sequence-region   12 1 46669029
-##sequence-region   13 1 106807694
-##sequence-region   14 1 104886043
-##sequence-region   15 1 101769107
-##sequence-region   16 1 84729064
-##sequence-region   17 1 86533673 
-
-
-# 下载 gtf 格式  
-cd /mnt/d/project/rat/annotation
-wget http://ftp.ensembl.org/pub/release-107/gtf/rattus_norvegicus/Rattus_norvegicus.mRatBN7.2.107.gtf.gz
-gzip -d 	Rattus_norvegicus.mRatBN7.2.107.gtf.gz
-
-# gtf查看结果
-
-xuruizhi@DESKTOP-HI65AUV:/mnt/d/project/rat/annotation$ head  mRatBN7.2.107.gtf
-
-#gtf文件开头描述了这个注释数据的基本信息，比如版本号，更新时间，组装的NCBI的Assembly编号等等，后面每一行表示描述信息，说明了在哪条染色体的什么位置是什么东西。
-#!genome-build mRatBN7.2
-#!genome-version mRatBN7.2
-#!genome-date 2020-11
-#!genome-build-accession GCA_015227675.2
-#!genebuild-last-updated 2021-02
-1       ensembl gene    36112690        36122387        .       -       .       gene_id "ENSRNOG00000066169"; gene_version "1"; gene_source "ensembl"; gene_biotype "protein_coding";
-# 比如该行表示在1号染色体负链上 36112690-36122387 这个范围内有一个基因编号为ENSRNOG00000066169的基因
-
-1       ensembl transcript      36112690        36122387        .       -       .       gene_id "ENSRNOG00000066169"; gene_version "1"; transcript_id "ENSRNOT00000101581"; transcript_version "1"; gene_source "ensembl"; gene_biotype "protein_coding"; transcript_source "ensembl"; transcript_biotype "protein_coding";
-1       ensembl exon    36122324        36122387        .       -       .       gene_id "ENSRNOG00000066169"; gene_version "1"; transcript_id "ENSRNOT00000101581"; transcript_version "1"; exon_number "1"; gene_source "ensembl"; gene_biotype "protein_coding"; transcript_source "ensembl"; transcript_biotype "protein_coding"; exon_id "ENSRNOE00000618632"; exon_version "1";
-1       ensembl CDS     36122324        36122387        .       -       0       gene_id "ENSRNOG00000066169"; gene_version "1"; transcript_id "ENSRNOT00000101581"; transcript_version "1"; exon_number "1"; gene_source "ensembl"; gene_biotype "protein_coding"; transcript_source "ensembl"; transcript_biotype "protein_coding"; protein_id "ENSRNOP00000083062"; protein_version "1";
-1       ensembl exon    36121478        36121512        .       -       .       gene_id "ENSRNOG00000066169"; gene_version "1"; transcript_id "ENSRNOT00000101581"; transcript_version "1"; exon_number "2"; gene_source "ensembl"; gene_biotype "protein_coding"; transcript_source "ensembl"; transcript_biotype "protein_coding"; exon_id "ENSRNOE00000610554"; exon_version "1";
-```
-
-7. ensemble中  
-[gff 注释信息命名方式](http://ftp.ensembl.org/pub/release-107/gff3/rattus_norvegicus/README)  
-[gtf 注释信息命名方式](http://ftp.ensembl.org/pub/release-107/gtf/rattus_norvegicus/README)  
-
-两者注释区别：gff是先判断该序列属于gene还是转录本等，呈现出不同的主要特征信息；但是gtf是所有的信息全部呈现出来
-
-gff 注释信息：  
-
-① gene features的类型：   
-
-*  "gene" 代表 protein-coding genes 编码蛋白的基因  
-*  "ncRNA_gene" 代表 RNA genes   RNA基因   
-*  "pseudogene" 代表 pseudogenes假基因  
-
-② transcript features的类型:
-   * "mRNA" 代表 protein-coding transcripts 编码蛋白的转录本
-   * a specific type or RNA transcript such as "snoRNA" or "lnc_RNA"  RNA转录本
-   * "pseudogenic_transcript" for pseudogenes 假基因转录本
-所有的转录本都和exon特征相关。编码蛋白的转录本和 "CDS", "five_prime_UTR", and "three_prime_UTR" 特征相关。
-
-
-③ Attributes for feature types:
-* region types: "five_prime_UTR", and "three_prime_UTR"
-    * ID: 唯一识别号, 形式 "<region_type>:<region_name>"
-    * [Alias]：别名，以逗号分隔的别名列表，通常包括 INSDC accession
-    * [Is_circular]: 标志环形区域 circular regions
- * gene types:
-    * ID:  唯一识别号, 形式 "gene:<gene_stable_id>"
-    * biotype: Ensembl 生物型, e.g. "蛋白质编码", "假基因"
-    * gene_id: Ensembl 基因稳定 ID  
-    * version: Ensembl 基因版本   
-    * [Name]： 基因名称
-    * [description]： 基因描述
- * transcript types:  
-    * ID: 唯一识别号, 形式 "transcript:<transcript_stable_id>"
-    * Parent: 基因标识符, 形式 "gene:<gene_stable_id>"
-    * biotype: Ensembl 生物型, e.g. "蛋白质编码", "假基因" 
-    * transcript_id: Ensembl 转录本 stable ID
-    * version: Ensembl 转录本版本
-    * [Note]: 如果转录序列已被编辑 (i.e. 和基因组序列不同), 编辑在注释中描述。
- * exon
-    * Parent: Transcript identifier, 形式 "transcript:<transcript_stable_id>"
-    * exon_id: Ensembl 外显子 stable ID
-    * version: Ensembl 外显子版本
-    * constitutive: 组成型外显子，标志着该外显子在所有转录本中均存在
-    * rank:  代表5'->3' ordering of exons的整数
- * CDS  
- CDS（Coding sequence）是指成熟mRNA中可以被翻译为蛋白质的编码序列区域，自起始密码子开始至终止密码子结束。
-    * ID:  唯一识别号, 形式  "CDS:<protein_stable_id>"
-    * Parent: Transcript identifier，形式"transcript:<transcript_stable_id>"
-    * protein_id: Ensembl 蛋白 stable ID
-    * version: Ensembl 蛋白版本
-
-④ 元数据Metadata：
- * 基因组构建 - 构建assembly的标识符，例如GRCh37.p11
- * 基因组版本 - 此assembly的版本，例如GRCh37
- * 基因组日期 - 此assembly的发布日期，例如2009-02
- * 基因组构建加入 - 基因组加入，例如GCA_000001405.14
- * genebuild-last-updated - 最后一次genebuild更新的日期，例如2013-09
-
-
-⑤ FILE NAMES： 
-  <species>.<assembly>.<_version>.gff3.gz  
-
-对于预测的基因集，在名称文件中添加了一个额外的 abinitio 标志。  
-  <species>.<assembly>.<version>.abinitio.gff3.gz  
-
-```
-e.g. 
-GL476399        Pmarinus_7.0    supercontig     1       4695893 .       .       .       ID=supercontig:GL476399;Alias=scaffold_71
-GL476399        ensembl gene                  2596494   2601138 .       +       .       ID=gene:ENSPMAG00000009070;Name=TRYPA3;biotype=protein_coding;description=Trypsinogen A1%3B Trypsinogen a3%3B Uncharacterized protein  [Source:UniProtKB/TrEMBL%3BAcc:O42608];logic_name=ensembl;version=1
-```
-
-
-[gtf 注释信息](http://ftp.ensembl.org/pub/release-107/gtf/rattus_norvegicus/README)   
-
-
- GTF (General Transfer Format)   
-① FILE NAMES：   
-  <species>.<assembly>.<_version>.gtf.gz    
-
-对于预测的基因集，在名称文件中添加了一个额外的 abinitio 标志。    
-  <species>.<assembly>.<version>.abinitio.gtf.gz  
-
-② Fields  
-
-Fields are tab-separated. Also, all but the final field in each 
-feature line must contain a value; "empty" columns are denoted 
-with a '.'  
- 
-    seqname   - name of the chromosome or scaffold; chromosome names 
-                without a 'chr' 
-    source    - name of the program that generated this feature, or 
-                the data source (database or project name)
-    feature   - feature type name. Current allowed features are
-                {gene, transcript, exon, CDS, Selenocysteine, start_codon,
-                stop_codon and UTR}
-    start     - start position of the feature, with sequence numbering 
-                starting at 1.
-    end       - end position of the feature, with sequence numbering 
-                starting at 1.
-    score     - a floating point value indiciating the score of a feature
-    strand    - defined as + (forward) or - (reverse).
-    frame     - one of '0', '1' or '2'. Frame indicates the number of base pairs
-                before you encounter a full codon. '0' indicates the feature 
-                begins with a whole codon. '1' indicates there is an extra
-                base (the 3rd base of the prior codon) at the start of this feature.
-                '2' indicates there are two extra bases (2nd and 3rd base of the 
-                prior exon) before the first codon. All values are given with
-                relation to the 5' end.
-    attribute - a semicolon-separated list of tag-value pairs (separated by a space), 
-                providing additional information about each feature. A key can be
-                repeated multiple times.
-
-③ Attributes  
-
-The following attributes are available. All attributes are semi-colon
-separated pairs of keys and values.  
-
-- gene_id: The stable identifier for the gene
-- gene_version: The stable identifier version for the gene
-- gene_name: The official symbol of this gene
-- gene_source: The annotation source for this gene
-- gene_biotype: The biotype of this gene
-- transcript_id: The stable identifier for this transcript
-- transcript_version: The stable identifier version for this transcript
-- transcript_name: The symbold for this transcript derived from the gene name
-- transcript_source: The annotation source for this transcript
-- transcript_biotype: The biotype for this transcript
-- exon_id: The stable identifier for this exon
-- exon_version: The stable identifier version for this exon
-- exon_number: Position of this exon in the transcript
-- ccds_id: CCDS identifier linked to this transcript
-- protein_id: Stable identifier for this transcript's protein
-- protein_version: Stable identifier version for this transcript's protein
-- tag: A collection of additional key value tags
-- transcript_support_level: Ranking to assess how well a transcript is supported (from 1 to 5)
-
-④ Tags  
-
-Tags are additional flags used to indicate attibutes of the transcript.  
-
-- CCDS: Flags this transcript as one linked to a CCDS record
-- seleno: Flags this transcript has a Selenocysteine edit. Look for the Selenocysteine
-feature for the position of this on the genome
-- cds_end_NF: the coding region end could not be confirmed
-- cds_start_NF: the coding region start could not be confirmed
-- mRNA_end_NF: the mRNA end could not be confirmed
-- mRNA_start_NF: the mRNA start could not be confirmed.
-- basic: the transcript is part of the gencode basic geneset
-
-
-
-
-
-# Pre-alinment
-
-## quality control checking
-
-1. 目的：whether the sequencing quality is qualified or not
-2. 使用软件：`FastQC`  
-FastQC可用于可视化测序数据中的`碱基质量评分`、`GC含量`、序列长度分布、序列重复水平、k-mer的过度表达，及`引物、接头的污染`。
-
-
-## pre-alinment QC
+## 4.2 pre-alinment_QC
 1. 目的：adapters and low quality reads trimming
 2. 使用软件：`Trim Galore`  
-Trim Galore可以自动检测接头序列，质控和去除接头两个步骤一起,适用于多种组学去接头  
+Trim Galore可以自动检测接头序列，质控和去除接头两个步骤一起,适用于多种组学去接头.  
 
-```
-mkdir -p ../trim/
+```bash
+mkdir -p /mnt/d/ATAC/trim/
+# 构建循环
+cd ~/data/sra
+ls ./*_1.fastq.gz > ./1
+ls ./*_2.fastq.gz > ./2
 
-trim_galore -o /mnt/d/ATAC/output/trim/ --fastqc /mnt/d/ATAC/sequence/*.fastq.gz
+paste 1 1 2 >config.raw
+
+# 执行trim代码
+cat config.raw | while read id;
+do echo $id 
+ arr=($id)
+ fq1=${arr[1]}
+ fq2=${arr[2]}
+ sample=${arr[0]}
+
+trim_galore --phred33 --length 35 -e 0.1 --stringency 3 --paired -o /mnt/d/ATAC/trim/  $fq1 $fq2 &
+done
+
+#-q 质量；--length 去除长度小于35的reads；-e 允许的最大误差；--paired 双端测序；-o 输出目录；后接 fastq_file1和file2
 
 # 整合质控结果
 cd /mnt/d/ATAC/output/trim/
