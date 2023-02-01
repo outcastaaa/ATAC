@@ -449,7 +449,7 @@ ls ./*_2.fastq.gz > ./2
 
 paste 1 1 2 >config.raw
 
-# 执行trim代码
+# 执行trim代码，有时候会卡住，要有耐心
 cat config.raw | while read id;
 do echo $id 
  arr=($id)
@@ -550,8 +550,8 @@ multiqc .
 bowtie2_index=/mnt/d/ATAC/genome/
 align_dir=/mnt/d/ATAC/align/
 
-cp ~/data/sra/config.raw  /mnt/d/ATAC/fastqc_again/
-cd /mnt/d/ATAC/fastqc_again/ 
+cp ~/data/sra/config.raw  /mnt/d/ATAC/trim2/
+cd /mnt/d/ATAC/trim2/ 
 cat config.raw | while read id;
 do echo $id 
  arr=($id)
