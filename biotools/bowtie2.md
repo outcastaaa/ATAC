@@ -13,7 +13,8 @@ bowtie2-build -f /public/Reference/GRCh38.primary_assembly.genome.fa --threads 2
 ```
 
 # 比对
-[具体看该文章](https://www.jianshu.com/p/f84ffba2ec1e)  
+[参考文章1](https://www.jianshu.com/p/f84ffba2ec1e)    [参考文章2](https://cloud.tencent.com/developer/article/1772432)  
+
 ## 单端比对
 ```bash
 bowtie2 [options]* -x <bt2-idx> -U <fq> -S <sam_output> -p <threads> 2>Align.summary
