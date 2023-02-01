@@ -193,4 +193,5 @@ Paired-end options:
                         Write second read in a pair to this file if pair is too long.
 ```
 # Trimmomatic
-## 使用方法
+## [使用方法](https://zhuanlan.zhihu.com/p/91691632)
+
