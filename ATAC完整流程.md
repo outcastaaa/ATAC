@@ -9,6 +9,7 @@
     - [2.2 fastqc](#22-fastqc)
     - [2.3 multiqc](#23-multiqc)
     - [2.4 TrimGalore](#24-TrimGalore)
+    - [cutadapt](#cutadapt)
     - [2.5 bowtie2](#25-bowtie2)	
 
 
@@ -142,6 +143,18 @@ tar xvzf TrimGalore.tar.gz
 ```
 * [详细使用](https://github.com/outcastaaa/bioinformatics-learning/blob/main/RNA-seq/Tools/trim_galore.md)  
 
+## cutadapt+trimmomatic
+* [详细使用](https://github.com/outcastaaa/ATAC/blob/main/biotools/cutadapt%2BTrimmomatic.md)
+```bash
+pip install cutadapt
+
+#trimmomatic
+cd /mnt/d/biosoft
+wget http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/Trimmomatic-0.38.zip
+unzip Trimmomatic-0.38.zip
+cd Trimmomatic-0.38
+export PATH="$(pwd):$PATH"
+```
 
 ## 2.5 bowtie2
 ```bash
@@ -377,8 +390,9 @@ bowtie2-build -f /mnt/d/ATAC/genome/GRCm38.primary_assembly.genome.fa --threads 
 mkdir -p /mnt/d/ATAC/genome
 cd /mnt/d/ATAC/genome/
 
-wget -4 -q ftp://ftp/ccb.jhu.edu/pub/data/bowtie2_indexes/mm10.zip
+wget ftp://ftp.ccb.jhu.edu/pub/data/bowtie2_indexes/mm10.zip 
 unzip mm10.zip
+rm mm10.zip
 ```
 
 
@@ -421,8 +435,10 @@ multiqc .
 
 ## 4.2 pre-alinment_QC
 1. 目的：adapters and low quality reads trimming
-2. 使用软件：`Trim Galore`  
-Trim Galore可以自动检测接头序列，质控和去除接头两个步骤一起,适用于多种组学去接头.  
+2. 使用软件：`Trim Galore`，因为在最后一部卡住，选择使用`cutadapt + trimmomatic`分步修剪  [参考1](https://www.jianshu.com/p/4ee2f4d2292f)  
+
+* Trim Galore可以自动检测接头序列，质控和去除接头两个步骤一起,适用于多种组学去接头.  
+3. 代码：  
 
 ```bash
 mkdir -p /mnt/d/ATAC/trim/
@@ -451,7 +467,19 @@ fastqc -t 4 -o /mnt/d/ATAC/fastqc_again/ /mnt/d/ATAC/trim/*.gz
 cd /mnt/d/ATAC/fastqc_again/
 multiqc .
 ```
+* 因为trim_galore卡住，采用cutadapt + trimmomatic
 ```bash
+# 去接头
+mkdir -p /mnt/d/ATAC/cutadapt/
+
+# 构建循环
+cd ~/data/sra
+ls *_1.fastq.gz > 1
+ls *_2.fastq.gz > 2
+
+paste 1 1 2 >config.raw
+
+# 执行cutadapt代码
 cat config.raw | while read id;
 do echo $id 
  arr=($id)
@@ -459,18 +487,80 @@ do echo $id
  fq2=${arr[2]}
  sample=${arr[0]}
 
-trim_galore --phred33 --length 35 -e 0.1 --stringency 3 --paired -o /mnt/d/ATAC/trim2/  $fq1 $fq2 &
+cutadapt -a CTGTCTCTTATA -A CTGTCTCTTATA -j 6\
+    --minimum-length 30 --overlap 3 -e 0.1 --trim-n \
+    -o /mnt/d/ATAC/cutadapt/$fq1 -p /mnt/d/ATAC/cutadapt/$fq2 $fq1 $fq2
 done
+    # --minimum-length 如果剔除接头后read长度低于30，这条read将会被丢弃
+    # --overlap        如果两端的序列与接头有4个碱基的匹配将会被剔除
+    # --trim-n         剔除两端的N
+    # -a 去除3端引物序列
+    # -e 容错率，默认为0.1
+	# --discard-untrimmed 去除没有adapter的reads，不要乱用
+
+
+# 去低质量reads
+mkdir -p /mnt/d/ATAC/trimmomatic/paired
+mkdir -p /mnt/d/ATAC/trimmomatic/unpaired
+cat config.raw | while read id;
+do echo $id 
+ arr=($id)
+ fq1=${arr[1]}
+ fq2=${arr[2]}
+ sample=${arr[0]}
+
+ # Trimmomatic-0.38记得更改路径
+    java -jar /mnt/d/biosoft/Trimmomatic-0.38/Trimmomatic-0.38.jar \
+    PE -threads 4 -phred33 /mnt/d/ATAC/cutadapt/$fq1 /mnt/d/ATAC/cutadapt/$fq2 \
+	/mnt/d/ATAC/trimmomatic/paired/$fq1 /mnt/d/ATAC/trimmomatic/unpaired/$fq1 \
+	/mnt/d/ATAC/trimmomatic/paired/$fq2 /mnt/d/ATAC/trimmomatic/unpaired/$fq2 \
+    LEADING:20 TRAILING:20 SLIDINGWINDOW:5:15 MINLEN:30 
+done
+
+  # LEADING:20，从序列的开头开始去掉质量值小于 20 的碱基
+  # TRAILING:20，从序列的末尾开始去掉质量值小于 20 的碱基
+  # SLIDINGWINDOW:5:15，从 5' 端开始以 5bp 的窗口计算碱基平均质量，如果此平均值低于 15，则从这个位置截断read
+  # MINLEN:30， 如果 reads 长度小于 30bp 则扔掉整条 read。
+
+
+# 再次质控
+fastqc -t 4 -o /mnt/d/ATAC/fastqc_again/ /mnt/d/ATAC/trimmomatic/paired/*.gz
+cd /mnt/d/ATAC/fastqc_again/
+multiqc .
 ```
  
+4. 结果：  
+
 
 
 
 # alignment 
 1. 目的：将质控后的reads比对到目的基因组上
-2. 使用软件： BWA-MEM or Bowtie2，本流程采用`BWA`
+2. 使用软件： BWA-MEM or Bowtie2，本流程采用`Bowtie2`  
 
-通常情况下，比对率大于80%视为比对成功。
+3. 代码：  
+
+```bash
+
+bowtie2_index=/mnt/d/ATAC/genome/
+align_dir=/mnt/d/ATAC/align/
+
+cp ~/data/sra/config.raw  /mnt/d/ATAC/fastqc_again/
+cd /mnt/d/ATAC/fastqc_again/ 
+cat config.raw | while read id;
+do echo $id 
+ arr=($id)
+ fq1=${arr[1]}
+ fq2=${arr[2]}
+ sample=${arr[0]}
+bowtie2  -p 4  -x  $bowtie2_index  -1  $fq1 -2 $fq2 \
+          2>$align_dir/Align.summary \
+		 | samtools sort  -O bam  -@ 4 -o /mnt/d/ATAC/align/${sample}.bam -  
+done
+```
+4. 结果：  
+通常情况下，比对率大于80%视为比对成功。比较好的结果应大于90%。    
+
 对于哺乳动物物种，开放染色质检测和差异分析的建议最小mapped reads数为5000万，基于经验和计算估计的TF足迹为2亿。
 
 
