@@ -147,7 +147,9 @@ tar xvzf TrimGalore.tar.gz
 ```bash
 brew install bowtie2
 ```
-* [详细用法](https://github.com/outcastaaa/ATAC/blob/main/biotools/bowtie2.md)
+* [详细用法](https://github.com/outcastaaa/ATAC/blob/main/biotools/bowtie2.md)  
+
+
 ## 2.6 hisat2  
 
 1. [hisat2官网更改](https://daehwankimlab.github.io/hisat2/)
