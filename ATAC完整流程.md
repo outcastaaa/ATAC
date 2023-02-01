@@ -9,11 +9,13 @@
     - [2.2 fastqc](#22-fastqc)
     - [2.3 multiqc](#23-multiqc)
     - [2.4 TrimGalore](#24-TrimGalore)
+    - [2.5 bowtie2](#25-bowtie2)	
 
 
 
     - [2.6 hisat2](#26-hisat2)
-    - [sortmerna](#sortmerna)
+
+
     - [2.7 samtools](#27-samtools)
     - [2.8 HTseq](#28-htseq)
     - [2.9 R](#29-r)
@@ -141,8 +143,11 @@ tar xvzf TrimGalore.tar.gz
 * [详细使用](https://github.com/outcastaaa/bioinformatics-learning/blob/main/RNA-seq/Tools/trim_galore.md)  
 
 
-
-
+## 2.5 bowtie2
+```bash
+brew install bowtie2
+```
+* [详细用法](https://github.com/outcastaaa/ATAC/blob/main/biotools/bowtie2.md)
 ## 2.6 hisat2  
 
 1. [hisat2官网更改](https://daehwankimlab.github.io/hisat2/)
@@ -346,9 +351,33 @@ sra数据是SRA数据库用于储存二代测序数据的原始数据的一种�
 
 ## 3.2 genome
 
-1. [Ensemble网址](https://asia.ensembl.org/)  
-在左侧`All genomes`中，选择物种`Rat`; 在左侧`Download DNA sequence (FASTA)` 下载基因组序列数据; 在右侧的`Download GTF or GFF3 (files for genes, cDNAs, ncRNA, proteins)`下载基因注释文件     
+1. 自己建立基因组索引    
+* [Ensemble网址](https://asia.ensembl.org/)下载参考基因组  
+[ensemble中基因组数据集命名方式](https://github.com/outcastaaa/bioinformatics-learning/blob/main/RNA-seq/RNA-SEQ%E6%B5%81%E7%A8%8B.md#31-%E5%8F%82%E8%80%83%E6%95%B0%E6%8D%AE)  
 
+
+文章选用的基因组为mm9，目前最新的小鼠（家鼠）参考基因组是GRCm39（mm39），但是可能还是GRCm38（mm10）用得比较多，因此选择mm10做后续分析。    
+
+在左侧`All genomes`中，选择物种`Mouse`；选择对应版本； 在左侧`Download DNA sequence (FASTA)` 下载基因组序列数据; 在右侧的`Download GTF or GFF3 (files for genes, cDNAs, ncRNA, proteins)`下载基因注释文件。    
+
+
+* 使用命令构建索引 'hisat2 build'等方法  
+```bash
+bowtie2-build -f /mnt/d/ATAC/genome/GRCm38.primary_assembly.genome.fa --threads 4 GRCm38
+```
+
+2. 下载基因组索引文件和注释文件[注释文件内容详解](https://github.com/outcastaaa/bioinformatics-learning/blob/main/RNA-seq/RNA-SEQ%E6%B5%81%E7%A8%8B.md#31-%E5%8F%82%E8%80%83%E6%95%B0%E6%8D%AE)   
+
+
+因为后续用bowtie2比对，在bowtie2官网下载已经建立好的基因组索引文件。  
+
+```bash
+mkdir -p /mnt/d/ATAC/genome
+cd /mnt/d/ATAC/genome/
+
+wget -4 -q ftp://ftp/ccb.jhu.edu/pub/data/bowtie2_indexes/mm10.zip
+unzip mm10.zip
+```
 
 
 
@@ -415,11 +444,22 @@ done
 
 #-q 质量；--length 去除长度小于35的reads；-e 允许的最大误差；--paired 双端测序；-o 输出目录；后接 fastq_file1和file2
 
-# 整合质控结果
-cd /mnt/d/ATAC/output/trim/
+# 再次质控
+fastqc -t 4 -o /mnt/d/ATAC/fastqc_again/ /mnt/d/ATAC/trim/*.gz
+cd /mnt/d/ATAC/fastqc_again/
 multiqc .
 ```
+```bash
+cat config.raw | while read id;
+do echo $id 
+ arr=($id)
+ fq1=${arr[1]}
+ fq2=${arr[2]}
+ sample=${arr[0]}
 
+trim_galore --phred33 --length 35 -e 0.1 --stringency 3 --paired -o /mnt/d/ATAC/trim2/  $fq1 $fq2 &
+done
+```
  
 
 
@@ -427,8 +467,6 @@ multiqc .
 # alignment 
 1. 目的：将质控后的reads比对到目的基因组上
 2. 使用软件： BWA-MEM or Bowtie2，本流程采用`BWA`
-
- 
 
 通常情况下，比对率大于80%视为比对成功。
 对于哺乳动物物种，开放染色质检测和差异分析的建议最小mapped reads数为5000万，基于经验和计算估计的TF足迹为2亿。
