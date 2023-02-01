@@ -463,11 +463,11 @@ done
 #-q 质量；--length 去除长度小于35的reads；-e 允许的最大误差；--paired 双端测序；-o 输出目录；后接 fastq_file1和file2
 
 # 再次质控
-fastqc -t 4 -o /mnt/d/ATAC/fastqc_again/ /mnt/d/ATAC/trim/*.gz
+fastqc -t 4 -o /mnt/d/ATAC/fastqc_again/ /mnt/d/ATAC/trim2/*.gz
 cd /mnt/d/ATAC/fastqc_again/
 multiqc .
 ```
-* 因为trim_galore卡住，采用cutadapt + trimmomatic
+* 或者采用cutadapt + trimmomatic
 ```bash
 # 去接头
 mkdir -p /mnt/d/ATAC/cutadapt/
@@ -530,6 +530,11 @@ multiqc .
 ```
  
 4. 结果：  
+* 储存在[trim_galore](https://github.com/outcastaaa/ATAC/tree/main/trim_galore)和[cutadapt+Trimmomatic](https://github.com/outcastaaa/ATAC/tree/main/cutadapt%2BTrimmomatic)  
+
+* 再次质控结果  
+
+
 
 
 
