@@ -808,3 +808,34 @@ length  count   expect  max.err error counts
 98      879     2.6     1       38 841
 99      714     2.6     1       87 627
 100     2394    2.6     1       1704 690
+
+
+
+
+# Trimmomatic
+./SRR11539111_1.fastq.gz ./SRR11539111_1.fastq.gz ./SRR11539111_2.fastq.gz
+TrimmomaticPE: Started with arguments:
+ -threads 4 -phred33 /mnt/d/ATAC/cutadapt/./SRR11539111_1.fastq.gz /mnt/d/ATAC/cutadapt/./SRR11539111_2.fastq.gz /mnt/d/ATAC/trimmomatic/paired/./SRR11539111_1.fastq.gz /mnt/d/ATAC/trimmomatic/unpaired/./SRR11539111_1.fastq.gz /mnt/d/ATAC/trimmomatic/paired/./SRR11539111_2.fastq.gz /mnt/d/ATAC/trimmomatic/unpaired/./SRR11539111_2.fastq.gz LEADING:20 TRAILING:20 SLIDINGWINDOW:5:15 MINLEN:30
+Input Read Pairs: 49726148 Both Surviving: 47728686 (95.98%) Forward Only Surviving: 1957103 (3.94%) Reverse Only Surviving: 28807 (0.06%) Dropped: 11552 (0.02%)
+TrimmomaticPE: Completed successfully
+./SRR11539112_1.fastq.gz ./SRR11539112_1.fastq.gz ./SRR11539112_2.fastq.gz
+TrimmomaticPE: Started with arguments:
+ -threads 4 -phred33 /mnt/d/ATAC/cutadapt/./SRR11539112_1.fastq.gz /mnt/d/ATAC/cutadapt/./SRR11539112_2.fastq.gz /mnt/d/ATAC/trimmomatic/paired/./SRR11539112_1.fastq.gz /mnt/d/ATAC/trimmomatic/unpaired/./SRR11539112_1.fastq.gz /mnt/d/ATAC/trimmomatic/paired/./SRR11539112_2.fastq.gz /mnt/d/ATAC/trimmomatic/unpaired/./SRR11539112_2.fastq.gz LEADING:20 TRAILING:20 SLIDINGWINDOW:5:15 MINLEN:30
+Exception in thread "main" java.io.FileNotFoundException: /mnt/d/ATAC/cutadapt/./SRR11539112_1.fastq.gz (No such file or directory)
+        at java.base/java.io.FileInputStream.open0(Native Method)
+        at java.base/java.io.FileInputStream.open(FileInputStream.java:216)
+        at java.base/java.io.FileInputStream.<init>(FileInputStream.java:157)
+        at org.usadellab.trimmomatic.fastq.FastqParser.parse(FastqParser.java:135)
+        at org.usadellab.trimmomatic.TrimmomaticPE.process(TrimmomaticPE.java:265)
+        at org.usadellab.trimmomatic.TrimmomaticPE.run(TrimmomaticPE.java:555)
+        at org.usadellab.trimmomatic.Trimmomatic.main(Trimmomatic.java:80)
+./SRR11539115_1.fastq.gz ./SRR11539115_1.fastq.gz ./SRR11539115_2.fastq.gz
+TrimmomaticPE: Started with arguments:
+ -threads 4 -phred33 /mnt/d/ATAC/cutadapt/./SRR11539115_1.fastq.gz /mnt/d/ATAC/cutadapt/./SRR11539115_2.fastq.gz /mnt/d/ATAC/trimmomatic/paired/./SRR11539115_1.fastq.gz /mnt/d/ATAC/trimmomatic/unpaired/./SRR11539115_1.fastq.gz /mnt/d/ATAC/trimmomatic/paired/./SRR11539115_2.fastq.gz /mnt/d/ATAC/trimmomatic/unpaired/./SRR11539115_2.fastq.gz LEADING:20 TRAILING:20 SLIDINGWINDOW:5:15 MINLEN:30
+Input Read Pairs: 48759526 Both Surviving: 46023403 (94.39%) Forward Only Surviving: 2691291 (5.52%) Reverse Only Surviving: 29046 (0.06%) Dropped: 15786 (0.03%)
+TrimmomaticPE: Completed successfully
+./SRR11539116_1.fastq.gz ./SRR11539116_1.fastq.gz ./SRR11539116_2.fastq.gz
+TrimmomaticPE: Started with arguments:
+ -threads 4 -phred33 /mnt/d/ATAC/cutadapt/./SRR11539116_1.fastq.gz /mnt/d/ATAC/cutadapt/./SRR11539116_2.fastq.gz /mnt/d/ATAC/trimmomatic/paired/./SRR11539116_1.fastq.gz /mnt/d/ATAC/trimmomatic/unpaired/./SRR11539116_1.fastq.gz /mnt/d/ATAC/trimmomatic/paired/./SRR11539116_2.fastq.gz /mnt/d/ATAC/trimmomatic/unpaired/./SRR11539116_2.fastq.gz LEADING:20 TRAILING:20 SLIDINGWINDOW:5:15 MINLEN:30
+Input Read Pairs: 43458278 Both Surviving: 41286008 (95.00%) Forward Only Surviving: 2133792 (4.91%) Reverse Only Surviving: 25206 (0.06%) Dropped: 13272 (0.03%)
+TrimmomaticPE: Completed successfully
