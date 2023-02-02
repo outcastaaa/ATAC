@@ -110,28 +110,6 @@ index命令格式如下：
 3. samtools view 
 
 Usage: samtools view [options] <in.bam>|<in.sam>|<in.cram> [region ...]
-
-Output options:
-  -b, --bam                  Output BAM
-  -C, --cram                 Output CRAM (requires -T)
-  -1, --fast                 Use fast BAM compression (and default to --bam)
-  -u, --uncompressed         Uncompressed BAM output (and default to --bam)
-  -h, --with-header          Include header in SAM output
-  -H, --header-only          Print SAM header only (no alignments)
-      --no-header            Print SAM alignment records only [default]
-  -c, --count                Print only the count of matching records
-  -o, --output FILE          Write output to FILE [standard output]
-  -U, --unoutput FILE, --output-unselected FILE
-                             Output reads not selected by filters to FILE
-  -p, --unmap                Set flag to UNMAP on reads not selected
-                             then write to output file.
-  -P, --fetch-pairs          Retrieve complete pairs even when outside of region
-Input options:
-  -t, --fai-reference FILE   FILE listing reference names and lengths
-  -M, --use-index            Use index and multi-region iterator for regions
-      --region[s]-file FILE  Use index to include only reads overlapping FILE
-  -X, --customized-index     Expect extra index file argument after <in.bam>
-
 Filtering options (Only include in output reads that...):
   -L, --target[s]-file FILE  ...overlap (BED) regions in FILE
   -r, --read-group STR       ...are in read group STR
@@ -152,36 +130,6 @@ Filtering options (Only include in output reads that...):
       --subsample-seed INT   Influence WHICH reads are kept in subsampling [0]
   -s INT.FRAC                Same as --subsample 0.FRAC --subsample-seed INT
 
-Processing options:
-      --add-flags FLAG       Add FLAGs to reads
-      --remove-flags FLAG    Remove FLAGs from reads
-  -x, --remove-tag STR
-               Comma-separated read tags to strip (repeatable) [null]
-      --keep-tag STR
-               Comma-separated read tags to preserve (repeatable) [null].
-               Equivalent to "-x ^STR"
-  -B, --remove-B             Collapse the backward CIGAR operation
-
-General options:
-  -?, --help   Print long help, including note about region specification
-  -S           Ignored (input format is auto-detected)
-      --no-PG  Do not add a PG line
-      --input-fmt-option OPT[=VAL]
-               Specify a single input file format option in the form
-               of OPTION or OPTION=VALUE
-  -O, --output-fmt FORMAT[,OPT[=VAL]]...
-               Specify output format (SAM, BAM, CRAM)
-      --output-fmt-option OPT[=VAL]
-               Specify a single output file format option in the form
-               of OPTION or OPTION=VALUE
-  -T, --reference FILE
-               Reference sequence FASTA FILE [null]
-  -@, --threads INT
-               Number of additional threads to use [0]
-      --write-index
-               Automatically index the output files [off]
-      --verbosity INT
-               Set level of verbosity
 
 Notes:
 
@@ -226,6 +174,11 @@ Notes:
    together. `--region[s]-file FILE` is simply equivalent to `-M -L FILE`,
    so using both causes one of the specified BED files to be ignored.
 ```
+# samtools view
+可以起到筛选作用
+[参考文章](http://www.htslib.org/doc/samtools-view.html)  
+
+
 # bam文件
 ## 查看BAM文件内容：
 使用samtools view查看BAM文件    
