@@ -184,6 +184,7 @@ wget https://github.com/broadinstitute/picard/releases/download/2.27.5/picard.ja
 ```
 * [详细用法](https://github.com/outcastaaa/ATAC/blob/main/biotools/Picard.md) 
 
+## 2.8 bedtools
 
 
 
@@ -565,8 +566,8 @@ do echo $id
   fq1=${arr[1]}
   fq2=${arr[2]}
   sample=${arr[0]}
-  bowtie2  -p 4  -x  $bowtie2_index  -1  $fq1 -2 $fq2 \
-  2>$align_dir/Align.summary \
+  bowtie2  -p 4  -x  $bowtie2_index --very-sensitive -X 2000 -1  $fq1 -2 $fq2 \
+  2>$align_dir/{1}.summary \
   -S $align_dir/${sample}.sam
 done
 ```
@@ -636,6 +637,10 @@ parallel -k -j 6 "
 " ::: $(ls *.sam | perl -p -e 's/\.fq\.gz\.sam$//')
 # samtools index为已经基于坐标排序后bam或者cram的文件创建索引，默认在当前文件夹产生*.bai的index文件
 # raw.stat记录匹配后原始文件情况
+
+# 统计线粒体比对情况
+samtools idxstats SRR11539111.sort.bam
+
 ls -lh
 rm *.sam
 ```
@@ -666,12 +671,12 @@ mkdir /mnt/d/ATAC/rmdup
 cd /mnt/d/ATAC/align
 parallel -j 6 "
   java -jar /mnt/d/biosoft/picard/picard.jar \
-     MarkDuplicates -I {1}.sort.bam  \
-	 -O ../rmdup/{1}.picard.rmdup.bam \
+     MarkDuplicates I={1}.sort.bam  \
+	 O=../rmdup/{1}.picard.rmdup.bam \
 	 REMOVE_DUPLICATES=ture \
-	 >../rmdup/{1}.log 2>&1 \
+	 M=../rmdup/{1}.log \
      samtools index ../rmdup/{1}.picard.rmdup.bam \
-	 samtools flagstat ../rmdup/{1}.picard.rmdup.bam > ../rmdup/{1}.rmdup.stat \
+	 samtools flagstat ../rmdup/{1}.picard.rmdup.bam > ../rmdup/{1}.rmdup.stat \ 
 " ::: $( ls *.sort.bam)
 ```
 4. 结果：  
@@ -704,12 +709,22 @@ samtools view -f 2 -q 30 -o test.filter.bam test.picard.rmdup.bam
 mkdir /mnt/d/ATAC/fliter
 cd /mnt/d/ATAC/rmdup
 parallel -j 6 "
-    samtools view -f 2 -q 30 ./{1}.picard.rmdup.bam | grep -v  'chrM' \
-	| samtools sort -O bam -o - > ../fliter/{1}.fliter.bam
+    samtools view -h -f 2 -q 30 ./{1}.picard.rmdup.bam | grep -v  'chrM' \
+	| samtools sort -O bam -o - > ../fliter/{1}.fliter.bam \
+	samtools index ../fliter/{1}.fliter.bam \
+	samtools flagstat ../fliter/{1}.fliter.bam > ../fliter/{1}.fliter.stat \
 " ::: $( ls *.picard.rmdup.bam)
 ```
 
-## 6.3 calculate_insert_size
+## 6.4 bamtobed
+```bash
+mkdir cd /mnt/d/ATAC/bed
+cd /mnt/d/ATAC/fliter
+
+parallel -j 6 "
+   bedtools bamtobed -i ./{1}.filter.bam >../bed/{1}.bed
+" ::: $( ls *.filter.bam)
+```
 
 
 
