@@ -68,7 +68,7 @@ Commands:
 1. samtools sort [options] input.bam  
 
 options:
--n : 根据read的name进行排序，默认对最左侧坐标进行排序
+-n : 根据read的name进行排序，默认以leftmost coordinates的方式对比对结果进行排序
 -o : 设置排序后输出文件的文件名
 -O : 后跟sam或bam，规定排序后输出文件的格式，默认是bam
 -@ : 后跟正整数，指定分析所用线程数
