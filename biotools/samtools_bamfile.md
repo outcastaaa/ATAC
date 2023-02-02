@@ -106,7 +106,7 @@ index命令格式如下：
 
 原文链接：https://blog.csdn.net/u013553061/article/details/53192807
 ```
-
+# bam文件
 ## 查看BAM文件内容：
 使用samtools view查看BAM文件    
 ```bash
