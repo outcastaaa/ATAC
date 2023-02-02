@@ -10,15 +10,15 @@
     - [2.3 multiqc](#23-multiqc)
     - [2.4 TrimGalore](#24-TrimGalore)
     - [cutadapt+trimmomatic](#cutadapt+trimmomatic)
-	- [](#)
     - [2.5 bowtie2](#25-bowtie2)	
+    - [2.6 samtools](#26-samtools)
+    - [2.7 Picard](#27-Picard)
 
 
 
-    - [2.6 hisat2](#26-hisat2)
 
 
-    - [2.7 samtools](#27-samtools)
+
     - [2.8 HTseq](#28-htseq)
     - [2.9 R](#29-r)
     - [2.10 Rstudio](#210-rstudio)
@@ -32,6 +32,8 @@
     - [4.1 quality_control_checking](#41-quality_control_checking)
     - [4.2 pre-alinment_QC](#42-pre-alinment_QC)
 - [5.alignment](#5.alignment)
+	- [5.1 alignment](#51-alignment)
+	- [5.2 transfer_samtobam](#52-transfer_samtobam)
 - [6.Post-alignment_processing](#6.Post-alignment_processing)
 	- [6.1 make_bam_index](#6.1-make_bam_index)
 	- [6.2 remove_duplicate_reads](#6.2-remove_duplicate_reads)
@@ -164,37 +166,26 @@ brew install bowtie2
 ```
 * [详细用法](https://github.com/outcastaaa/ATAC/blob/main/biotools/bowtie2.md)  
 
-
-
-
-## 2.6 hisat2  
-
-1. [hisat2官网更改](https://daehwankimlab.github.io/hisat2/)
-2. 右侧download下载,直接点击下载即可，不需要回到终端再下载。下载完成后剪切到d/biosoft文件夹内解压
-```
-Version: HISAT2 2.2.1
-Release Date: 7/24/2020
-
-Linux_x86_64	https://cloud.biohpc.swmed.edu/index.php/s/oTtGWbWjaxsQ2Ho/download
-```
-3. 回到终端写入环境
-```
-
-# 导入临时环境变量
-$ export PATH="~/biosoft/hisat2-2.1.0:$PATH"
-
-# 测试是否可用
-$ hisat2 -h
-
-xuruizhi@DESKTOP-HI65AUV:/mnt/d/biosoft$  hisat2 -h
-HISAT2 version 2.2.1 by Daehwan Kim (infphilo@gmail.com, www.ccb.jhu.edu/people/infphilo)
-Usage:
-```
-
-
-## 2.7 samtools
+## 2.6 samtools
 最新版本为1.16  
 本地下载时，在配制这步出错，使用`brew install samtools`安装
+* [详细用法](https://github.com/outcastaaa/ATAC/blob/main/biotools/samtools_bamfile.md) 
+## 2.7 Picard
+* 可以直接用brew安装
+```bash
+brew install picard
+```
+* 在作者GitHub上安装  
+```bash
+mkdir -p /mnt/d/biosoft/picard
+cd /mnt/d/biosoft/picard
+wget https://github.com/broadinstitute/picard/releases/download/2.27.5/picard.jar
+
+```
+* [详细用法](https://github.com/outcastaaa/ATAC/blob/main/biotools/Picard.md) 
+
+
+
 
 ## 2.8 HTseq
 ```
@@ -528,9 +519,9 @@ done
 
 
 # 再次质控
-fastqc -t 4 -o /mnt/d/ATAC/fastqc_again/ /mnt/d/ATAC/trimmomatic/paired/*.gz
-cd /mnt/d/ATAC/fastqc_again/
-multiqc . > ./again/
+fastqc -t 4 -o /mnt/d/ATAC/fastqc_again/again  /mnt/d/ATAC/trimmomatic/paired/*.gz
+cd /mnt/d/ATAC/fastqc_again/again
+multiqc . 
 ```
  
 4. 结果：  
@@ -544,59 +535,162 @@ multiqc . > ./again/
 
 
 # 5.alignment 
+## 5.1 alignment
 1. 目的：将质控后的reads比对到目的基因组上
 2. 使用软件： BWA-MEM or Bowtie2，本流程采用`Bowtie2`  
 
 3. 代码：  
 
 ```bash
-
-bowtie2_index=/mnt/d/ATAC/genome/
+bowtie2_index=/mnt/d/ATAC/genome/mm10
 align_dir=/mnt/d/ATAC/align/
 
-cp ~/data/sra/config.raw  /mnt/d/ATAC/trim2/
+# 单样本尝试
+cd /mnt/d/ATAC/trim2/
+bowtie2  -x  $bowtie2_index  -1  SRR11539111_1_val_1.fq.gz -2 SRR11539111_2_val_2.fq.gz \
+		-S $align_dir/example.sam
+
+# 循环 
 cd /mnt/d/ATAC/trim2/ 
+cat >config.raw <<EOF
+SRR11539111.fq.gz  SRR11539111_1_val_1.fq.gz  SRR11539111_2_val_2.fq.gz
+SRR11539112.fq.gz  SRR11539112_1_val_1.fq.gz  SRR11539112_2_val_2.fq.gz
+SRR11539115.fq.gz  SRR11539115_1_val_1.fq.gz  SRR11539115_2_val_2.fq.gz
+SRR11539116.fq.gz  SRR11539116_1_val_1.fq.gz  SRR11539116_2_val_2.fq.gz
+EOF
+
 cat config.raw | while read id;
 do echo $id 
- arr=($id)
- fq1=${arr[1]}
- fq2=${arr[2]}
- sample=${arr[0]}
-bowtie2  -p 4  -x  $bowtie2_index  -1  $fq1 -2 $fq2 \
-          2>$align_dir/Align.summary \
-		 | samtools sort  -O bam  -@ 4 -o  - > /mnt/d/ATAC/align/${sample}.bam 
+  arr=($id)
+  fq1=${arr[1]}
+  fq2=${arr[2]}
+  sample=${arr[0]}
+  bowtie2  -p 4  -x  $bowtie2_index  -1  $fq1 -2 $fq2 \
+  2>$align_dir/Align.summary \
+  -S $align_dir/${sample}.sam
 done
 ```
-4. 结果：  
+4. 结果： [bam文件具体解读](https://luohao-brian.gitbooks.io/gene_sequencing_book/content/di-5-8282-li-jie-bing-cao-zuo-bam-wen-jian.html)   
+
+
 
 通常情况下，比对率大于80%视为比对成功。比较好的结果应大于90%。    
 
 对于哺乳动物物种，开放染色质检测和差异分析的建议最小mapped reads数为5000万，基于经验和计算估计的TF足迹为2亿。
+* 统计比对情况  
 
+```bash
+cd /mnt/d/ATAC/align
+file_list=($(ls *.summary))
+# 用-e选项打印出转义字符，换行输出表头
+echo -e "sample   \t  ratio  \t    time"      
+for i in ${file_list[@]};
+do
+    
+    prefix=$(echo ${i} | perl -p -e 's/\.summary//')  # i为输出的summary文件，删掉格式后缀
+    echo -n -e "${prefix}\t"    # -e‘后面跟上‘/t’会在空格间加上水平制表符
+    # 输出横列表头为‘SRR11539111.fq.gz’‘SRR11539112.fq.gz’的表
 
+    cat ${i} |
+      
+      grep -E "(overall alignment rate)|(Overall time)" |  
+      # 查找这两个数据
+      # 如果使用了grep 命令的选项-E，则应该使用 | 来分割多个pattern，以此实现OR操作。
+
+      perl -n -e '
+        if(m/alignment/){
+          $hash{precent} = $1 if m/([\d.]+)%/;
+        }elsif(m/time/){
+          if(m/(\d\d):(\d\d):(\d\d)/){
+            my $time = $1 * 60 + $2 + $3 / 60;  # 把时间换算成分钟
+            $hash{time} = $time;
+          }
+        }
+        END{
+          $hash{precent} = "NA" if not exists $hash{precent}; 
+          # 如果没有该数据输出NA
+          $hash{time} = "NA" if not exists $hash{time};
+          printf "%.2f\t%.2f\n", $hash{precent}, $hash{time};
+        }
+      '
+done
+```
+## 5.2 transfer_samtobam
+1. 目的：SAM格式是目前用来存放大量核酸比对结果信息的通用格式，bam文件是sam文件的二进制格式，可以减小文件的存储。  
+2. 使用软件: `samtools`  
+3. 代码：  
+```bash
+# 比对完的结果以reads name排序，将文件夹内sam文件全部转换为其二进制bam文件以减少内存，samtools sort转化为按照坐标排序
+# samtools index为已经基于坐标排序后bam或者cram的文件创建索引，默认在当前文件夹产生*.bai的index文件
+
+cd /mnt/d/ATAC/align
+
+parallel -k -j 4 "
+    samtools sort -@ 6 {1}.fq.gz.sam > {1}.sort.bam     
+    samtools index {1}.sort.bam
+" ::: $(ls *.sam | perl -p -e 's/\.fq\.gz\.sam$//')
+
+ls -lh
+rm *.sam
+```
 
 # 6.Post-alignment_processing 
 ## 6.1 make_bam_index
+1. 目的：比对后的分析步骤通常要求sam/bam文件被进一步处理，例如在IGV查看比对结果时，常需要输入的bam文件已经被index。  
+2. 使用软件: `samtools`  
+3. 代码：上一步一起实现。  
+
 
 
 ## 6.2 remove_duplicate_reads
-1. 目的：将质控后的reads比对到目的基因组上
-2. 使用软件： Picard and SAMtools，本流程采用`Picard`
+1. 目的：  
+
+去除没有匹配到的、匹配得分较低的、重复的reads(如果两条reads具有相同的长度而且比对到了基因组的同一位置，那么就认为这样的reads是由PCR扩增而来)；去除线粒体中染色质可及区域及ENCODE blacklisted regions。    
+
+2. 根本原因：
+
+①  ATAC-Seq与其他方法不同的一点是需要过滤去除线粒体（如果是植物，还需要过滤叶绿体），因为线粒体DNA是裸露的，也可以被Tn5酶识别切割。   
+② ENCODE blacklisted区域：基因中的重复序列，微卫星序列等，该片段GC含量不稳定，会特异性富集，会呈现假阳性。    
+Inconsistencies in the underlying annotation exist at regions where assembly has been difficult. For instance, repetitive regions may be collapsed or under-represented in the reference sequence relative to the actual underlying genomic sequence. Resulting analysis of these regions can lead to inaccurate interpretation, as there may be significant enrichment of signal because of amplification of noise.    
+在人基因组手动注释中发现，这种区域多为particularly rRNA, alpha satellites, and other simple repeats，长度covering on average 45 kb with the largest being 1.4 Mb。[参考文献The ENCODE Blacklist: Identification of Problematic Regions of the Genome](https://mp.weixin.qq.com/s/SS640LNI5QcvChmZNGEOmw)    
+
+③ PCR过程中由于偏好性扩增出现的重复reads。    
+
+2. 使用软件： Picard（基于坐标排序 Must be coordinate sorted） and SAMtools（默认坐标排序），本流程采用`Picard`
+
+3. 代码：
+```bash
+mkdir /mnt/d/ATAC/rmdup
+cd /mnt/d/ATAC/align
+parallel -j 6 "
+  java -jar /mnt/d/biosoft/picard/picard.jar \
+     MarkDuplicates -I {1}.sort.bam \
+	 -O ../rmdup/{1}.picard.rmdup.bam\
+	 REMOVE_DUPLICATES=ture \
+	 >{1}.log 2>&1 \
+" ::: $( ls *.sort.bam)
+
+samtools flagstat teat.bam
+samtools view test.picard.rmdup.bam | cut -f 1 | sort -u >1.pos
+samtools view teat.bam | cut-f 1 | sort -u >2.pos
+diff 1.pos 2.pos
+samtools view test.picard.rmdup.bam | grep '' 无
+samtools view test.bam | grep ''
+samtools view test.bam | grep -w '某个pos' 多个reads比对到同一个位置
+samtools view test.bam | grep -w '某个pos' | less -S
+```
+4. 结果：  
 
 
-unique mapping reads/rates唯一比对的reads或比例、duplicated read percentages 重复的reads百分比 fragment size distribution 和片段大小分布
+可以得到的数据： unique mapping reads/rates唯一比对的reads或比例；duplicated read percentages 重复的reads百分比； fragment size distribution 片段大小分布  
 
+## 去除比对质量差的reads
 
+```bash
+samtools view -f 2 -q 30 -o 
+```
 
-
-去除没有匹配到的、匹配得分较低的、重复的reads；去除线粒体中染色质可及区域及ENCODE blacklisted regions。
-
-1. ATAC-Seq与其他方法不同的一点是需要过滤去除线粒体（如果是植物，还需要过滤叶绿体），因为线粒体DNA是裸露的，也可以被Tn5酶识别切割。  
-2. ENCODE blacklisted区域：基因中的重复序列，微卫星序列等，该片段GC含量不稳定，会特异性富集，会呈现假阳性   
-Inconsistencies in the underlying annotation exist at regions where assembly has been difficult. For instance, repetitive regions may be collapsed or under-represented in the reference sequence relative to the actual underlying genomic sequence. Resulting analysis of these regions can lead to inaccurate interpretation, as there may be significant enrichment of signal because of amplification of noise.
-在人基因组手动注释中发现，这种区域多为particularly rRNA, alpha satellites, and other simple repeats，长度covering on average 45 kb with the largest being 1.4 Mb。[参考文献The ENCODE Blacklist: Identification of Problematic Regions of the Genome](https://mp.weixin.qq.com/s/SS640LNI5QcvChmZNGEOmw)  
-
-3. PCR过程中由于偏好性扩增出现的重复reads
+ 
 ## 6.3 calculate_insert_size
 
 
