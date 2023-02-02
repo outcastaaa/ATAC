@@ -9,7 +9,8 @@
     - [2.2 fastqc](#22-fastqc)
     - [2.3 multiqc](#23-multiqc)
     - [2.4 TrimGalore](#24-TrimGalore)
-    - [cutadapt](#cutadapt)
+    - [cutadapt+trimmomatic](#cutadapt+trimmomatic)
+	- [](#)
     - [2.5 bowtie2](#25-bowtie2)	
 
 
@@ -161,6 +162,8 @@ export PATH="$(pwd):$PATH"
 brew install bowtie2
 ```
 * [详细用法](https://github.com/outcastaaa/ATAC/blob/main/biotools/bowtie2.md)  
+
+
 
 
 ## 2.6 hisat2  
@@ -526,14 +529,14 @@ done
 # 再次质控
 fastqc -t 4 -o /mnt/d/ATAC/fastqc_again/ /mnt/d/ATAC/trimmomatic/paired/*.gz
 cd /mnt/d/ATAC/fastqc_again/
-multiqc .
+multiqc . > ./again/
 ```
  
 4. 结果：  
 * 储存在[trim_galore](https://github.com/outcastaaa/ATAC/tree/main/trim_galore)和[cutadapt+Trimmomatic](https://github.com/outcastaaa/ATAC/tree/main/cutadapt%2BTrimmomatic)  
 
 * 再次质控结果  
-
+其他没有合格的板块或不影响下游分析，或可以通过后续步骤解决，这一步成功去除了`Adapter Content`版块的接头序列。
 
 
 
@@ -560,10 +563,11 @@ do echo $id
  sample=${arr[0]}
 bowtie2  -p 4  -x  $bowtie2_index  -1  $fq1 -2 $fq2 \
           2>$align_dir/Align.summary \
-		 | samtools sort  -O bam  -@ 4 -o /mnt/d/ATAC/align/${sample}.bam -  
+		 | samtools sort  -O bam  -@ 4 -o  - > /mnt/d/ATAC/align/${sample}.bam 
 done
 ```
 4. 结果：  
+
 通常情况下，比对率大于80%视为比对成功。比较好的结果应大于90%。    
 
 对于哺乳动物物种，开放染色质检测和差异分析的建议最小mapped reads数为5000万，基于经验和计算估计的TF足迹为2亿。
@@ -571,8 +575,8 @@ done
 
 
 # Post-alignment processing 
+## make bam index
 
-## mapping result sort as BAM 
 
 ## remove duplicate reads
 1. 目的：将质控后的reads比对到目的基因组上
