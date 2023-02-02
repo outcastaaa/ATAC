@@ -28,12 +28,13 @@
 - [3.Data](#3.Data)
     - [3.1 sequence](#31-sequence)
     - [3.2 genome](#32-genome)
-- [4.Pre alinment](#4.Prealinment)
+- [4.Pre-alinment](#4.Pre-alinment)
     - [4.1 quality_control_checking](#41-quality_control_checking)
     - [4.2 pre-alinment_QC](#42-pre-alinment_QC)
-
-	- [Sequencing data](#sequencing-data)
-	- [Reference genome data](#reference-genome-data)
+- [5.alignment](#5.alignment)
+- [6.Post-alignment_processing](#6.Post-alignment_processing)
+	- [6.1 make_bam_index](#6.1-make_bam_index)
+	- [6.2 remove_duplicate_reads](#6.2-remove_duplicate_reads)
 
 - [Methylation analysis](#methylation-analysis)
 	- [Genome indexing](#genome-indexing)
@@ -542,7 +543,7 @@ multiqc . > ./again/
 
 
 
-# alignment 
+# 5.alignment 
 1. 目的：将质控后的reads比对到目的基因组上
 2. 使用软件： BWA-MEM or Bowtie2，本流程采用`Bowtie2`  
 
@@ -574,11 +575,11 @@ done
 
 
 
-# Post-alignment processing 
-## make bam index
+# 6.Post-alignment_processing 
+## 6.1 make_bam_index
 
 
-## remove duplicate reads
+## 6.2 remove_duplicate_reads
 1. 目的：将质控后的reads比对到目的基因组上
 2. 使用软件： Picard and SAMtools，本流程采用`Picard`
 
@@ -596,7 +597,7 @@ Inconsistencies in the underlying annotation exist at regions where assembly has
 在人基因组手动注释中发现，这种区域多为particularly rRNA, alpha satellites, and other simple repeats，长度covering on average 45 kb with the largest being 1.4 Mb。[参考文献The ENCODE Blacklist: Identification of Problematic Regions of the Genome](https://mp.weixin.qq.com/s/SS640LNI5QcvChmZNGEOmw)  
 
 3. PCR过程中由于偏好性扩增出现的重复reads
-## calculate insert size
+## 6.3 calculate_insert_size
 
 
 
