@@ -572,6 +572,8 @@ done
 ```
 4. 结果： [bam文件具体解读](https://luohao-brian.gitbooks.io/gene_sequencing_book/content/di-5-8282-li-jie-bing-cao-zuo-bam-wen-jian.html)   
 
+[FLAG转换](https://broadinstitute.github.io/picard/explain-flags.html)  
+
 
 
 通常情况下，比对率大于80%视为比对成功。比较好的结果应大于90%。    
@@ -615,82 +617,98 @@ do
       '
 done
 ```
-## 5.2 transfer_samtobam
-1. 目的：SAM格式是目前用来存放大量核酸比对结果信息的通用格式，bam文件是sam文件的二进制格式，可以减小文件的存储。  
+## 5.2 sort_transfer-to-bam_index
+1. 目的：  
+
+samtobam:SAM格式是目前用来存放大量核酸比对结果信息的通用格式，bam文件是sam文件的二进制格式，将文件夹内sam文件全部转换为其二进制bam文件以减少内存。    
+sort:比对完的结果以reads name排序，samtools sort转化为按照坐标排序.    
+index:比对后的分析步骤通常要求sam/bam文件被进一步处理，例如在IGV查看比对结果时，常需要输入的bam文件已经被index。   
+
 2. 使用软件: `samtools`  
 3. 代码：  
 ```bash
-# 比对完的结果以reads name排序，将文件夹内sam文件全部转换为其二进制bam文件以减少内存，samtools sort转化为按照坐标排序
-# samtools index为已经基于坐标排序后bam或者cram的文件创建索引，默认在当前文件夹产生*.bai的index文件
-
 cd /mnt/d/ATAC/align
 
-parallel -k -j 4 "
-    samtools sort -@ 6 {1}.fq.gz.sam > {1}.sort.bam     
-    samtools index {1}.sort.bam
+parallel -k -j 6 "
+    samtools sort {1}.fq.gz.sam > {1}.sort.bam   
+	samtools index {1}.sort.bam
+	samtools flagstat  {1}.sort.bam > {1}.raw.stat 
 " ::: $(ls *.sam | perl -p -e 's/\.fq\.gz\.sam$//')
-
+# samtools index为已经基于坐标排序后bam或者cram的文件创建索引，默认在当前文件夹产生*.bai的index文件
+# raw.stat记录匹配后原始文件情况
 ls -lh
 rm *.sam
 ```
 
+
 # 6.Post-alignment_processing 
-## 6.1 make_bam_index
-1. 目的：比对后的分析步骤通常要求sam/bam文件被进一步处理，例如在IGV查看比对结果时，常需要输入的bam文件已经被index。  
-2. 使用软件: `samtools`  
-3. 代码：上一步一起实现。  
-
-
-
-## 6.2 remove_duplicate_reads
 1. 目的：  
 
 去除没有匹配到的、匹配得分较低的、重复的reads(如果两条reads具有相同的长度而且比对到了基因组的同一位置，那么就认为这样的reads是由PCR扩增而来)；去除线粒体中染色质可及区域及ENCODE blacklisted regions。    
 
 2. 根本原因：
 
-①  ATAC-Seq与其他方法不同的一点是需要过滤去除线粒体（如果是植物，还需要过滤叶绿体），因为线粒体DNA是裸露的，也可以被Tn5酶识别切割。   
+①  ATAC-Seq与其他方法不同的一点是需要`过滤去除线粒体`（如果是植物，还需要过滤叶绿体），因为线粒体DNA是裸露的，也可以被Tn5酶识别切割。     
 ② ENCODE blacklisted区域：基因中的重复序列，微卫星序列等，该片段GC含量不稳定，会特异性富集，会呈现假阳性。    
-Inconsistencies in the underlying annotation exist at regions where assembly has been difficult. For instance, repetitive regions may be collapsed or under-represented in the reference sequence relative to the actual underlying genomic sequence. Resulting analysis of these regions can lead to inaccurate interpretation, as there may be significant enrichment of signal because of amplification of noise.    
-在人基因组手动注释中发现，这种区域多为particularly rRNA, alpha satellites, and other simple repeats，长度covering on average 45 kb with the largest being 1.4 Mb。[参考文献The ENCODE Blacklist: Identification of Problematic Regions of the Genome](https://mp.weixin.qq.com/s/SS640LNI5QcvChmZNGEOmw)    
+Inconsistencies in the underlying annotation exist at regions where assembly has been difficult. For instance, repetitive regions may be collapsed or under-represented in the reference sequence relative to the actual underlying genomic sequence. Resulting analysis of these regions can lead to inaccurate interpretation, as there may be significant enrichment of signal because of amplification of noise. 在人基因组手动注释中发现，这种区域多为particularly rRNA, alpha satellites, and other simple repeats，长度covering on average 45 kb with the largest being 1.4 Mb。[参考文献The ENCODE Blacklist: Identification of Problematic Regions of the Genome](https://mp.weixin.qq.com/s/SS640LNI5QcvChmZNGEOmw)    
 
-③ PCR过程中由于偏好性扩增出现的重复reads。    
+③ `PCR`过程中由于偏好性扩增出现的重复reads。      
 
-2. 使用软件： Picard（基于坐标排序 Must be coordinate sorted） and SAMtools（默认坐标排序），本流程采用`Picard`
+3. 使用软件： `Picard`（基于坐标排序 Must be coordinate sorted） and `SAMtools`（默认坐标排序）
 
-3. 代码：
+
+
+## 6.1 remove_PCR-duplicate_reads
+目的：去除因为PCR偏好性导致的reads重复扩增  
+
 ```bash
 mkdir /mnt/d/ATAC/rmdup
 cd /mnt/d/ATAC/align
 parallel -j 6 "
   java -jar /mnt/d/biosoft/picard/picard.jar \
-     MarkDuplicates -I {1}.sort.bam \
-	 -O ../rmdup/{1}.picard.rmdup.bam\
+     MarkDuplicates -I {1}.sort.bam  \
+	 -O ../rmdup/{1}.picard.rmdup.bam \
 	 REMOVE_DUPLICATES=ture \
-	 >{1}.log 2>&1 \
+	 >../rmdup/{1}.log 2>&1 \
+     samtools index ../rmdup/{1}.picard.rmdup.bam \
+	 samtools flagstat ../rmdup/{1}.picard.rmdup.bam > ../rmdup/{1}.rmdup.stat \
 " ::: $( ls *.sort.bam)
+```
+4. 结果：  
+可以得到的数据： unique mapping reads/rates唯一比对的reads或比例；duplicated read percentages 重复的reads百分比； fragment size distribution 片段大小分布  
+* 结果统计
+```bash
 
 samtools flagstat teat.bam
-samtools view test.picard.rmdup.bam | cut -f 1 | sort -u >1.pos
-samtools view teat.bam | cut-f 1 | sort -u >2.pos
+samtools flagstat test.picard.rmdup.bam 
+samtools view teat.bam | cut-f 1 | sort -u >1.pos
+samtools view test.picard.rmdup.bam | cut -f 1 | sort -u >2.pos
+
 diff 1.pos 2.pos
 samtools view test.picard.rmdup.bam | grep '' 无
 samtools view test.bam | grep ''
 samtools view test.bam | grep -w '某个pos' 多个reads比对到同一个位置
 samtools view test.bam | grep -w '某个pos' | less -S
 ```
-4. 结果：  
-
-
-可以得到的数据： unique mapping reads/rates唯一比对的reads或比例；duplicated read percentages 重复的reads百分比； fragment size distribution 片段大小分布  
-
-## 去除比对质量差的reads
+## 6.2 remove_badquality_reads
+* 目的：保留都比对到同一个染色体的paired reads（proper paired），同时质量较高的reads (mapping quality>=30) 
 
 ```bash
-samtools view -f 2 -q 30 -o 
+samtools view -f 2 -q 30 -o test.filter.bam test.picard.rmdup.bam
+# -f 只取出比对上的reads
+# -q 取mapping质量大于30的reads
+```
+## 6.3 remove_chrM_reads
+```bash
+# 将上一步和这一步结合起来
+mkdir /mnt/d/ATAC/fliter
+cd /mnt/d/ATAC/rmdup
+parallel -j 6 "
+    samtools view -f 2 -q 30 ./{1}.picard.rmdup.bam | grep -v  'chrM' \
+	| samtools sort -O bam -o - > ../fliter/{1}.fliter.bam
+" ::: $( ls *.picard.rmdup.bam)
 ```
 
- 
 ## 6.3 calculate_insert_size
 
 
