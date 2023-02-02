@@ -161,6 +161,17 @@ Variant Manipulation:                            Tools that manipulate variant c
 ```
 
 ## 比对去重参数使用方法
-MarkDuplicates                               Identifies duplicate reads.
+MarkDuplicates——Identifies duplicate reads.
+## 去重原理  
+
+该工具的MarkDuplicates方法也可以识别duplicates。但是与samtools不同的是，该工具仅仅是对duplicates做一个标记，只在需要的时候对reads进行去重。  
+
+它不仅考虑reads的比对位置，还会考虑其中的插入错配等情况（即会利用sam/bam文件中的CIGAR值），甚至reads的tail、lane以及flowcell。Picard主要考虑reads的5'端的比对位置，以及每个reads比对上的方向。  
+
+因此我们可以从一定程度上认为，5' 端的位置、方向、以及碱基比对情况相同，Picard就将这些reads中碱基比对值Q>15的看作是best pair而其他的reads则当作是duplicate reads。甚至当reads的长度不同时，Picard依然利用上述原理进行去重。  
+
+对Picard来说，reads的5' 端信息更为重要。若duplicates是PCR重复，那么它们的序列不一定完全相同。但是由于PCR扩增时，酶的前进方向是5'->3'方向，PCR重复序列中5' 端的部分相似的可能性更高。  
+
+
 
 
