@@ -13,13 +13,8 @@
     - [2.5 bowtie2](#25-bowtie2)	
     - [2.6 samtools](#26-samtools)
     - [2.7 Picard](#27-Picard)
+    - [2.8 bedtools](#28-bedtools)
 
-
-
-
-
-
-    - [2.8 HTseq](#28-htseq)
     - [2.9 R](#29-r)
     - [2.10 Rstudio](#210-rstudio)
     - [2.11 parallel](#211-parallel)
@@ -148,7 +143,7 @@ tar xvzf TrimGalore.tar.gz
 * [详细使用](https://github.com/outcastaaa/bioinformatics-learning/blob/main/RNA-seq/Tools/trim_galore.md)  
 
 ## cutadapt+trimmomatic
-* [详细使用](https://github.com/outcastaaa/ATAC/blob/main/biotools/cutadapt%2BTrimmomatic.md)
+
 ```bash
 pip install cutadapt
 
@@ -159,6 +154,8 @@ unzip Trimmomatic-0.38.zip
 cd Trimmomatic-0.38
 export PATH="$(pwd):$PATH"
 ```
+* [详细使用](https://github.com/outcastaaa/ATAC/blob/main/biotools/cutadapt%2BTrimmomatic.md)  
+
 
 ## 2.5 bowtie2
 ```bash
@@ -169,7 +166,9 @@ brew install bowtie2
 ## 2.6 samtools
 最新版本为1.16  
 本地下载时，在配制这步出错，使用`brew install samtools`安装
-* [详细用法](https://github.com/outcastaaa/ATAC/blob/main/biotools/samtools_bamfile.md) 
+* [详细用法](https://github.com/outcastaaa/ATAC/blob/main/biotools/samtools_bamfile.md)   
+
+
 ## 2.7 Picard
 * 可以直接用brew安装
 ```bash
@@ -182,10 +181,19 @@ cd /mnt/d/biosoft/picard
 wget https://github.com/broadinstitute/picard/releases/download/2.27.5/picard.jar
 
 ```
-* [详细用法](https://github.com/outcastaaa/ATAC/blob/main/biotools/Picard.md) 
+* [详细用法](https://github.com/outcastaaa/ATAC/blob/main/biotools/Picard.md)   
+
+
 
 ## 2.8 bedtools
-
+```bash
+mkdir -p /mnt/d/biosoft/bedtools
+cd /mnt/d/biosoft/bedtools
+wget https://github.com/arq5x/bedtools2/releases/download/v2.30.0/bedtools-2.30.0.tar.gz
+tar -zxvf bedtools-2.30.0.tar.gz
+cd bedtools2
+make
+```
 
 
 ## 2.8 HTseq
@@ -549,8 +557,10 @@ align_dir=/mnt/d/ATAC/alignment
 
 # 单样本尝试
 cd /mnt/d/ATAC/trim2/
-bowtie2  -x  $bowtie2_index  -1  SRR11539111_1_val_1.fq.gz -2 SRR11539111_2_val_2.fq.gz \
-		-S $align_dir/example.sam
+
+bowtie2  -p 7 -x  $bowtie2_index --very-sensitive -X 2000 -1  SRR11539112_1_val_1.fq.gz -2 SRR11539112_2_val_2.fq.gz \
+  2>$align_dir/SRR11539112.summary \
+  -S $align_dir/SRR11539112.sam
 
 # 循环 
 cd /mnt/d/ATAC/trim2/ 
@@ -574,7 +584,7 @@ done
 ```
 4. 结果： [bam文件具体解读](https://luohao-brian.gitbooks.io/gene_sequencing_book/content/di-5-8282-li-jie-bing-cao-zuo-bam-wen-jian.html)   
 
-[FLAG转换](https://broadinstitute.github.io/picard/explain-flags.html)  
+[FLAG转换网站](https://broadinstitute.github.io/picard/explain-flags.html)  
 
 
 
@@ -607,9 +617,9 @@ done
 ## 5.2 sort_transfer-to-bam_index
 1. 目的：  
 
-samtobam:SAM格式是目前用来存放大量核酸比对结果信息的通用格式，bam文件是sam文件的二进制格式，将文件夹内sam文件全部转换为其二进制bam文件以减少内存。    
-sort:比对完的结果以reads name排序，samtools sort转化为按照坐标排序.    
-index:比对后的分析步骤通常要求sam/bam文件被进一步处理，例如在IGV查看比对结果时，常需要输入的bam文件已经被index。   
+samtobam: SAM格式是目前用来存放大量核酸比对结果信息的通用格式，bam文件是sam文件的二进制格式，将文件夹内sam文件全部转换为其二进制bam文件以减少内存。    
+sort: 比对完的结果以reads name排序，samtools sort转化为按照坐标排序。     
+index: 比对后的分析步骤通常要求sam/bam文件被进一步处理，例如在IGV查看比对结果时，常需要输入的bam文件已经被index。   
 
 2. 使用软件: `samtools`  
 3. 代码：  
@@ -658,25 +668,28 @@ cd /mnt/d/ATAC/align
 parallel -j 6 "
   java -jar /mnt/d/biosoft/picard/picard.jar \
      MarkDuplicates I={1}.sort.bam  \
-	 O=../rmdup/{1}.picard.rmdup.bam \
+	 O=../rmdup/{1}.rmdup.bam \
 	 REMOVE_DUPLICATES=ture \
+	 VALIDATION_STRINGENCY =LENIENT \
 	 M=../rmdup/{1}.log \
-     samtools index ../rmdup/{1}.picard.rmdup.bam \
-	 samtools flagstat ../rmdup/{1}.picard.rmdup.bam > ../rmdup/{1}.rmdup.stat \ 
+    samtools index ../rmdup/{1}.rmdup.bam \
+	samtools flagstat ../rmdup/{1}.rmdup.bam > ../rmdup/{1}.rmdup.stat \ 
 " ::: $( ls *.sort.bam)
+
+#--VALIDATION_STRINGENCY <验证严格性>此程序读取的所有 SAM 文件的验证严格性。将严格性设置为 SILENT 可以提高处理 BAM 文件时的性能，其中可变长度数据（读取、质量、标签）不需要解码。默认值：严格。 可能的值：{STRICT、LENIENT、SILENT}
 ```
 4. 结果：  
 可以得到的数据： unique mapping reads/rates唯一比对的reads或比例；duplicated read percentages 重复的reads百分比； fragment size distribution 片段大小分布  
 * 结果统计
 ```bash
 
-samtools flagstat teat.bam
-samtools flagstat test.picard.rmdup.bam 
-samtools view teat.bam | cut-f 1 | sort -u >1.pos
-samtools view test.picard.rmdup.bam | cut -f 1 | sort -u >2.pos
+samtools flagstat test.bam
+samtools flagstat test.rmdup.bam 
+samtools view test.bam | cut-f 1 | sort -u >1.pos
+samtools view test.rmdup.bam | cut -f 1 | sort -u >2.pos
 
 diff 1.pos 2.pos
-samtools view test.picard.rmdup.bam | grep '' 无
+samtools view test.rmdup.bam | grep '' 无
 samtools view test.bam | grep ''
 samtools view test.bam | grep -w '某个pos' 多个reads比对到同一个位置
 samtools view test.bam | grep -w '某个pos' | less -S
@@ -685,32 +698,67 @@ samtools view test.bam | grep -w '某个pos' | less -S
 * 目的：保留都比对到同一个染色体的paired reads（proper paired），同时质量较高的reads (mapping quality>=30) 
 
 ```bash
-samtools view -f 2 -q 30 -o test.filter.bam test.picard.rmdup.bam
+samtools view -f 2 -q 30 -o test.filter.bam test.rmdup.bam
 # -f 只取出比对上的reads
 # -q 取mapping质量大于30的reads
 ```
 ## 6.3 remove_chrM_reads
+* 目的：去除比对到线粒体上的reads，这一步一定要做，线粒体上长度小，极大概率覆盖很多reads，造成虚假peak  
+
 ```bash
+# 统计chrM reads
+cd /mnt/d/ATAC/alignment
+parallel -j 6 "
+    mtreads = $(samtools idxstats ./{1}.sort.bam | grep 'chrM' | cut -f 3)
+	totalreads = $(samtools idxstats ./{1}.sort.bam | awk '{SUM += $3}' END {print SUM}')
+    echo '==> mtDNA Content:' $(bc <<< "scale=2;100*$mtreads/$totalreads")'%'
+" ::: $( ls *.sort.bam)
+
 # 将上一步和这一步结合起来
-mkdir /mnt/d/ATAC/fliter
+
+mkdir /mnt/d/ATAC/filter
 cd /mnt/d/ATAC/rmdup
 parallel -j 6 "
-    samtools view -h -f 2 -q 30 ./{1}.picard.rmdup.bam | grep -v  'chrM' \
-	| samtools sort -O bam -o - > ../fliter/{1}.fliter.bam \
-	samtools index ../fliter/{1}.fliter.bam \
-	samtools flagstat ../fliter/{1}.fliter.bam > ../fliter/{1}.fliter.stat \
-" ::: $( ls *.picard.rmdup.bam)
+    samtools view -h -f 2 -q 30 ./{1}.rmdup.bam | grep -v  chrM \
+	| samtools sort -O bam  stdin > ../filter/{1}.filter.bam 
+	samtools index ../filter/{1}.filter.bam 
+	samtools flagstat ../filter/{1}.filter.bam > ../filter/{1}.filter.stat 
+" ::: $( ls *.rmdup.bam)
 ```
 
 ## 6.4 bamtobed
+* 目的：后续需要用到'bed'文件，把处理好的bam比对文件转化为bed格式
+* [参考文章](https://bedtools.readthedocs.io/en/latest/content/tools/bamtobed.html)  
+
 ```bash
-mkdir cd /mnt/d/ATAC/bed
-cd /mnt/d/ATAC/fliter
+mkdir -p /mnt/d/ATAC/bed
+cd /mnt/d/ATAC/filter
 
 parallel -j 6 "
    bedtools bamtobed -i ./{1}.filter.bam >../bed/{1}.bed
 " ::: $( ls *.filter.bam)
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -773,11 +821,39 @@ ATAC-seq关心的是在哪里切断，断点才是peak的中心，所以使用sh
 
 
 
-# peak calling 
 
-ATAC-seq 数据分析的第二个主要步骤是识别开放区域（也称为 Peak），后续高级分析以此为基础。目前，MACS2 是 ENCODE ATAC-seq 流程的默认 Peak caller 程序。
 
-  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# 7.call_peaks 
+1. 目的： ATAC-seq 数据分析的第二个主要步骤是识别开放区域（也称为 Peak），后续高级分析以此为基础。  
+
+2. 软件：目前，`MACS2` 是 ENCODE ATAC-seq 流程的默认 Peak caller 程序。
+
+这里他们选用固定宽度（fixed-width）的peaks,优点有：1）对大量的peaks进行counts和motif分析时可以减小误差；2）对于大量数据集的可以合并峰得到一致性的peaks; 
+使用的是macs2 call peaks,参数如下：
+
+--shift -75 --extsize 150 --nomodel --call-summits --nolambda --keep-dup all -p 0.01
+同时根据hg38 blacklist过滤，并除去染色体两端以外的峰。
+一个样本的overlaps他们是通过迭代移除的方法，首先保留最显著的peak,然后任何与最显著peak有直接overlap的peaks都被移除；接着对另一个最显著性的peak进行相同的操作，最终保留所有更显著的peaks，移除与其有直接overlaps的peaks  
 
 # Peak differential analysis
 
@@ -880,6 +956,7 @@ de novo 方法对于低质量和 novel motifs 仍然具有优势。尽管由于�
 
 -k 1 -D 20 -R 3 -N 1 -L 20 -i S,1,0.50 -X 2000 –rg-id # remove repeats的参数
 --very-sensitive -X 2000 --rg-id # bowtie2参数
+
 排序去除重复
 使用Picard 的MarkDuplicates去除重复。
 
