@@ -71,7 +71,23 @@ Before we start exploring the output of MACS2, we'll briefly talk about the new 
 **narrowPeak:**
 
 A narrowPeak (.narrowPeak) file is used by the ENCODE project to provide called peaks of signal enrichment based on pooled, normalized (interpreted) data. It is a BED 6+4 format, which means the first 6 columns of a standard BED file  with **4 additional fields**:
-![bed](../ATAC)
+[bed文件](https://github.com/hbctraining/In-depth-NGS-Data-Analysis-Course/blob/master/sessionV/img/narrowPeak.png)  
+```
+1.chromosome 
+2.start coordinate
+3.end coordinate 
+4.name 
+5.score 
+6.strand
+==========Standard BED file fields========
+7.signalValue-Measurement of overall enrichment for the region 
+8.pValue-Statistical significance(-log10)
+9.qValue-Statistical significance using false discovery rate(-log10)
+10.peak-Point-source called for thispeak; 0-based offset from chromStart
+==========narrowPeak specific fields=========
+```
+
+
 
 **WIG format:**
 
@@ -117,7 +133,10 @@ Now you should see a pdf file in your current directory by the same name. Create
 
 Open up the pdf file for Nanog-rep1. The first plot illustrates **the distance between the modes from which the shift size was determined**. 
 
-<img src="../img/model-macs.png" width="400">
+[picture of peak-modle](https://github.com/hbctraining/In-depth-NGS-Data-Analysis-Course/blob/master/sessionV/img/model-macs.png)    
+
+
+
 
 The second plot is the  **cross-correlation plot**. This is a graphical representation of the Pearson correlation of positive- and negative- strand tag densities, shifting the strands relative to each other by increasing distance. We will talk about this in more detail in the next lesson.
 
