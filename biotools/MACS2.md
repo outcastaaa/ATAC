@@ -71,8 +71,7 @@ Before we start exploring the output of MACS2, we'll briefly talk about the new 
 **narrowPeak:**
 
 A narrowPeak (.narrowPeak) file is used by the ENCODE project to provide called peaks of signal enrichment based on pooled, normalized (interpreted) data. It is a BED 6+4 format, which means the first 6 columns of a standard BED file  with **4 additional fields**:
-
-<img src="../img/narrowPeak.png">
+![bed](../ATAC)
 
 **WIG format:**
 
