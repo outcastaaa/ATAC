@@ -543,8 +543,9 @@ multiqc .
 3. 代码：  
 
 ```bash
+mkdir -p /mnt/d/ATAC/alignment
 bowtie2_index=/mnt/d/ATAC/genome/mm10
-align_dir=/mnt/d/ATAC/align/
+align_dir=/mnt/d/ATAC/alignment
 
 # 单样本尝试
 cd /mnt/d/ATAC/trim2/
@@ -566,8 +567,8 @@ do echo $id
   fq1=${arr[1]}
   fq2=${arr[2]}
   sample=${arr[0]}
-  bowtie2  -p 4  -x  $bowtie2_index --very-sensitive -X 2000 -1  $fq1 -2 $fq2 \
-  2>$align_dir/{1}.summary \
+  bowtie2  -p 6  -x  $bowtie2_index --very-sensitive -X 2000 -1  $fq1 -2 $fq2 \
+  2>$align_dir/${sample}.summary \
   -S $align_dir/${sample}.sam
 done
 ```
@@ -583,40 +584,25 @@ done
 * 统计比对情况  
 
 ```bash
-cd /mnt/d/ATAC/align
-file_list=($(ls *.summary))
-# 用-e选项打印出转义字符，换行输出表头
-echo -e "sample   \t  ratio  \t    time"      
-for i in ${file_list[@]};
-do
-    
-    prefix=$(echo ${i} | perl -p -e 's/\.summary//')  # i为输出的summary文件，删掉格式后缀
-    echo -n -e "${prefix}\t"    # -e‘后面跟上‘/t’会在空格间加上水平制表符
-    # 输出横列表头为‘SRR11539111.fq.gz’‘SRR11539112.fq.gz’的表
+# 以SRR11539111为例
+# summmary
+49006650 reads; of these:
+  49006650 (100.00%) were paired; of these:
+    1643074 (3.35%) aligned concordantly 0 times
+    33537190 (68.43%) aligned concordantly exactly 1 time
+    13826386 (28.21%) aligned concordantly >1 times
+    ----
+    1643074 pairs aligned concordantly 0 times; of these:
+      306783 (18.67%) aligned discordantly 1 time
+    ----
+    1336291 pairs aligned 0 times concordantly or discordantly; of these:
+      2672582 mates make up the pairs; of these:
+        1573243 (58.87%) aligned 0 times
+        664621 (24.87%) aligned exactly 1 time
+        434718 (16.27%) aligned >1 times
+98.39% overall alignment rate
 
-    cat ${i} |
-      
-      grep -E "(overall alignment rate)|(Overall time)" |  
-      # 查找这两个数据
-      # 如果使用了grep 命令的选项-E，则应该使用 | 来分割多个pattern，以此实现OR操作。
 
-      perl -n -e '
-        if(m/alignment/){
-          $hash{precent} = $1 if m/([\d.]+)%/;
-        }elsif(m/time/){
-          if(m/(\d\d):(\d\d):(\d\d)/){
-            my $time = $1 * 60 + $2 + $3 / 60;  # 把时间换算成分钟
-            $hash{time} = $time;
-          }
-        }
-        END{
-          $hash{precent} = "NA" if not exists $hash{precent}; 
-          # 如果没有该数据输出NA
-          $hash{time} = "NA" if not exists $hash{time};
-          printf "%.2f\t%.2f\n", $hash{precent}, $hash{time};
-        }
-      '
-done
 ```
 ## 5.2 sort_transfer-to-bam_index
 1. 目的：  
@@ -628,7 +614,7 @@ index:比对后的分析步骤通常要求sam/bam文件被进一步处理，例�
 2. 使用软件: `samtools`  
 3. 代码：  
 ```bash
-cd /mnt/d/ATAC/align
+cd /mnt/d/ATAC/alignment
 
 parallel -k -j 6 "
     samtools sort {1}.fq.gz.sam > {1}.sort.bam   
