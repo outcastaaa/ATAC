@@ -1,5 +1,6 @@
 
 # ATAC-seq分析
+[很好的参考文章](https://yiweiniu.github.io/blog/2019/03/ATAC-seq-data-analysis-from-FASTQ-to-peaks/)  
 
 - [0.Introduction](#0.Introduction)
 - [1.Prepare](#1.Prepare)
@@ -194,6 +195,14 @@ tar -zxvf bedtools-2.30.0.tar.gz
 cd bedtools2
 make
 ```
+## 2.9 MACS2
+* [工作原理](https://github.com/hbctraining/In-depth-NGS-Data-Analysis-Course/blob/master/sessionV/lessons/04_peak_calling_macs.md)  
+
+The tag density around a true binding site should show a bimodal enrichment pattern (or paired peaks). MACS takes advantage of this bimodal pattern to empirically model the shifting size to better locate the precise binding sites.
+
+To find paired peaks to build the model, MACS first scans the whole dataset searching for highly significant enriched regions. This is done only using the ChIP sample! Given a sonication size () and a high-confidence fold-enrichment (), MACS slides two windows across the genome to find regions with tags more than mfold enriched relative to a random tag genome distribution.
+
+MACS randomly samples 1,000 of these high-quality peaks, separates their positive and negative strand tags, and aligns them by the midpoint between their centers. The distance between the modes of the two peaks in the alignment is defined as 'd' and represents the estimated fragment length. MACS shifts all the tags by d/2 toward the 3' ends to the most likely protein-DNA interaction sites..
 
 
 ## 2.8 HTseq
@@ -581,6 +590,8 @@ do echo $id
   2>$align_dir/${sample}.summary \
   -S $align_dir/${sample}.sam
 done
+# better alignment results are frequently achieved with --very-sensitive
+# use -X 2000 to allow larger fragment size (default is 500)
 ```
 4. 结果： [bam文件具体解读](https://luohao-brian.gitbooks.io/gene_sequencing_book/content/di-5-8282-li-jie-bing-cao-zuo-bam-wen-jian.html)   
 
@@ -611,8 +622,6 @@ done
         664621 (24.87%) aligned exactly 1 time
         434718 (16.27%) aligned >1 times
 98.39% overall alignment rate
-
-
 ```
 ## 5.2 sort_transfer-to-bam_index
 1. 目的：  
@@ -634,8 +643,6 @@ parallel -k -j 6 "
 # samtools index为已经基于坐标排序后bam或者cram的文件创建索引，默认在当前文件夹产生*.bai的index文件
 # raw.stat记录匹配后原始文件情况
 
-# 统计线粒体比对情况
-samtools idxstats SRR11539111.sort.bam
 
 ls -lh
 rm *.sam
@@ -664,19 +671,23 @@ Inconsistencies in the underlying annotation exist at regions where assembly has
 
 ```bash
 mkdir /mnt/d/ATAC/rmdup
-cd /mnt/d/ATAC/align
+cd /mnt/d/ATAC/alignment
 parallel -j 6 "
   java -jar /mnt/d/biosoft/picard/picard.jar \
-     MarkDuplicates I={1}.sort.bam  \
-	 O=../rmdup/{1}.rmdup.bam \
+     MarkDuplicates INPUT={1}.sort.bam  \
+	 OUTPUT=../rmdup/{1}.rmdup.bam \
 	 REMOVE_DUPLICATES=ture \
 	 VALIDATION_STRINGENCY =LENIENT \
-	 M=../rmdup/{1}.log \
-    samtools index ../rmdup/{1}.rmdup.bam \
-	samtools flagstat ../rmdup/{1}.rmdup.bam > ../rmdup/{1}.rmdup.stat \ 
+	 METRICS_FILE=../rmdup/{1}.log 
+	
+    samtools index ../rmdup/{1}.rmdup.bam 
+	samtools flagstat ../rmdup/{1}.rmdup.bam > ../rmdup/{1}.rmdup.stat 
+	
 " ::: $( ls *.sort.bam)
 
-#--VALIDATION_STRINGENCY <验证严格性>此程序读取的所有 SAM 文件的验证严格性。将严格性设置为 SILENT 可以提高处理 BAM 文件时的性能，其中可变长度数据（读取、质量、标签）不需要解码。默认值：严格。 可能的值：{STRICT、LENIENT、SILENT}
+#--VALIDATION_STRINGENCY <验证严格性>此程序读取的所有 SAM 文件的验证严格性。
+#将严格性设置为 SILENT 可以提高处理 BAM 文件时的性能，其中可变长度数据（读取、质量、标签）不需要解码。
+#默认值：严格。 可能的值：{STRICT、LENIENT、SILENT}
 ```
 4. 结果：  
 可以得到的数据： unique mapping reads/rates唯一比对的reads或比例；duplicated read percentages 重复的reads百分比； fragment size distribution 片段大小分布  
@@ -699,11 +710,12 @@ samtools view test.bam | grep -w '某个pos' | less -S
 
 ```bash
 samtools view -f 2 -q 30 -o test.filter.bam test.rmdup.bam
-# -f 只取出比对上的reads
+# -f Retain properly paired reads -f 2
 # -q 取mapping质量大于30的reads
+# Remove reads unmapped, mate unmapped, not primary alignment, reads failing platform, duplicates (-F 1804) 看情况取舍
 ```
 ## 6.3 remove_chrM_reads
-* 目的：去除比对到线粒体上的reads，这一步一定要做，线粒体上长度小，极大概率覆盖很多reads，造成虚假peak  
+* 目的：去除比对到线粒体上的reads，这一步一定要做，线粒体上长度小，极大概率覆盖很多reads，造成虚假peak。由于mtDNA读段的百分比是文库质量的指标，我们通常在比对后删除线粒体读段。  
 
 ```bash
 # 统计chrM reads
@@ -719,8 +731,7 @@ parallel -j 6 "
 mkdir /mnt/d/ATAC/filter
 cd /mnt/d/ATAC/rmdup
 parallel -j 6 "
-    samtools view -h -f 2 -q 30 ./{1}.rmdup.bam | grep -v  chrM \
-	| samtools sort -O bam  stdin > ../filter/{1}.filter.bam 
+    samtools view -h -f 2 -q 30 ./{1}.rmdup.bam | grep -v  chrM | samtools sort -O bam  -o ../filter/{1}.filter.bam 
 	samtools index ../filter/{1}.filter.bam 
 	samtools flagstat ../filter/{1}.filter.bam > ../filter/{1}.filter.stat 
 " ::: $( ls *.rmdup.bam)
@@ -738,6 +749,17 @@ parallel -j 6 "
    bedtools bamtobed -i ./{1}.filter.bam >../bed/{1}.bed
 " ::: $( ls *.filter.bam)
 ```
+
+# Merging BAMs (optional)  
+[该文章](https://yiweiniu.github.io/blog/2019/03/ATAC-seq-data-analysis-from-FASTQ-to-peaks/)解释的很全面  
+
+If it is B, biological replicates, you almost certainly don’t want to merge them. You will lose your information about biological variance is present.本文相当于两个处理各两个生物学重复，因此建议不合并。  
+
+```bash
+samtools merge -@ 6 condition1.merged.bam sample1.bam sample2.bam sample3.bam
+samtools index -@ 6 condition1.merged.bam
+```
+
 
 
 
@@ -816,7 +838,16 @@ wigToBigWig ${name}.bg $chrom_info ${name}.bw
 awk 'BEGIN {OFS = "\t"} ; {if ($6 == "+") print $1, $2 + 4, $2 + 5; else print $1, $3 - 6, $3 - 5}' ${name}.bed > ${name}.Tn5.bed
 ```
 
-# shift
+
+
+
+
+
+
+# 7.shift_reads
+由于Tn5酶是以二聚体的方面结合到染色体上的，其跨度大致是9bp，在第一篇ATAC-seq出来的时候，作者就考虑到了这个问题，在分析的时候，需要回补这个9个bp的碱基差。具体做法就是将正链正向移动4bp，将负链负向移动5个bp。我一般用alignmentSieve 一步到位。注意，不做reads shift 对单碱基分辨高的分析会有影响，例如TF motif footprinting
+
+
 ATAC-seq关心的是在哪里切断，断点才是peak的中心，所以使用shift模型，--shift -75或-100.  
 
 
