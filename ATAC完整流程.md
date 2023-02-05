@@ -569,7 +569,7 @@ cd /mnt/d/ATAC/trim2/
 
 bowtie2  -p 7 -x  $bowtie2_index --very-sensitive -X 2000 -1  SRR11539112_1_val_1.fq.gz -2 SRR11539112_2_val_2.fq.gz \
   2>$align_dir/SRR11539112.summary \
-  -S $align_dir/SRR11539112.sam
+  -S $align_dir/SRR11539112.sam 
 
 # 循环 
 cd /mnt/d/ATAC/trim2/ 
@@ -635,8 +635,9 @@ index: 比对后的分析步骤通常要求sam/bam文件被进一步处理，例
 ```bash
 cd /mnt/d/ATAC/alignment
 
+#samtools sort {1}.fq.gz.sam > {1}.sort.bam
 parallel -k -j 6 "
-    samtools sort {1}.fq.gz.sam > {1}.sort.bam   
+     
 	samtools index {1}.sort.bam
 	samtools flagstat  {1}.sort.bam > {1}.raw.stat 
 " ::: $(ls *.sam | perl -p -e 's/\.fq\.gz\.sam$//')
