@@ -649,8 +649,8 @@ do echo $id
   fq2=${arr[2]}
   sample=${arr[0]}
 
-	samtools index ${sample}.sort.bam
-	samtools flagstat  ${sample}.sort.bam > ${sample}.raw.stat
+	samtools index -@ 6 ${sample}.sort.bam
+	samtools flagstat  -@ 6 ${sample}.sort.bam > ${sample}.raw.stat
 done
 # samtools index为已经基于坐标排序后bam或者cram的文件创建索引，默认在当前文件夹产生*.bai的index文件
 # raw.stat记录匹配后原始文件情况
@@ -682,21 +682,43 @@ Inconsistencies in the underlying annotation exist at regions where assembly has
 目的：去除因为PCR偏好性导致的reads重复扩增  
 
 ```bash
-mkdir /mnt/d/ATAC/rmdup
+mkdir -p /mnt/d/ATAC/rmdup
 cd /mnt/d/ATAC/alignment
+
+cat config.raw | while read id;
+do echo $id 
+  arr=($id)
+  sample=${arr[0]}
+
+  java -jar /mnt/d/biosoft/picard/picard.jar \
+     MarkDuplicates I=${sample}.sort.bam \
+	  O=../rmdup/${sample}.rmdup.bam \
+	 REMOVE_DUPLICATES=ture \
+	 VALIDATION_STRINGENCY=LENIENT \
+	 M=../rmdup/${sample}.log  
+done
+
+cat config.raw | while read id;
+do echo $id 
+  arr=($id)
+  sample=${arr[0]}
+   samtools index -@ 7 ../rmdup/${sample}.rmdup.bam
+   samtools flagstat -@ 7 ../rmdup/${sample}.rmdup.bam > ../rmdup/${sample}.rmdup.stat
+done
+
+或者
+
 parallel -j 6 "
   java -jar /mnt/d/biosoft/picard/picard.jar \
-     MarkDuplicates INPUT={1}.sort.bam  \
-	 OUTPUT=../rmdup/{1}.rmdup.bam \
-	 REMOVE_DUPLICATES=ture \
-	 VALIDATION_STRINGENCY =LENIENT \
-	 METRICS_FILE=../rmdup/{1}.log 
-	
-    samtools index ../rmdup/{1}.rmdup.bam 
-	samtools flagstat ../rmdup/{1}.rmdup.bam > ../rmdup/{1}.rmdup.stat 
-	
+     MarkDuplicates -INPUT ${sample}.sort.bam \
+	 -OUTPUT ../rmdup/${sample}.rmdup.bam \
+	 -REMOVE_DUPLICATES ture \
+	# VALIDATION_STRINGENCY =LENIENT \
+	 -METRICS_FILE ../rmdup/${sample}.log 
+  samtools index -@ 7 ../rmdup/{1}.rmdup.bam 
+	samtools flagstat -@ 7  ../rmdup/{1}.rmdup.bam > ../rmdup/{1}.rmdup.stat 
 " ::: $( ls *.sort.bam)
-
+   
 #--VALIDATION_STRINGENCY <验证严格性>此程序读取的所有 SAM 文件的验证严格性。
 #将严格性设置为 SILENT 可以提高处理 BAM 文件时的性能，其中可变长度数据（读取、质量、标签）不需要解码。
 #默认值：严格。 可能的值：{STRICT、LENIENT、SILENT}
