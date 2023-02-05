@@ -574,10 +574,10 @@ bowtie2  -p 7 -x  $bowtie2_index --very-sensitive -X 2000 -1  SRR11539112_1_val_
 # 循环 
 cd /mnt/d/ATAC/trim2/ 
 cat >config.raw <<EOF
-SRR11539111.fq.gz  SRR11539111_1_val_1.fq.gz  SRR11539111_2_val_2.fq.gz
-SRR11539112.fq.gz  SRR11539112_1_val_1.fq.gz  SRR11539112_2_val_2.fq.gz
-SRR11539115.fq.gz  SRR11539115_1_val_1.fq.gz  SRR11539115_2_val_2.fq.gz
-SRR11539116.fq.gz  SRR11539116_1_val_1.fq.gz  SRR11539116_2_val_2.fq.gz
+SRR11539111  SRR11539111_1_val_1.fq.gz  SRR11539111_2_val_2.fq.gz
+SRR11539112  SRR11539112_1_val_1.fq.gz  SRR11539112_2_val_2.fq.gz
+SRR11539115  SRR11539115_1_val_1.fq.gz  SRR11539115_2_val_2.fq.gz
+SRR11539116  SRR11539116_1_val_1.fq.gz  SRR11539116_2_val_2.fq.gz
 EOF
 
 cat config.raw | while read id;
@@ -634,13 +634,24 @@ index: 比对后的分析步骤通常要求sam/bam文件被进一步处理，例
 3. 代码：  
 ```bash
 cd /mnt/d/ATAC/alignment
-
-#samtools sort {1}.fq.gz.sam > {1}.sort.bam
+# sam to bam
 parallel -k -j 6 "
-     
-	samtools index {1}.sort.bam
-	samtools flagstat  {1}.sort.bam > {1}.raw.stat 
+  samtools sort {1}.fq.gz.sam > {1}.sort.bam    
 " ::: $(ls *.sam | perl -p -e 's/\.fq\.gz\.sam$//')
+
+# index and stat
+cp /mnt/d/ATAC/trim2/config.raw /mnt/d/ATAC/alignment/config.raw
+
+cat config.raw | while read id;
+do echo $id 
+  arr=($id)
+  fq1=${arr[1]}
+  fq2=${arr[2]}
+  sample=${arr[0]}
+
+	samtools index ${sample}.sort.bam
+	samtools flagstat  ${sample}.sort.bam > ${sample}.raw.stat
+done
 # samtools index为已经基于坐标排序后bam或者cram的文件创建索引，默认在当前文件夹产生*.bai的index文件
 # raw.stat记录匹配后原始文件情况
 
