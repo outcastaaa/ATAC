@@ -1,0 +1,35 @@
+#    SRR11539116.raw.stat
+85328790 + 0 in total (QC-passed reads + QC-failed reads)
+85328790 + 0 primary
+0 + 0 secondary
+0 + 0 supplementary
+0 + 0 duplicates
+0 + 0 primary duplicates
+83571727 + 0 mapped (97.94% : N/A)
+83571727 + 0 primary mapped (97.94% : N/A)
+85328790 + 0 paired in sequencing
+42664395 + 0 read1
+42664395 + 0 read2
+81826182 + 0 properly paired (95.90% : N/A)
+82675456 + 0 with itself and mate mapped
+896271 + 0 singletons (1.05% : N/A)
+170366 + 0 with mate mapped to a different chr
+91397 + 0 with mate mapped to a different chr (mapQ>=5)
+
+
+#    SRR11539116.fq.gz.summary
+42664395 reads; of these:
+  42664395 (100.00%) were paired; of these:
+    1751304 (4.10%) aligned concordantly 0 times
+    26898469 (63.05%) aligned concordantly exactly 1 time
+    14014622 (32.85%) aligned concordantly >1 times
+    ----
+    1751304 pairs aligned concordantly 0 times; of these:
+      285985 (16.33%) aligned discordantly 1 time
+    ----
+    1465319 pairs aligned 0 times concordantly or discordantly; of these:
+      2930638 mates make up the pairs; of these:
+        1757063 (59.95%) aligned 0 times
+        716708 (24.46%) aligned exactly 1 time
+        456867 (15.59%) aligned >1 times
+97.94% overall alignment rate
