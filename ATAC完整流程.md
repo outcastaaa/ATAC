@@ -690,29 +690,26 @@ do echo $id
   arr=($id)
   sample=${arr[0]}
 
-  java -jar /mnt/d/biosoft/picard/picard.jar \
-     MarkDuplicates I=${sample}.sort.bam \
-	  O=../rmdup/${sample}.rmdup.bam \
-	 REMOVE_DUPLICATES=ture \
-	 VALIDATION_STRINGENCY=LENIENT \
-	 M=../rmdup/${sample}.log  
-done
-
-cat config.raw | while read id;
-do echo $id 
-  arr=($id)
-  sample=${arr[0]}
+  java -Dpicard.useLegacyParser=false \
+  -jar /mnt/d/biosoft/picard/picard.jar \
+     MarkDuplicates -I ${sample}.sort.bam \
+	  -O ../rmdup/${sample}.rmdup.bam \
+	 -REMOVE_DUPLICATES true \
+   -VALIDATION_STRINGENCY LENIENT \
+	 -M ../rmdup/${sample}.log  
+   
    samtools index -@ 7 ../rmdup/${sample}.rmdup.bam
    samtools flagstat -@ 7 ../rmdup/${sample}.rmdup.bam > ../rmdup/${sample}.rmdup.stat
 done
 
-或者
+
+# 或者
 
 parallel -j 6 "
   java -jar /mnt/d/biosoft/picard/picard.jar \
      MarkDuplicates -INPUT ${sample}.sort.bam \
 	 -OUTPUT ../rmdup/${sample}.rmdup.bam \
-	 -REMOVE_DUPLICATES ture \
+	 -REMOVE_DUPLICATES true \
 	# VALIDATION_STRINGENCY =LENIENT \
 	 -METRICS_FILE ../rmdup/${sample}.log 
   samtools index -@ 7 ../rmdup/{1}.rmdup.bam 
@@ -727,13 +724,13 @@ parallel -j 6 "
 可以得到的数据： unique mapping reads/rates唯一比对的reads或比例；duplicated read percentages 重复的reads百分比； fragment size distribution 片段大小分布  
 * 结果统计
 ```bash
+# 看哪些内容被删掉了
+cd /mnt/d/ATAC/alignment$
+samtools view SRR11539111.sort.bam | cut -f 1 | sort -u >1.pos
+cd /mnt/d/ATAC/rmdup
+samtools view SRR11539111.rmdup.bam | cut -f 1 | sort -u >2.pos
+diff ../alignment/1.pos ./2.pos
 
-samtools flagstat test.bam
-samtools flagstat test.rmdup.bam 
-samtools view test.bam | cut-f 1 | sort -u >1.pos
-samtools view test.rmdup.bam | cut -f 1 | sort -u >2.pos
-
-diff 1.pos 2.pos
 samtools view test.rmdup.bam | grep '' 无
 samtools view test.bam | grep ''
 samtools view test.bam | grep -w '某个pos' 多个reads比对到同一个位置
@@ -752,23 +749,37 @@ samtools view -f 2 -q 30 -o test.filter.bam test.rmdup.bam
 * 目的：去除比对到线粒体上的reads，这一步一定要做，线粒体上长度小，极大概率覆盖很多reads，造成虚假peak。由于mtDNA读段的百分比是文库质量的指标，我们通常在比对后删除线粒体读段。  
 
 ```bash
-# 统计chrM reads
-cd /mnt/d/ATAC/alignment
-parallel -j 6 "
-    mtreads = $(samtools idxstats ./{1}.sort.bam | grep 'chrM' | cut -f 3)
-	totalreads = $(samtools idxstats ./{1}.sort.bam | awk '{SUM += $3}' END {print SUM}')
-    echo '==> mtDNA Content:' $(bc <<< "scale=2;100*$mtreads/$totalreads")'%'
-" ::: $( ls *.sort.bam)
 
-# 将上一步和这一步结合起来
 
+    
+	  
+    
+done
+
+# 结果：
+
+```
+* 将上一步和这一步结合起来  
+
+
+```bash
 mkdir /mnt/d/ATAC/filter
 cd /mnt/d/ATAC/rmdup
-parallel -j 6 "
-    samtools view -h -f 2 -q 30 ./{1}.rmdup.bam | grep -v  chrM | samtools sort -O bam  -o ../filter/{1}.filter.bam 
-	samtools index ../filter/{1}.filter.bam 
-	samtools flagstat ../filter/{1}.filter.bam > ../filter/{1}.filter.stat 
-" ::: $( ls *.rmdup.bam)
+cp /mnt/d/ATAC/trim2/config.raw   /mnt/d/ATAC/rmdup/config.raw
+
+cat config.raw | while read id;
+do echo $id 
+  arr=($id)
+  sample=${arr[0]}
+  # 统计chrM reads，使用没有去除PCR重复的数据
+  mtreads = $(samtools idxstats ../alignment/${sample}.sort.bam | grep 'chrM' | cut -f 3)
+  totalreads = $(samtools idxstats ../alignment/${sample}.sort.bam | awk '{SUM += $3}' END {print SUM}')
+  echo "==> mtDNA Content:' $(bc <<< "scale=2;100*$mtreads/$totalreads")'%"
+
+  samtools view -h -f 2 -q 30 ./${sample}.rmdup.bam | grep -v  chrM | samtools sort -@ 7 -O bam  -o ../filter/${sample}.filter.bam 
+	samtools index  -@ 7 ../filter/${sample}.filter.bam 
+	samtools flagstat  -@ 7 ../filter/${sample}.filter.bam > ../filter/${sample}.filter.stat 
+done
 ```
 
 ## 6.4 bamtobed
