@@ -1,4 +1,20 @@
 [参考文章:包括原理、参数](https://github.com/hbctraining/In-depth-NGS-Data-Analysis-Course/blob/master/sessionV/lessons/04_peak_calling_macs.md)
+## 用法
+```bash
+macs2 callpeak
+usage: macs2 callpeak [-h] -t TFILE [TFILE ...] [-c [CFILE ...]]
+                      [-f {AUTO,BAM,SAM,BED,ELAND,ELANDMULTI,ELANDEXPORT,BOWTIE,BAMPE,BEDPE}] [-g GSIZE] [-s TSIZE]
+                      [--keep-dup KEEPDUPLICATES] [--outdir OUTDIR] [-n NAME] [-B] [--verbose VERBOSE] [--trackline]
+                      [--SPMR] [--nomodel] [--shift SHIFT] [--extsize EXTSIZE] [--bw BW] [--d-min D_MIN]
+                      [-m MFOLD MFOLD] [--fix-bimodal] [-q QVALUE | -p PVALUE] [--scale-to {large,small}]
+                      [--down-sample] [--seed SEED] [--tempdir TEMPDIR] [--nolambda] [--slocal SMALLLOCAL]
+                      [--llocal LARGELOCAL] [--max-gap MAXGAP] [--min-length MINLEN] [--broad]
+                      [--broad-cutoff BROADCUTOFF] [--cutoff-analysis] [--call-summits] [--fe-cutoff FECUTOFF]
+                      [--buffer-size BUFFER_SIZE] [--to-large] [--ratio RATIO]
+macs2 callpeak: error: the following arguments are required: -t/--treatment
+```
+
+
 ## 详细参数
 There are seven [major functions](https://github.com/taoliu/MACS#usage-of-macs2) available in MACS2 serving as sub-commands. We will only cover `callpeak` in this lesson, but you can use `macs2 COMMAND -h` to find out more, if you are interested.
 
