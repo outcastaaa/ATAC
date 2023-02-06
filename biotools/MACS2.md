@@ -11,7 +11,6 @@ usage: macs2 callpeak [-h] -t TFILE [TFILE ...] [-c [CFILE ...]]
                       [--llocal LARGELOCAL] [--max-gap MAXGAP] [--min-length MINLEN] [--broad]
                       [--broad-cutoff BROADCUTOFF] [--cutoff-analysis] [--call-summits] [--fe-cutoff FECUTOFF]
                       [--buffer-size BUFFER_SIZE] [--to-large] [--ratio RATIO]
-macs2 callpeak: error: the following arguments are required: -t/--treatment
 ```
 
 
