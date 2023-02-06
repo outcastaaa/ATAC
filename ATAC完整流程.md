@@ -15,6 +15,7 @@
     - [2.6 samtools](#26-samtools)
     - [2.7 Picard](#27-Picard)
     - [2.8 bedtools](#28-bedtools)
+    - [2.9 MACS2](#29-MACS2)
 
     - [2.9 R](#29-r)
     - [2.10 Rstudio](#210-rstudio)
@@ -195,6 +196,9 @@ tar -zxvf bedtools-2.30.0.tar.gz
 cd bedtools2
 make
 ```
+* [详细用法](https://github.com/outcastaaa/ATAC/blob/main/biotools/bedtools.md)   
+
+
 ## 2.9 MACS2
 * [工作原理](https://github.com/hbctraining/In-depth-NGS-Data-Analysis-Course/blob/master/sessionV/lessons/04_peak_calling_macs.md)  
 
@@ -203,6 +207,29 @@ The tag density around a true binding site should show a bimodal enrichment patt
 To find paired peaks to build the model, MACS first scans the whole dataset searching for highly significant enriched regions. This is done only using the ChIP sample! Given a sonication size () and a high-confidence fold-enrichment (), MACS slides two windows across the genome to find regions with tags more than mfold enriched relative to a random tag genome distribution.
 
 MACS randomly samples 1,000 of these high-quality peaks, separates their positive and negative strand tags, and aligns them by the midpoint between their centers. The distance between the modes of the two peaks in the alignment is defined as 'd' and represents the estimated fragment length. MACS shifts all the tags by d/2 toward the 3' ends to the most likely protein-DNA interaction sites..
+* 下载安装  
+[官网](https://pypi.org/project/MACS2/)  
+
+```bash
+mkdir -p /mnt/d/biosoft/MACS2
+cd /mnt/d/biosoft/MACS2
+wget https://files.pythonhosted.org/packages/e2/61/85d30ecdd34525113e28cb0c5a9f393f93578165f8d848be5925c0208dfb/MACS2-2.2.7.1.tar.gz
+tar -zxvf MACS2-2.2.7.1.tar.gz
+cd MACS2-2.2.7.1
+python setup.py install
+cd MACS2-2.2.7.1/bin
+sudo chmod 777 macs2 
+# 写入环境
+export PATH=/mnt/d/biosoft/MACS2/MACS2-2.2.7.1/bin:$PATH
+
+# 安装成功
+macs2
+usage: macs2 [-h] [--version]
+             {callpeak,bdgpeakcall,bdgbroadcall,bdgcmp,bdgopt,cmbreps,bdgdiff,filterdup,predictd,pileup,randsample,refinepeak}
+             ...
+macs2: error: the following arguments are required: subcommand
+```
+* [详细用法](https://github.com/outcastaaa/ATAC/blob/main/biotools/MACS2.md)  
 
 
 ## 2.8 HTseq
@@ -729,12 +756,12 @@ cd /mnt/d/ATAC/alignment$
 samtools view SRR11539111.sort.bam | cut -f 1 | sort -u >1.pos
 cd /mnt/d/ATAC/rmdup
 samtools view SRR11539111.rmdup.bam | cut -f 1 | sort -u >2.pos
-diff ../alignment/1.pos ./2.pos
+diff ../alignment/1.pos ./2.pos > diff.txt
 
-samtools view test.rmdup.bam | grep '' 无
-samtools view test.bam | grep ''
-samtools view test.bam | grep -w '某个pos' 多个reads比对到同一个位置
-samtools view test.bam | grep -w '某个pos' | less -S
+samtools view SRR11539111.rmdup.bam | grep -w 'SRR11539111.1808287' 无
+samtools view SRR11539111.sort.bam | grep -w 'SRR11539111.1808287'
+samtools view SRR11539111.sort.bam | grep -w '某个pos' 多个reads比对到同一个位置
+samtools view SRR11539111.sort.bam | grep -w '某个pos' | less -S
 ```
 ## 6.2 remove_badquality_reads
 * 目的：保留都比对到同一个染色体的paired reads（proper paired），同时质量较高的reads (mapping quality>=30) 
@@ -748,10 +775,7 @@ samtools view -f 2 -q 30 -o test.filter.bam test.rmdup.bam
 ## 6.3 remove_chrM_reads
 * 目的：去除比对到线粒体上的reads，这一步一定要做，线粒体上长度小，极大概率覆盖很多reads，造成虚假peak。由于mtDNA读段的百分比是文库质量的指标，我们通常在比对后删除线粒体读段。  
 
-
-
-* 将上一步和这一步结合起来  
-
+* 统计chrM reads，使用没有去除PCR重复的数据
 ```bash
 mkdir -p /mnt/d/ATAC/filter
 cd /mnt/d/ATAC/rmdup
@@ -763,7 +787,7 @@ do
   arr=($id)
   sample=${arr[0]}
 
-  # 统计chrM reads，使用没有去除PCR重复的数据
+
   samtools idxstats ../alignment/${sample}.sort.bam | grep 'chrM' | cut -f 3  
   # 第一列是染色体名称，第二列是序列长度，第三列是mapped reads数，第四列是unmapped reads数
   samtools idxstats ../alignment/${sample}.sort.bam | awk '{SUM += $3} END {print SUM}' 
@@ -776,8 +800,10 @@ done
 9067938 105321082   8.617%
 11454225 93733501   12.220%
 18899078 83571727   22.614%
-
 ```
+
+
+* 将上一步和这一步结合起来
 ```bash
 cd /mnt/d/ATAC/rmdup
 cat config.raw | while read id;
@@ -790,11 +816,49 @@ do echo $id
 	samtools flagstat  -@ 7 ../filter/${sample}.filter.bam > ../filter/${sample}.filter.stat 
 done
 ```
+* 结果
+```bash
+# 原比对文件数据，以SRR11539111为例
+98013300 + 0 in total (QC-passed reads + QC-failed reads)
+98013300 + 0 primary
+0 + 0 secondary
+0 + 0 supplementary
+0 + 0 duplicates
+0 + 0 primary duplicates
+96440057 + 0 mapped (98.39% : N/A)
+96440057 + 0 primary mapped (98.39% : N/A)
+98013300 + 0 paired in sequencing
+49006650 + 0 read1
+49006650 + 0 read2
+94727152 + 0 properly paired (96.65% : N/A)
+95584080 + 0 with itself and mate mapped
+855977 + 0 singletons (0.87% : N/A)
+160994 + 0 with mate mapped to a different chr
+89323 + 0 with mate mapped to a different chr (mapQ>=5)
+
+# 删除PCR重复+低质量+chrM后数据
+48111744 + 0 in total (QC-passed reads + QC-failed reads)
+48111744 + 0 primary
+0 + 0 secondary
+0 + 0 supplementary
+0 + 0 duplicates
+0 + 0 primary duplicates
+48111744 + 0 mapped (100.00% : N/A)
+48111744 + 0 primary mapped (100.00% : N/A)
+48111744 + 0 paired in sequencing
+24055872 + 0 read1
+24055872 + 0 read2
+48111744 + 0 properly paired (100.00% : N/A)
+48111744 + 0 with itself and mate mapped
+0 + 0 singletons (0.00% : N/A)
+0 + 0 with mate mapped to a different chr
+0 + 0 with mate mapped to a different chr (mapQ>=5)
+```
 
 ## 6.4 bamtobed
-* 目的：后续需要用到'bed'文件，把处理好的bam比对文件转化为bed格式
-* [参考文章](https://bedtools.readthedocs.io/en/latest/content/tools/bamtobed.html)  
-
+1. 目的：后续需要用到'bed'文件，把处理好的bam比对文件转化为bed格式
+2. 使用软件：`bedtools`,[参考文章](https://bedtools.readthedocs.io/en/latest/content/tools/bamtobed.html)  
+3. 代码：
 ```bash
 mkdir -p /mnt/d/ATAC/bed
 cd /mnt/d/ATAC/filter
@@ -803,12 +867,53 @@ parallel -j 6 "
    bedtools bamtobed -i ./{1} >../bed/{1}.bed
 " ::: $( ls *.filter.bam)
 ```
+* 结果：
+```bash
+chr1    3000773 3000873 SRR11539111.41226980/2  32      +
+chr1    3000784 3000884 SRR11539111.41226980/1  32      -
+chr1    3000793 3000893 SRR11539111.46953273/1  34      +
+chr1    3000873 3000969 SRR11539111.16779100/1  36      +
+chr1    3000918 3001018 SRR11539111.6534710/1   38      +
+chr1    3000921 3001021 SRR11539111.46953273/2  34      -
+chr1    3000935 3001035 SRR11539111.6534710/2   38      -
+chr1    3000935 3001035 SRR11539111.16779100/2  36      -
+chr1    3000966 3001066 SRR11539111.47139289/1  37      +
+chr1    3001028 3001096 SRR11539111.19849957/1  39      +
+```
+* bedpe文件格式
+```bash
+# 必选的三列：
+chrom - 染色体的名称（例如chr3，chrY，chr2_random）或支架（例如scaffold10671）。
+chromStart- 染色体或scanfold中特征的起始位置。染色体中的第一个碱基编号为0。
+chromEnd- 染色体或scanfold中特征的结束位置。所述 chromEnd碱没有包括在特征的显示。\
+例如，染色体的前100个碱基定义为chromStart = 0，chromEnd = 100，并跨越编号为0-99的碱基。
+
+# 9个可选的BED字段：
+name - 定义BED行的名称。当轨道打开到完全显示模式时，此标签显示在Genome浏览器窗口中BED行的左侧，或者在打包模式下直接显示在项目的左侧。
+score - 得分在0到1000之间。如果此注释数据集的轨迹线useScore属性设置为1，则得分值将确定显示此要素的灰度级别（较高的数字=较深的灰色）。
+strand - 定义strand。要么“。” （=无绞线）或“+”或“ - ”。
+thickStart- 绘制特征的起始位置（例如，基因显示中的起始密码子）。当没有厚部分时，thickStart和thickEnd通常设置为chromStart位置。
+thickEnd - 绘制特征的结束位置（例如基因显示中的终止密码子）。
+itemRgb- R，G，B形式的RGB值（例如255,0,0）。如果轨道行 itemRgb属性设置为“On”，则此RBG值将确定此BED行中包含的数据的显示颜色。\
+注意：建议使用此属性的简单颜色方案（八种颜色或更少颜色），以避免压倒Genome浏览器和Internet浏览器的颜色资源。
+blockCount- BED行中的块（外显子）数。
+blockSizes- 块大小的逗号分隔列表。此列表中的项目数应与blockCount相对应。
+blockStarts - 以逗号分隔的块开始列表。应该相对于chromStart计算所有 blockStart位置。此列表中的项目数应与blockCount相对应。
+
+链接：https://www.jianshu.com/p/9208c3b89e44
+```
+* [bed bedpe格式的区别](https://www.jianshu.com/p/c73c1dc81c61)  
+BEDPE 格式类似于 BED 格式，可用于描述成对的基因组区域。
+由于bed文件原则上不能表示跨染色体的信息，因此，对于结构变异，一般采用的一种基于bed文件的变种文件bedpe格式进行存储。其格式与bed最大的区别在于，对于必须列即chrom、chromStart、chromEnd三列分别记录两次。  
+
 
 # Merging BAMs (optional)  
-[该文章](https://yiweiniu.github.io/blog/2019/03/ATAC-seq-data-analysis-from-FASTQ-to-peaks/)解释的很全面  
+[该文章](https://yiweiniu.github.io/blog/2019/03/ATAC-seq-data-analysis-from-FASTQ-to-peaks/)解释的很全面   
+* 如果是技术重复，可以在前期就合并增加测序深度  
 
-If it is B, biological replicates, you almost certainly don’t want to merge them. You will lose your information about biological variance is present.本文相当于两个处理各两个生物学重复，因此建议不合并。  
-
+* 如果是生物重复，最好别合并；先分别call peak然后取union（consensus peak） 
+If it is biological replicates, you almost certainly don’t want to merge them. You will lose your information about biological variance is present.本文相当于两个处理各两个生物学重复，因此建议不合并。  
+calling peaks on each replicate separately then making use of those that are common in all to create a "gold standard" of the most reliable call.
 ```bash
 samtools merge -@ 6 condition1.merged.bam sample1.bam sample2.bam sample3.bam
 samtools index -@ 6 condition1.merged.bam
@@ -898,58 +1003,92 @@ awk 'BEGIN {OFS = "\t"} ; {if ($6 == "+") print $1, $2 + 4, $2 + 5; else print $
 
 
 
-# 7.shift_reads
-由于Tn5酶是以二聚体的形式结合到染色体上的，其跨度大致是9bp，在第一篇ATAC-seq出来的时候，作者就考虑到了这个问题，在分析的时候，需要回补这个9个bp的碱基差。具体做法就是将正链正向移动4bp，将负链负向移动5个bp。一般用alignmentSieve 一步到位。注意，不做reads shift 对单碱基分辨高的分析会有影响，例如TF motif footprinting。
+# shift_reads (optional) 
+1. 目的：由于Tn5酶是以二聚体的形式结合到染色体上的，其跨度大致是9bp，在第一篇ATAC-seq出来的时候，作者就考虑到了这个问题，在分析的时候，需要回补这个9个bp的碱基差。具体做法就是将正链正向移动4bp，将负链负向移动5个bp。一般用alignmentSieve 一步到位。注意，不做reads shift 对单碱基分辨高的分析会有影响，例如TF motif footprinting，但也不是所有TF footprinting分析软件需要shifted reads，很多可以自己转换，e.g. NucleoATAC。  
+2. 使用软件：该步有很多种[方法](https://yiweiniu.github.io/blog/2019/03/ATAC-seq-data-analysis-from-FASTQ-to-peaks/)，本流程采用 `bedtools` and `awk`.
+
+3. 代码：
+```bash
+mkdir -p /mnt/d/ATAC/shifted
+cd /mnt/d/ATAC/filter
+# the BAM file should be sorted by read name beforehand
+parallel -j 7 "
+samtools sort -n -o ../shifted/{1}.named {1} #记得改名
+" ::: $( ls *.filter.bam)
+
+cd /mnt/d/ATAC/shifted
+# The bedtools command should extract the paired-end alignments as bedpe format, then the awk command should shift the fragments as needed
+ls *.named | while read id ;
+do
+bedtools bamtobed -i ${id} -bedpe | awk -v OFS="\t" '{($9=="+"){print $1,$2+4,$6+4} \
+  ($9=="-"){print $1,$2-5,$6-5}}' > ${id}.Tn5.bedpe
+done
+```
 
 
-ATAC-seq关心的是在哪里切断，断点才是peak的中心，所以使用shift模型，--shift -75或-100.  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+ 
 
 
 # 7.call_peaks 
-1. 目的： ATAC-seq 数据分析的第二个主要步骤是识别开放区域（也称为 Peak），后续高级分析以此为基础。  
+1. 目的： 下一步需要在统计学上判断真实的peak，因为Tn5在染色体上结合是个概率事件，如何判断这个位置的reads足够为一个peak，这就需要用到统计检测。ATAC-seq 数据分析的第二个主要步骤是识别开放区域（也称为 Peak），后续高级分析以此为基础。  
 
-2. 软件：目前，`MACS2` 是 ENCODE ATAC-seq 流程的默认 Peak caller 程序。
+2. 软件：目前，`MACS2` 是 ENCODE ATAC-seq 流程的默认 Peak caller 程序。  
 
-这里他们选用固定宽度（fixed-width）的peaks,优点有：1）对大量的peaks进行counts和motif分析时可以减小误差；2）对于大量数据集的可以合并峰得到一致性的peaks; 
-使用的是macs2 call peaks,参数如下：
+3. 其他： 
 
---shift -75 --extsize 150 --nomodel --call-summits --nolambda --keep-dup all -p 0.01
-同时根据hg38 blacklist过滤，并除去染色体两端以外的峰。
-一个样本的overlaps他们是通过迭代移除的方法，首先保留最显著的peak,然后任何与最显著peak有直接overlap的peaks都被移除；接着对另一个最显著性的peak进行相同的操作，最终保留所有更显著的peaks，移除与其有直接overlaps的peaks  
 
+* ATAC-seq关心的是在哪里切断，断点才是peak的中心，所以使用shift模型，--shift -75或-100.   
+
+* 这里选用固定宽度（fixed-width）的peaks,优点有：   
+1）对大量的peaks进行counts和motif分析时可以减小误差；  
+2）对于大量数据集的可以合并峰得到一致性的peaks;   
+
+* 一个样本的overlaps他们是通过迭代移除的方法，首先保留最显著的peak，然后任何与最显著peak有直接overlap的peaks都被移除；接着对另一个最显著性的peak进行相同的操作，最终保留所有更显著的peaks，移除与其有直接overlaps的peaks  
+* 注：后续分析过程需要用到IDR提取consensus peak，建议MACS2 callpeaks的步骤参数设置不要过于严格，以便鉴定出更多的peaks。
+
+4. 代码：
 ```bash
 mkdir /mnt/d/ATAC/peaks/
-cd 
+cd /mnt/d/ATAC/bed/
 ls *.bed | while read id; do
-  macs2 callpeak -t $id -g mm --nonmodel --shift 100 --extsive 200 -n ${id%%.*} --outdir ../peaks/ 
-  # %%取前缀
+  macs2 callpeak  -g mm -f BAMPE --nonmodel \
+  --shift 100 --extsive 200 -p 0.01 -n ${id%%.*} -t $id \
+  --outdir ../peaks/ \
+  2 > ${id%%.*}.macs2.log
+  # %%取前缀 
 done
-# 生成三个文件：narrowpeak, peaks.xls,summits.bed
 ```
+* macs2 callpeaks 参数  
+
+-t bed文件;  -g 比对基因组;  -n 前缀;  
+-Q/–QVALUE：qvalue (minimum FDR)设定call significant regions的阈值；默认，0.01；    
+--nomodel的意思是让其不要建立双峰模型来使两个“相邻”的峰shift成一个峰，而是向外shift(也就是在nomodel后要加上--shift -75 --extsize 150的参数);  
+-P/–PVALUE：设定p值时， qvalue不再起作用。  
+–NOMODEL：MACS 不构建模型。  
+–EXTSIZE：设定–nomodel，MACS 会沿着 5’->3’方向延伸reads；如果转录因子结合区域长200bp，把所有的reads都统一成200bp长，并且移动了100bp，这样就保证了这200bp的中心是酶切位点.  
+–SHIFT：–shiftsize已经被 –extsize所替代；–nomodel设定之后，MACS 会用这个参数剪切reads5’，利用–extsize 延伸reads 3’端；如果设为负数，方向相反(3’->5’ );ChIP-Seq建议设置为0；当检测富集切割位点时，例如DNAseI-Seq datasets，此参数应该设为 -1 * half of EXTSIZE( EXTSIZE设为200，此参数为-100).    
+-f BAMPE： It forces MACS to pileup the real fragment length instead of an estimate, which maked sense imho, due to the quiet different fragment sizes that the library prep creates. If you followed original protocol for ATAC-Seq, you should get Paired-End reads. If so, I would suggest you just use `--format BAMPE` to let MACS2 pileup the whole fragments in general. But if you want to focus on looking for where the ‘cutting sites’ are, then `--nomodel --shift -100 --extsize 200` should work.    
+--nolambda: 不要考虑在峰值候选区域的局部偏差/λ.  
+
+
+* 两个例子：  
+
+DNAse-Seq，想将平滑窗口设为200bps时，使用参数‘–nomodel –shift -100 –extsize 200’。  
+nucleosome-seq，使用核小体一半大小进行小波分析获得核小体中心的峰；当缠绕核小体DNA长度为147bps，可使用参数‘–nomodel –shift 37 –extsize 73’。  
+
+链接：https://www.imooc.com/article/270403  
+
+
+
+
+
 * 结果：在IGV查看
+生成三个文件：narrowpeak, peaks.xls,summits.bed
+bw文件是用于方便可视化peak的文件，因为上游处理完的bam文件通常都较大，不方便于快速展示，而将其转变成bw(bigwig)或者wig就会方便的多，而bigWig文件的显示性能又相较wig文件快得多，故bw是更常用的。而相较于bed文件相说，它不只提供了peak的位置，还有peak的高低。
+
+
+
+
 # Peak differential analysis
 
 csaw 是通过将 edgeR 框架扩展到将基因组分 bin 而开发的。滑动窗口方法被认为可以对基因组中的 reads 进行更多的无偏估计，但是需要严格的 FDR 控制才能正确合并相邻窗口。
