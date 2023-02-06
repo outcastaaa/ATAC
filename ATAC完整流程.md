@@ -748,33 +748,42 @@ samtools view -f 2 -q 30 -o test.filter.bam test.rmdup.bam
 ## 6.3 remove_chrM_reads
 * 目的：去除比对到线粒体上的reads，这一步一定要做，线粒体上长度小，极大概率覆盖很多reads，造成虚假peak。由于mtDNA读段的百分比是文库质量的指标，我们通常在比对后删除线粒体读段。  
 
-```bash
 
 
-    
-	  
-    
-done
-
-# 结果：
-
-```
 * 将上一步和这一步结合起来  
 
-
 ```bash
-mkdir /mnt/d/ATAC/filter
+mkdir -p /mnt/d/ATAC/filter
 cd /mnt/d/ATAC/rmdup
 cp /mnt/d/ATAC/trim2/config.raw   /mnt/d/ATAC/rmdup/config.raw
 
 cat config.raw | while read id;
+do 
+  echo $id 
+  arr=($id)
+  sample=${arr[0]}
+
+  # 统计chrM reads，使用没有去除PCR重复的数据
+  samtools idxstats ../alignment/${sample}.sort.bam | grep 'chrM' | cut -f 3  
+  # 第一列是染色体名称，第二列是序列长度，第三列是mapped reads数，第四列是unmapped reads数
+  samtools idxstats ../alignment/${sample}.sort.bam | awk '{SUM += $3} END {print SUM}' 
+done
+```
+* 结果
+```bash
+# 统计chrM reads&每个chr总reads&比例
+8319031 96440057    8.626%
+9067938 105321082   8.617%
+11454225 93733501   12.220%
+18899078 83571727   22.614%
+
+```
+```bash
+cd /mnt/d/ATAC/rmdup
+cat config.raw | while read id;
 do echo $id 
   arr=($id)
   sample=${arr[0]}
-  # 统计chrM reads，使用没有去除PCR重复的数据
-  mtreads = $(samtools idxstats ../alignment/${sample}.sort.bam | grep 'chrM' | cut -f 3)
-  totalreads = $(samtools idxstats ../alignment/${sample}.sort.bam | awk '{SUM += $3}' END {print SUM}')
-  echo "==> mtDNA Content:' $(bc <<< "scale=2;100*$mtreads/$totalreads")'%"
 
   samtools view -h -f 2 -q 30 ./${sample}.rmdup.bam | grep -v  chrM | samtools sort -@ 7 -O bam  -o ../filter/${sample}.filter.bam 
 	samtools index  -@ 7 ../filter/${sample}.filter.bam 
@@ -791,7 +800,7 @@ mkdir -p /mnt/d/ATAC/bed
 cd /mnt/d/ATAC/filter
 
 parallel -j 6 "
-   bedtools bamtobed -i ./{1}.filter.bam >../bed/{1}.bed
+   bedtools bamtobed -i ./{1} >../bed/{1}.bed
 " ::: $( ls *.filter.bam)
 ```
 
@@ -890,7 +899,7 @@ awk 'BEGIN {OFS = "\t"} ; {if ($6 == "+") print $1, $2 + 4, $2 + 5; else print $
 
 
 # 7.shift_reads
-由于Tn5酶是以二聚体的方面结合到染色体上的，其跨度大致是9bp，在第一篇ATAC-seq出来的时候，作者就考虑到了这个问题，在分析的时候，需要回补这个9个bp的碱基差。具体做法就是将正链正向移动4bp，将负链负向移动5个bp。我一般用alignmentSieve 一步到位。注意，不做reads shift 对单碱基分辨高的分析会有影响，例如TF motif footprinting
+由于Tn5酶是以二聚体的形式结合到染色体上的，其跨度大致是9bp，在第一篇ATAC-seq出来的时候，作者就考虑到了这个问题，在分析的时候，需要回补这个9个bp的碱基差。具体做法就是将正链正向移动4bp，将负链负向移动5个bp。一般用alignmentSieve 一步到位。注意，不做reads shift 对单碱基分辨高的分析会有影响，例如TF motif footprinting。
 
 
 ATAC-seq关心的是在哪里切断，断点才是peak的中心，所以使用shift模型，--shift -75或-100.  
@@ -931,6 +940,16 @@ ATAC-seq关心的是在哪里切断，断点才是peak的中心，所以使用sh
 同时根据hg38 blacklist过滤，并除去染色体两端以外的峰。
 一个样本的overlaps他们是通过迭代移除的方法，首先保留最显著的peak,然后任何与最显著peak有直接overlap的peaks都被移除；接着对另一个最显著性的peak进行相同的操作，最终保留所有更显著的peaks，移除与其有直接overlaps的peaks  
 
+```bash
+mkdir /mnt/d/ATAC/peaks/
+cd 
+ls *.bed | while read id; do
+  macs2 callpeak -t $id -g mm --nonmodel --shift 100 --extsive 200 -n ${id%%.*} --outdir ../peaks/ 
+  # %%取前缀
+done
+# 生成三个文件：narrowpeak, peaks.xls,summits.bed
+```
+* 结果：在IGV查看
 # Peak differential analysis
 
 csaw 是通过将 edgeR 框架扩展到将基因组分 bin 而开发的。滑动窗口方法被认为可以对基因组中的 reads 进行更多的无偏估计，但是需要严格的 FDR 控制才能正确合并相邻窗口。
