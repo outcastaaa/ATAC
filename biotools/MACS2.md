@@ -1,4 +1,20 @@
-[参考文章:包括原理、参数](https://github.com/hbctraining/In-depth-NGS-Data-Analysis-Course/blob/master/sessionV/lessons/04_peak_calling_macs.md)
+[参考文章:包括原理、参数](https://github.com/hbctraining/In-depth-NGS-Data-Analysis-Course/blob/master/sessionV/lessons/04_peak_calling_macs.md)  
+[参考文章2](https://www.imooc.com/article/270403#:~:text=MACS2%20%E5%8F%82%E6%95%B0%E8%AF%A6%E7%BB%86%E5%AD%A6%E4%B9%A0%201%20%E5%AE%89%E8%A3%85%20pip%20install%20MACS2%20MACS2%E5%8A%9F%E8%83%BD%EF%BC%9A,...%203%20%E7%BB%93%E6%9E%9C%E6%96%87%E4%BB%B6%201.NAME_peaks.xls%20%E5%AD%98%E6%94%BEpeak%E4%BF%A1%E6%81%AF%E7%9A%84%E6%96%87%E4%BB%B6%20%E6%9F%93%E8%89%B2%E4%BD%93%E5%90%8D%20peak%E8%B5%B7%E5%A7%8B%E4%BD%8D%E7%BD%AE%20)
+## 用法
+```bash
+macs2 callpeak
+usage: macs2 callpeak [-h] -t TFILE [TFILE ...] [-c [CFILE ...]]
+                      [-f {AUTO,BAM,SAM,BED,ELAND,ELANDMULTI,ELANDEXPORT,BOWTIE,BAMPE,BEDPE}] [-g GSIZE] [-s TSIZE]
+                      [--keep-dup KEEPDUPLICATES] [--outdir OUTDIR] [-n NAME] [-B] [--verbose VERBOSE] [--trackline]
+                      [--SPMR] [--nomodel] [--shift SHIFT] [--extsize EXTSIZE] [--bw BW] [--d-min D_MIN]
+                      [-m MFOLD MFOLD] [--fix-bimodal] [-q QVALUE | -p PVALUE] [--scale-to {large,small}]
+                      [--down-sample] [--seed SEED] [--tempdir TEMPDIR] [--nolambda] [--slocal SMALLLOCAL]
+                      [--llocal LARGELOCAL] [--max-gap MAXGAP] [--min-length MINLEN] [--broad]
+                      [--broad-cutoff BROADCUTOFF] [--cutoff-analysis] [--call-summits] [--fe-cutoff FECUTOFF]
+                      [--buffer-size BUFFER_SIZE] [--to-large] [--ratio RATIO]
+```
+
+
 ## 详细参数
 There are seven [major functions](https://github.com/taoliu/MACS#usage-of-macs2) available in MACS2 serving as sub-commands. We will only cover `callpeak` in this lesson, but you can use `macs2 COMMAND -h` to find out more, if you are interested.
 
