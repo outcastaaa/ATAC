@@ -1226,17 +1226,17 @@ wc -l SRR11539111_peaks.narrowPeak
 | Annotation used              | Value  | Resulting Data Status  |
 |------------------------------|--------|------------------------|
 | hg19 Refseq TSS annotation   | < 6    | Concerning             |
-|                              | 6--10  | Acceptable             |
-|                              | > 10   | Ideal                  |
+|  hg19 Refseq TSS annotation  | 6--10  | Acceptable             |
+|  hg19 Refseq TSS annotation  | > 10   | Ideal                  |
 | GRCh38 Refseq TSS annotation | < 5    | Concerning             |
-|                              | 5--7   | Acceptable             |
-|                              | > 7    | Ideal                  |
+| GRCh38 Refseq TSS annotation | 5--7   | Acceptable             |
+| GRCh38 Refseq TSS annotation | > 7    | Ideal                  |
 | mm9 GENCODE TSS annotation   | < 5    | Concerning             |
-|                              | 5--7   | Acceptable             |
-|                              | > 7    | Ideal                  |
+| mm9 GENCODE TSS annotation   | 5--7   | Acceptable             |
+| mm9 GENCODE TSS annotation   | > 7    | Ideal                  |
 | mm10 Refseq TSS annotation   | < 10   | Concerning             |
-|                              | 10--15 | Acceptable             |
-|                              | > 15   | Ideal                  |
+| mm10 Refseq TSS annotation   | 10--15 | Acceptable             |
+| mm10 Refseq TSS annotation   | > 15   | Ideal                  |
 
 ## 9.1 fragment length distribution
 1. 目的： 查看片段长度的分布情况  
