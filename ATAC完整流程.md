@@ -1095,14 +1095,16 @@ ls *.Tn5.bedpe| while read id; do
 done
 
 或者
+# 加了几个参数，删除了shift和extsize
 cp /mnt/d/ATAC/rmdup/config.raw /mnt/d/ATAC/shifted/config.raw
+mkdir -p /mnt/d/ATAC/peaks/
 cat config.raw | while read id;
 do echo $id 
   arr=($id)
   sample=${arr[0]}
 
-  macs2 callpeak  -g mm -f BEDPE --nomodel \
-   -n ${sample} -t ./${sample}.Tn5.bedpe \
+  macs2 callpeak  -g mm -f BEDPE --nomodel --keep-dup all \
+   --cutoff-analysis -n ${sample} -t ./${sample}.Tn5.bedpe \
   --outdir ../peaks/ 
 done
 
@@ -1134,7 +1136,8 @@ do echo $id
   --outdir ../peaks2/ 
 done
 ```
-* macs2 callpeaks 参数  
+* macs2 callpeaks [参数](https://manpages.ubuntu.com/manpages/impish/man1/macs2_callpeak.1.html#:~:text=Please%20note%20that%20if%20the%20format%20is%20set,predicting%20the%20fragment%20size%20first%20and%20extending%20reads.)   
+
 
 -t bed文件;  -g 比对基因组;  -n 前缀;  
 -Q/–QVALUE：qvalue (minimum FDR)设定call significant regions的阈值；默认，0.01；    
@@ -1154,7 +1157,14 @@ done
               instead of predicting the fragment size first and extending reads. Also please note
               that the BEDPE only contains three columns, and is NOT the same BEDPE  format  used
               by BEDTOOLS.  DEFAULT: "AUTO"    
---nolambda: 不要考虑在峰值候选区域的局部偏差/λ.  
+--nolambda: 如果为真，MACS 将使用固定背景 lambda 作为每个峰区域的本地 lambda。 通常，MACS 计算动态局部 lambda 以反映由于潜在的染色质可及性而导致的局部偏差。  
+--cutoff-analysis
+              While set, MACS2 will analyze number or total length of peaks that can be called by
+              different p-value cutoff then output a summary table to help user decide  a  better
+              cutoff.  The table will be saved in NAME_cutoff_analysis.txt file. Note, minlen and
+              maxgap may affect the results. WARNING: May take ~30 folds longer time  to  finish.
+              The  result  can  be useful for users to decide a reasonable cutoff value. DEFAULT:
+              False
 
 
 * 两个例子：  
@@ -1202,20 +1212,130 @@ wc -l SRR11539111_peaks.narrowPeak
 # bedpe的长度会更长一点，后续分析都采用bedpe
 ```
 
+* 可以在IGV查看结果  
 
 
 
 
+# 9.Quality_check
+判断ATAC-seq是否合格的几个[Current Standards](https://www.encodeproject.org/atac-seq/)  
+
+* 实验重复 Experiments should have two or more biological replicates. Assays performed using EN-TEx samples may be exempted due to limited availability of experimental material, but at least two technical replicates are required. 
+* 数据量 Each replicate should have 25 million non-duplicate, non-mitochondrial aligned reads for single-end sequencing and 50 million for paired-ended sequencing (i.e. 25 million fragments, regardless of sequencing run type). 
+* 比对率 The alignment rate, or percentage of mapped reads, should be greater than 95%, though values >80% may be acceptable. 
+* IDR value Replicate concordance is measured by calculating IDR values (Irreproducible Discovery Rate). The experiment passes if both rescue and self consistency ratios are less than 2.
+* Library complexity is measured using the Non-Redundant Fraction (NRF) and PCR Bottlenecking Coefficients 1 and 2, or PBC1 and PBC2. The preferred values are as follows: NRF>0.9, PBC1>0.9, and PBC2>3. 
+* Various peak files must meet certain requirements. Please visit the section on output files under the pipeline overview for more information on peak files.
+** The number of peaks within a replicated peak file should be >150,000, though values >100,000 may be acceptable.   
+** The number of peaks within an IDR peak file should be >70,000, though values >50,000 may be acceptable.  
+** A nucleosome free region (NFR) must be present.  
+** A mononucleosome peak must be present in the fragment length distribution. These are reads that span a single nucleosome, so they are longer than 147 bp but shorter than 147*2 bp. Good ATAC-seq datasets have reads that span nucleosomes (which allows for calling nucleosome positions in addition to open regions of chromatin).  
+
+
+* The fraction of reads in called peak regions (FRiP score) should be >0.3, though values greater than 0.2 are acceptable. For EN-TEx tissues, FRiP scores will not be enforced as QC metric. TSS enrichment remains in place as a key signal to noise measure.
+
+* Transcription start site (TSS) enrichment values are dependent on the reference files used; cutoff values for high quality data are listed in the table below. 
+
+
+| Annotation used              | Value  | Resulting Data Status  |
+|------------------------------|--------|------------------------|
+| hg19 Refseq TSS annotation   | < 6    | Concerning             |
+|                              | 6--10  | Acceptable             |
+|                              | > 10   | Ideal                  |
+| GRCh38 Refseq TSS annotation | < 5    | Concerning             |
+|                              | 5--7   | Acceptable             |
+|                              | > 7    | Ideal                  |
+| mm9 GENCODE TSS annotation   | < 5    | Concerning             |
+|                              | 5--7   | Acceptable             |
+|                              | > 7    | Ideal                  |
+| mm10 Refseq TSS annotation   | < 10   | Concerning             |
+|                              | 10--15 | Acceptable             |
+|                              | > 15   | Ideal                  |
+
+## 9.1 fragment length distribution
+1. 目的： 查看片段长度的分布情况  
+2. 原理：通常，一个成功的 ATAC-seq 实验应该生成一个片段大小分布图，其峰值与无核小体区域 (nucleosome-free regions: NFR) (<100 bp) 和单、二、三核小体 (~ 200、400、600 bp) (Fig. 1b) 相对应，呈递减和周期性。来自 NFR 的片段预计会在基因的转录起始位点 (transcription start site, TSS) 附近富集，而来自核小体结合区域的片段预计会在 TSS 附近被耗尽，在 TSS 附近的侧翼区域会有少量富集 (Fig. 1c)。  
+
+![b](../ATAC/pictures/1b.png)    
+b: 片段大小在 100bp 和 200bp 左右有明显的富集，表示没有核小体结合和单核小体结合的片段。
+![c](../ATAC/pictures/1c.png)  
+  c：TSS 富集可视化可以看出，没有核小体结合的片段在 TSS 处富集，而但核小体结合的片段在 TSS 上缺失，在 TSS 两侧富集。  
+
+
+3. 软件：有很多种方式可以画出该图，且都很简单，本流程采用`Picard`统计，`R`画图.
+4. 代码：
+```bash
+# 注：判断质量的分析步骤不需要Tn5位置转换过的bam，采用处理后的filter.bam即可
+mkdir -p /mnt/d/ATAC/frag_length
+cd /mnt/d/ATAC/filter
+cp /mnt/d/ATAC/rmdup/config.raw /mnt/d/ATAC/filter/config.raw
+
+cat config.raw | while read id;
+do echo $id 
+  arr=($id)
+  sample=${arr[0]}
+  java -jar /mnt/d/biosoft/picard/picard.jar CollectInsertSizeMetrics \
+  -I ${sample}.filter.bam \
+  -O ../frag_length/${sample}.insert_size_metrics.txt \
+  -H ../frag_length/${sample}.insert_size_histogram.pdf
+done
+#ERROR   2023-02-07 21:08:40     ProcessExecutor /home/linuxbrew/.linuxbrew/Cellar/r/4.2.1_2/lib/R/bin/exec/R: error while loading shared libraries: libicuuc.so.70: cannot open shared object file: No such file or directory
+
+#--Histogram_FILE,-H <File>    File to write insert size Histogram chart to.  
+#--INPUT,-I <File>             Input SAM/BAM/CRAM file. 
+#--OUTPUT,-O <File>            The file to write the output to. 
+```
+```bash
+# 画图前准备
+cd /mnt/d/ATAC/filter
+cat config.raw | while read id;
+do echo $id 
+  arr=($id)
+  sample=${arr[0]}
+  samtools view ${sample}.filter.bam | awk '$9>0' | cut -f 9 > ../frag_length/${sample}.fragment_length_count.txt
+  # samtools view ${sample}.filter.bam |  cut -f 9 > ../frag_length/${sample}.fragment_length_count2.txt
+done
+```
+```r
+# 在Rstudio中画图
+getwd()    #[1] "D:/atac/R_analysize"
+# 以SRR11539111为例
+a<-read.table('../frag_length/SRR11539111.fragment_length_count.txt')
+dim(a)
+#法1
+png('hist.png')
+hist(abs(as.numeric(a[,1])),breaks=500,xlab = "Fragment length(bp)",ylab = "Frequency",main = "SRR11539111 Fragment sizes")
+dev.off()
+#法2
+frag <- a$V1
+breaks_num <- 2000
+res <- hist(frag, breaks = breaks_num, plot = FALSE)
+# 添加坐标原点
+plot(x = c(0, res$breaks),
+     y = c(0, 0, res$counts) / 10^2,
+     type = "l", col = "red",full="red",
+     xlab = "Fragment length(bp)",
+     ylab = expression(Normalized ~ read ~ density ~ 10^2),
+     main = "Sample Fragment sizes")
+
+# 其他样本类似
+b <-read.table('../frag_length/SRR11539112.fragment_length_count.txt')
+c <-read.table('../frag_length/SRR11539115.fragment_length_count.txt')
+d <-read.table('../frag_length/SRR11539116.fragment_length_count.txt')
+```
 
 
 
 
-* 在IGV查看结果  
+## ATACseqQC:FRiP
 
 
 
 
+这些可以通过 ATACseqQC工具进行评估。最后，分别对正链和负链的 reads 进行 + 4bp 和 -5bp 的移位（目标DNA最后产生9bp的重复在ATAC-seq后续分析里要处理。这个长度近似于一个完整的DNA螺旋[参考文章](https://www.jianshu.com/p/13779b89e76b)），以解释 Tn5 转座酶修复损伤 DNA 所产生的 9bp 的重复，并实现 TF footprint 和 motif 相关分析的碱基对分辨率。 
+## IDR：样本内的重复性检测，合并一致性peaks
 
+## phantompeakqualtools：评估实验中信噪比、富集信号等
 
 
 # Peak differential analysis
@@ -1380,22 +1500,7 @@ LD信息从haploreg 网站下载 http://archive.broadinstitute.org/mammals/haplo
 
 
 
-# ATAC-seq质量评估
 
-## ATACseqQC:给出国歌质量评估度量值，包括FRiP
-还有其他需要评估的特定于 ATAC-seq 的质量度量。通常，一个成功的 ATAC-seq 实验应该生成一个片段大小分布图，其峰值与无核小体区域 (nucleosome-free regions: NFR) (<100 bp) 和单、二、三核小体 (~ 200、400、600 bp) (Fig. 1b) 相对应，呈递减和周期性。来自 NFR 的片段预计会在基因的转录起始位点 (transcription start site, TSS) 附近富集，而来自核小体结合区域的片段预计会在 TSS 附近被耗尽，在 TSS 附近的侧翼区域会有少量富集 (Fig. 1c)。  
-
-![b](../ATAC/pictures/1b.png)    
-b: 片段大小在 100bp 和 200bp 左右有明显的富集，表示没有核小体结合和单核小体结合的片段。
-![c](../ATAC/pictures/1c.png)  
-  c：TSS 富集可视化可以看出，没有核小体结合的片段在 TSS 处富集，而但核小体结合的片段在 TSS 上缺失，在 TSS 两侧富集。  
-
-
-
-这些可以通过 ATACseqQC工具进行评估。最后，分别对正链和负链的 reads 进行 + 4bp 和 -5bp 的移位（目标DNA最后产生9bp的重复在ATAC-seq后续分析里要处理。这个长度近似于一个完整的DNA螺旋[参考文章](https://www.jianshu.com/p/13779b89e76b)），以解释 Tn5 转座酶修复损伤 DNA 所产生的 9bp 的重复，并实现 TF footprint 和 motif 相关分析的碱基对分辨率。 
-## IDR：样本内的重复性检测，合并一致性peaks
-
-## phantompeakqualtools：评估实验中信噪比、富集信号等
 
 # 上面FastQC➔ trimmomatic➔BWA-MEM➔ATACseqQC
 
