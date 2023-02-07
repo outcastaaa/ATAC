@@ -1310,10 +1310,9 @@ c <-read.table('../frag_length/SRR11539115.fragment_length_count.txt')
 d <-read.table('../frag_length/SRR11539116.fragment_length_count.txt')
 ```
 * 结果：  
-
-
+[SRR11539111](https://github.com/outcastaaa/ATAC/blob/main/pictures/SRR11539111.png)
 ![SRR11539111](../ATAC/pictures/SRR11539111.png)   
-
+[SRR11539116](https://github.com/outcastaaa/ATAC/blob/main/pictures/SRR11539116.png)
 ![SRR11539116](../ATAC/pictures/SRR11539116.png)  
 
 
