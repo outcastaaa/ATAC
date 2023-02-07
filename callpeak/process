@@ -1,0 +1,29 @@
+$ cat config.raw | while read id;
+do echo $id 
+  arr=($id)
+  sample=${arr[0]}
+
+  macs2 callpeak  -g mm -f BEDPE --nomodel \
+  --shift 100 --extsize 200 -n ${sample} -t ./${sample}.Tn5.bedpe \
+  --outdir ../peaks/ 
+done
+
+
+SRR11539111 SRR11539111_1_val_1.fq.gz SRR11539111_2_val_2.fq.gz
+INFO  @ Tue, 07 Feb 2023 02:55:39:
+# Command line: callpeak -g mm -f BEDPE --nomodel --shift 100 --extsize 200 -n SRR11539111 -t ./SRR11539111.Tn5.bedpe --outdir ../peaks/
+# ARGUMENTS LIST:
+# name = SRR11539111
+# format = BEDPE
+# ChIP-seq file = ['./SRR11539111.Tn5.bedpe']
+# control file = None
+# effective genome size = 1.87e+09
+# band width = 300
+# model fold = [5, 50]
+# qvalue cutoff = 5.00e-02
+# The maximum gap between significant sites is assigned as the read length/tag size.
+# The minimum length of peaks is assigned as the predicted fragment length "d".
+# Larger dataset will be scaled towards smaller dataset.
+# Range for calculating regional lambda is: 10000 bps
+# Broad region calling is off
+# Paired-End mode is on
