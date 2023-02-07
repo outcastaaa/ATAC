@@ -16,6 +16,9 @@
     - [2.7 Picard](#27-Picard)
     - [2.8 bedtools](#28-bedtools)
     - [2.9 MACS2](#29-MACS2)
+    - [2.10 IGV](#210-IGV)
+
+
 
     - [2.9 R](#29-r)
     - [2.10 Rstudio](#210-rstudio)
@@ -211,13 +214,14 @@ MACS randomly samples 1,000 of these high-quality peaks, separates their positiv
 [官网](https://pypi.org/project/MACS2/)  
 
 ```bash
+# 方法1
 mkdir -p /mnt/d/biosoft/MACS2
 cd /mnt/d/biosoft/MACS2
 wget https://files.pythonhosted.org/packages/e2/61/85d30ecdd34525113e28cb0c5a9f393f93578165f8d848be5925c0208dfb/MACS2-2.2.7.1.tar.gz
 tar -zxvf MACS2-2.2.7.1.tar.gz
 cd MACS2-2.2.7.1
 python setup.py install
-cd MACS2-2.2.7.1/bin
+cd /mnt/d/biosoft/MACS2/MACS2-2.2.7.1/bin
 sudo chmod 777 macs2 
 # 写入环境
 export PATH=/mnt/d/biosoft/MACS2/MACS2-2.2.7.1/bin:$PATH
@@ -227,9 +231,42 @@ macs2
 usage: macs2 [-h] [--version]
              {callpeak,bdgpeakcall,bdgbroadcall,bdgcmp,bdgopt,cmbreps,bdgdiff,filterdup,predictd,pileup,randsample,refinepeak}
              ...
-macs2: error: the following arguments are required: subcommand
+
+# 方法2：使用miniconda安装
+1. 打开清华大学开源镜像网站 https://mirrors.tuna.tsinghua.edu.cn -> 获取下载链接  
+2. 右键复制链接 https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/Miniconda3-py38_4.12.0-Linux-x86_64.sh
+3. 下载
+mkdir -p /mnt/d/biosoft/miniconda
+cd /mnt/d/biosoft/miniconda
+wget https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/Miniconda3-py38_4.12.0-Linux-x86_64.sh
+sh Miniconda3-py38_4.12.0-Linux-x86_64.sh
+# Miniconda3 will now be installed into this location:/home/xuruizhi/miniconda3
+source ~/miniconda3/bin/activate
+
+conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/
+conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/
+conda config --set show_channel_urls yes
+conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge/
+conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/bioconda/
+
+conda search macs2
+conda create -n python2 python=2
+conda activate python2
+conda install macs2
 ```
 * [详细用法](https://github.com/outcastaaa/ATAC/blob/main/biotools/MACS2.md)  
+
+## 2.10 IGV
+* 下载
+安装IGV前需要在电脑上安装JAVA，全部默认安装即可。[官网](https://software.broadinstitute.org/software/igv/download)选择合适版本下载 
+```bash
+cd /mnt/d/biosoft/
+wget https://data.broadinstitute.org/igv/projects/downloads/2.16/IGV_Win_2.16.0-WithJava-installer.exe
+``` 
+* 文件格式  
+在IGV中查看对齐的首选文件格式为BAM格式，除 BAM 外，其他受支持的与对齐相关的文件格式包括GOBY、 VCF、 PSL、 BED和TDF。IGV 还要求 BAM 文件具有关联的索引文件，并且必须与BAM文件位于同一目录中。  
+
+
 
 
 ## 2.8 HTseq
@@ -921,89 +958,7 @@ samtools index -@ 6 condition1.merged.bam
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# ATAC-seq质量评估
-
-## ATACseqQC:给出国歌质量评估度量值，包括FRiP
-还有其他需要评估的特定于 ATAC-seq 的质量度量。通常，一个成功的 ATAC-seq 实验应该生成一个片段大小分布图，其峰值与无核小体区域 (nucleosome-free regions: NFR) (<100 bp) 和单、二、三核小体 (~ 200、400、600 bp) (Fig. 1b) 相对应，呈递减和周期性。来自 NFR 的片段预计会在基因的转录起始位点 (transcription start site, TSS) 附近富集，而来自核小体结合区域的片段预计会在 TSS 附近被耗尽，在 TSS 附近的侧翼区域会有少量富集 (Fig. 1c)。  
-
-![b](../ATAC/pictures/1b.png)    
-b: 片段大小在 100bp 和 200bp 左右有明显的富集，表示没有核小体结合和单核小体结合的片段。
-![c](../ATAC/pictures/1c.png)  
-  c：TSS 富集可视化可以看出，没有核小体结合的片段在 TSS 处富集，而但核小体结合的片段在 TSS 上缺失，在 TSS 两侧富集。  
-
-
-
-这些可以通过 ATACseqQC工具进行评估。最后，分别对正链和负链的 reads 进行 + 4bp 和 -5bp 的移位（目标DNA最后产生9bp的重复在ATAC-seq后续分析里要处理。这个长度近似于一个完整的DNA螺旋[参考文章](https://www.jianshu.com/p/13779b89e76b)），以解释 Tn5 转座酶修复损伤 DNA 所产生的 9bp 的重复，并实现 TF footprint 和 motif 相关分析的碱基对分辨率。 
-## IDR：样本内的重复性检测，合并一致性peaks
-
-## phantompeakqualtools：评估实验中信噪比、富集信号等
-
-# 上面FastQC➔ trimmomatic➔BWA-MEM➔ATACseqQC
-
-https://github.com/schmitzlab/The-prevalence-evolution-and-chromatin-signatures-of-plant-regulatory-elements/blob/master/Alighment_ATAC-seq_reads/Alighment_ATAC-seq_reads.sh
-```
-java -jar /usr/local/apps/eb/Trimmomatic/0.36-Java-1.8.0_144/trimmomatic-0.36.jar PE \ 
- -threads $thread -phred33 \ 
- $input.R1.fastq.gz $input.R2.fastq.gz \ 
- ${name}.L.trim.fastq ${name}.L.trimU.fastq ${name}.R.trim.fastq ${name}.R.trimU.fastq \ 
- ILLUMINACLIP:/usr/local/apps/eb/Trimmomatic/0.36-Java-1.8.0_144/adapters/NexteraPE-PE.fa:2:30:10 \ 
- SLIDINGWINDOW:3:20 LEADING:0 TRAILING:0 MINLEN:30
-
-# bowtie mapping
-bowtie $INDEX -t -p 4 -v 2 --best --strata -m 1 -X 1000 -S ${name}.sam \
- -1 ${name}.L.trim.fastq -2 ${name}.R.trim.fastq
- 
-# sort sam to bam 
-samtools sort -O 'bam' -o ${name}.sorted.bam -T tmp ${name}.sam
-
-# remove clonal
-java -Xmx20g -classpath /usr/local/apps/eb/picard/2.16.0-Java-1.8.0_144 -jar \
-  /usr/local/apps/eb/picard/2.16.0-Java-1.8.0_144/picard.jar MarkDuplicates \
-  INPUT=${name}.sorted.bam OUTPUT=${name}.clean.bam METRICS_FILE=XXX.txt \
-  REMOVE_DUPLICATES=true VALIDATION_STRINGENCY=LENIENT
-
-# bam to bed
-bedtools bamtobed -i ${name}.clean.bam > ${name}.bed
-
-# Genome_coverage
-bedtools genomecov -i ${name}.bed -split -bg -g $chrom_info > ${name}.bg
-wigToBigWig ${name}.bg $chrom_info ${name}.bw
-
-# Tn5_coverage
-awk 'BEGIN {OFS = "\t"} ; {if ($6 == "+") print $1, $2 + 4, $2 + 5; else print $1, $3 - 6, $3 - 5}' ${name}.bed > ${name}.Tn5.bed
-```
-
-
-
-
-
-
-
-# shift_reads (optional) 
+# 7.shift_reads
 1. 目的：由于Tn5酶是以二聚体的形式结合到染色体上的，其跨度大致是9bp，在第一篇ATAC-seq出来的时候，作者就考虑到了这个问题，在分析的时候，需要回补这个9个bp的碱基差。具体做法就是将正链正向移动4bp，将负链负向移动5个bp。一般用alignmentSieve 一步到位。注意，不做reads shift 对单碱基分辨高的分析会有影响，例如TF motif footprinting，但也不是所有TF footprinting分析软件需要shifted reads，很多可以自己转换，e.g. NucleoATAC。  
 2. 使用软件：该步有很多种[方法](https://yiweiniu.github.io/blog/2019/03/ATAC-seq-data-analysis-from-FASTQ-to-peaks/)，本流程采用 `bedtools` and `awk`.
 
@@ -1013,28 +968,103 @@ mkdir -p /mnt/d/ATAC/shifted
 cd /mnt/d/ATAC/filter
 # the BAM file should be sorted by read name beforehand
 parallel -j 7 "
-samtools sort -n -o ../shifted/{1}.named {1} #记得改名
+samtools sort -n -o ../shifted/{1}.named {1}
 " ::: $( ls *.filter.bam)
 
 cd /mnt/d/ATAC/shifted
 # The bedtools command should extract the paired-end alignments as bedpe format, then the awk command should shift the fragments as needed
-ls *.named | while read id ;
-do
-bedtools bamtobed -i ${id} -bedpe | awk -v OFS="\t" '{($9=="+"){print $1,$2+4,$6+4} \
-  ($9=="-"){print $1,$2-5,$6-5}}' > ${id}.Tn5.bedpe
+parallel -j 6 "
+  bedtools bamtobed -i {1} -bedpe > {1}.bedpe
+" ::: $( ls *.named)
+
+cp /mnt/d/ATAC/rmdup/config.raw /mnt/d/ATAC/shifted/config.raw
+cat config.raw | while read id;
+do echo $id 
+  arr=($id)
+  sample=${arr[0]}
+
+  cat ${sample}.filter.bam.named.bedpe | awk -v \
+  OFS="\t" '{if($9=="+"){print $1,$2+4,$6+4} \
+   else if($9=="-"){print $1,$2-5,$6-5}}' \
+    > ${sample}.Tn5.bedpe
+done
+
+# bed转化
+cd /mnt/d/ATAC/shifted/
+cat config.raw | while read id;
+do echo $id 
+  arr=($id)
+  sample=${arr[0]}
+
+  cat ../bed/${sample}.filter.bam.bed | awk -v \
+  OFS="\t" '{if($6=="+"){print $1,$2+4,$3+4} \
+   else if($6=="-"){print $1,$2-5,$3-5}}' \
+    > ${sample}.Tn5.bed
+done
+```
+* 结果：
+！注意，后续callpeak不可直接使用bedtools转化的bedpe文件，只能包含三行信息：chr,chrom_start,chrom_end
+```bash
+# bedpe文件行数是对应bed文件的一一半
+$ cat SRR11539111.Tn5.bedpe | head -n 10
+chr16   79178085        79178285
+chr2    64769630        64770045
+chr13   31981788        31981906
+chr7    45794617        45794744
+chr14   122435902       122435953
+chr4    10789204        10789384
+chr4    150616790       150616881
+chr7    39964352        39964456
+chr3    51072439        51072481
+chr3    43586562        43587287
+$ wc -l SRR11539111.Tn5.bedpe
+# 24055872
+
+$ cat SRR11539111.Tn5.bed | head -n 10
+chr1    3000777 3000877
+chr1    3000779 3000879
+chr1    3000797 3000897
+chr1    3000877 3000973
+chr1    3000922 3001022
+chr1    3000916 3001016
+chr1    3000930 3001030
+chr1    3000930 3001030
+chr1    3000970 3001070
+chr1    3001032 3001100
+$ wc -l SRR11539111.Tn5.bed
+# 48111744
+```
+
+# Bempe2Bw (optional) 
+bw文件是用于方便可视化peak的文件，因为上游处理完的bam文件通常都较大，不方便于快速展示，而将其转变成bw(bigwig)或者wig就会方便的多，而bigWig文件的显示性能又相较wig文件快得多，故bw是更常用的。而相较于bed文件相说，它不只提供了peak的位置，还有peak的高低。 
+```bash
+# 排序->把bed文件转成bedgraph文件->bedgraph转bw
+mkdir -p  /mnt/d/ATAC/bw
+cd /mnt/d/ATAC/shifted
+# cp ./*.Tn5.sorted.bedpe /mnt/d/ATAC/bw/
+
+cat config.raw | while read id;
+do echo $id 
+  arr=($id)
+  sample=${arr[0]}
+
+  cat ${sample}.Tn5.bedpe | sort -V > ${sample}.Tn5.sorted.bedpe
+  # 未完成
+  bedtools genomecov -i ${name}.bed -split -bg -g $chrom_info > ${name}.bg
+  wigToBigWig ${name}.bg $chrom_info ${name}.bw
 done
 ```
 
 
- 
-
-
-# 7.call_peaks 
+# 8.call_peaks 
 1. 目的： 下一步需要在统计学上判断真实的peak，因为Tn5在染色体上结合是个概率事件，如何判断这个位置的reads足够为一个peak，这就需要用到统计检测。ATAC-seq 数据分析的第二个主要步骤是识别开放区域（也称为 Peak），后续高级分析以此为基础。  
 
 2. 软件：目前，`MACS2` 是 ENCODE ATAC-seq 流程的默认 Peak caller 程序。  
 
-3. 其他： 
+3. !!重要：关于是否使用[-f BEDPE的讨论](https://github.com/macs3-project/MACS/issues/331)，可根据需要选择合适的callpeak参数。  
+
+
+4. 其他： 
 
 
 * ATAC-seq关心的是在哪里切断，断点才是peak的中心，所以使用shift模型，--shift -75或-100.   
@@ -1048,14 +1078,60 @@ done
 
 4. 代码：
 ```bash
-mkdir /mnt/d/ATAC/peaks/
-cd /mnt/d/ATAC/bed/
-ls *.bed | while read id; do
-  macs2 callpeak  -g mm -f BAMPE --nonmodel \
-  --shift 100 --extsive 200 -p 0.01 -n ${id%%.*} -t $id \
-  --outdir ../peaks/ \
-  2 > ${id%%.*}.macs2.log
-  # %%取前缀 
+mkdir -p /mnt/d/ATAC/peaks/
+cd /mnt/d/ATAC/shifted/
+
+# 注：本流程使用的是经过转化的bedpe
+# 单个样本
+macs2 callpeak  -g mm -f BEDPE --nomodel \
+  -n SRR11539111 -t ./SRR11539111.Tn5.bedpe \
+  --outdir /mnt/d/ATAC/peaks
+
+# 循环
+ls *.Tn5.bedpe| while read id; do
+  macs2 callpeak  -g mm -f BEDPE --nomodel \
+   -n $id -t $id \
+  --outdir ../peaks/ 
+done
+
+或者
+cp /mnt/d/ATAC/rmdup/config.raw /mnt/d/ATAC/shifted/config.raw
+cat config.raw | while read id;
+do echo $id 
+  arr=($id)
+  sample=${arr[0]}
+
+  macs2 callpeak  -g mm -f BEDPE --nomodel \
+   -n ${sample} -t ./${sample}.Tn5.bedpe \
+  --outdir ../peaks/ 
+done
+
+# 如果用的不是专门双端测序的bedpe，而是bed文件，采用下面代码
+# 单个样本
+cd /mnt/d/ATAC/shifted/
+macs2 callpeak  -g mm --nomodel \
+  --shift -100 --extsize 200 -n SRR11539111 -t ./SRR11539111.bed \
+  --outdir /mnt/d/ATAC/peaks
+
+# 循环
+mkdir -p /mnt/d/ATAC/peaks2
+cd /mnt/d/ATAC/shifted/
+ls *.bed| while read id; do
+  macs2 callpeak  -g mm --nomodel \
+  --shift -100 --extsize 200 -n $id -t $id \
+  --outdir ../peaks2/ 
+done
+
+或者
+cp /mnt/d/ATAC/rmdup/config.raw /mnt/d/ATAC/shifted/config.raw
+cat config.raw | while read id;
+do echo $id 
+  arr=($id)
+  sample=${arr[0]}
+
+  macs2 callpeak  -g mm --nomodel \
+  --shift -100 --extsize 200 -n ${sample} -t ./${sample}.Tn5.bed \
+  --outdir ../peaks2/ 
 done
 ```
 * macs2 callpeaks 参数  
@@ -1067,7 +1143,17 @@ done
 –NOMODEL：MACS 不构建模型。  
 –EXTSIZE：设定–nomodel，MACS 会沿着 5’->3’方向延伸reads；如果转录因子结合区域长200bp，把所有的reads都统一成200bp长，并且移动了100bp，这样就保证了这200bp的中心是酶切位点.  
 –SHIFT：–shiftsize已经被 –extsize所替代；–nomodel设定之后，MACS 会用这个参数剪切reads5’，利用–extsize 延伸reads 3’端；如果设为负数，方向相反(3’->5’ );ChIP-Seq建议设置为0；当检测富集切割位点时，例如DNAseI-Seq datasets，此参数应该设为 -1 * half of EXTSIZE( EXTSIZE设为200，此参数为-100).    
--f BAMPE： It forces MACS to pileup the real fragment length instead of an estimate, which maked sense imho, due to the quiet different fragment sizes that the library prep creates. If you followed original protocol for ATAC-Seq, you should get Paired-End reads. If so, I would suggest you just use `--format BAMPE` to let MACS2 pileup the whole fragments in general. But if you want to focus on looking for where the ‘cutting sites’ are, then `--nomodel --shift -100 --extsize 200` should work.    
+-f      {AUTO,BAM,SAM,BED,ELAND,ELANDMULTI,ELANDEXPORT,BOWTIE,BAMPE,BEDPE},       --format
+       {AUTO,BAM,SAM,BED,ELAND,ELANDMULTI,ELANDEXPORT,BOWTIE,BAMPE,BEDPE}
+              Format  of  tag  file, "AUTO", "BED" or "ELAND" or "ELANDMULTI" or "ELANDEXPORT" or
+              "SAM" or "BAM" or "BOWTIE" or "BAMPE" or "BEDPE". The default AUTO option will  let
+              MACS  decide  which  format  (except for BAMPE and BEDPE which should be implicitly
+              set) the file is. Please check the definition in README. Please note  that  if  the
+              format  is  set  as  BAMPE or BEDPE, MACS2 will call its special Paired-end mode to
+              call peaks by piling up the actual ChIPed fragments defined by both  aligned  ends,
+              instead of predicting the fragment size first and extending reads. Also please note
+              that the BEDPE only contains three columns, and is NOT the same BEDPE  format  used
+              by BEDTOOLS.  DEFAULT: "AUTO"    
 --nolambda: 不要考虑在峰值候选区域的局部偏差/λ.  
 
 
@@ -1082,9 +1168,52 @@ nucleosome-seq，使用核小体一半大小进行小波分析获得核小体中
 
 
 
-* 结果：在IGV查看
-生成三个文件：narrowpeak, peaks.xls,summits.bed
-bw文件是用于方便可视化peak的文件，因为上游处理完的bam文件通常都较大，不方便于快速展示，而将其转变成bw(bigwig)或者wig就会方便的多，而bigWig文件的显示性能又相较wig文件快得多，故bw是更常用的。而相较于bed文件相说，它不只提供了peak的位置，还有peak的高低。
+* 结果： 
+最终生成三个文件：narrowpeak, peaks.xls,summits.bed，[详细解释](https://github.com/hbctraining/In-depth-NGS-Data-Analysis-Course/blob/master/sessionV/lessons/04_peak_calling_macs.md)  
+
+`_peaks.narrowPea`k：BED6+4格式文件，其中包含峰值位置以及峰值峰值，p值和q值  
+`_peaks.xls`：包含有关调用峰的信息的表格文件。其他信息包括堆积和折叠富集  
+`_summits.bed`：每个山峰的峰顶位置。要找到结合位点的基序，建议使用此文件  
+1. narrowpeak  
+```bash
+chr1	3670812	3672021	SRR11539111_peak_1	125	.	5.29967	15.80579	12.56397	799
+chr1	4785447	4785897	SRR11539111_peak_2	153	.	6.79790	18.76872	15.35057	249
+# 染色体 起始位点 结束位点（Tn5转化过）peak名称  score   链 signal_value（fold-change）  -log10(pvalue) -log10qvalue 峰位与peak起点的距离
+```
+2. peaks.xls
+```bash
+# chr	start   	end 	length	abs_summit	pileup位置堆积信号  	-log10(pvalue)  fold_enrichment	-log10(qvalue)	name
+chr1	3670813	3672021	1209	3671612	33	15.80579	5.29967	12.56397	SRR11539111_peak_1
+```
+3. summits.bed
+```bash
+chr1    3671611 3671612 SRR11539111_peak_1      12.56397
+chr1    4785696 4785697 SRR11539111_peak_2      15.35057
+#-log10pvalue
+```
+* bed_bedpe结果比较
+```bash
+# bedpe
+wc -l SRR11539111_peaks.narrowPeak
+17001
+
+# bed
+28552
+# bedpe的长度会更长一点，后续分析都采用bedpe
+```
+
+
+
+
+
+
+
+
+
+* 在IGV查看结果  
+
+
+
 
 
 
@@ -1237,3 +1366,72 @@ LD信息从haploreg 网站下载 http://archive.broadinstitute.org/mammals/haplo
 
 用PNAMER将“偏差分数”转换为p值，并使用Bejimi-HocHBG程序调整
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ATAC-seq质量评估
+
+## ATACseqQC:给出国歌质量评估度量值，包括FRiP
+还有其他需要评估的特定于 ATAC-seq 的质量度量。通常，一个成功的 ATAC-seq 实验应该生成一个片段大小分布图，其峰值与无核小体区域 (nucleosome-free regions: NFR) (<100 bp) 和单、二、三核小体 (~ 200、400、600 bp) (Fig. 1b) 相对应，呈递减和周期性。来自 NFR 的片段预计会在基因的转录起始位点 (transcription start site, TSS) 附近富集，而来自核小体结合区域的片段预计会在 TSS 附近被耗尽，在 TSS 附近的侧翼区域会有少量富集 (Fig. 1c)。  
+
+![b](../ATAC/pictures/1b.png)    
+b: 片段大小在 100bp 和 200bp 左右有明显的富集，表示没有核小体结合和单核小体结合的片段。
+![c](../ATAC/pictures/1c.png)  
+  c：TSS 富集可视化可以看出，没有核小体结合的片段在 TSS 处富集，而但核小体结合的片段在 TSS 上缺失，在 TSS 两侧富集。  
+
+
+
+这些可以通过 ATACseqQC工具进行评估。最后，分别对正链和负链的 reads 进行 + 4bp 和 -5bp 的移位（目标DNA最后产生9bp的重复在ATAC-seq后续分析里要处理。这个长度近似于一个完整的DNA螺旋[参考文章](https://www.jianshu.com/p/13779b89e76b)），以解释 Tn5 转座酶修复损伤 DNA 所产生的 9bp 的重复，并实现 TF footprint 和 motif 相关分析的碱基对分辨率。 
+## IDR：样本内的重复性检测，合并一致性peaks
+
+## phantompeakqualtools：评估实验中信噪比、富集信号等
+
+# 上面FastQC➔ trimmomatic➔BWA-MEM➔ATACseqQC
+
+https://github.com/schmitzlab/The-prevalence-evolution-and-chromatin-signatures-of-plant-regulatory-elements/blob/master/Alighment_ATAC-seq_reads/Alighment_ATAC-seq_reads.sh
+```
+java -jar /usr/local/apps/eb/Trimmomatic/0.36-Java-1.8.0_144/trimmomatic-0.36.jar PE \ 
+ -threads $thread -phred33 \ 
+ $input.R1.fastq.gz $input.R2.fastq.gz \ 
+ ${name}.L.trim.fastq ${name}.L.trimU.fastq ${name}.R.trim.fastq ${name}.R.trimU.fastq \ 
+ ILLUMINACLIP:/usr/local/apps/eb/Trimmomatic/0.36-Java-1.8.0_144/adapters/NexteraPE-PE.fa:2:30:10 \ 
+ SLIDINGWINDOW:3:20 LEADING:0 TRAILING:0 MINLEN:30
+
+# bowtie mapping
+bowtie $INDEX -t -p 4 -v 2 --best --strata -m 1 -X 1000 -S ${name}.sam \
+ -1 ${name}.L.trim.fastq -2 ${name}.R.trim.fastq
+ 
+# sort sam to bam 
+samtools sort -O 'bam' -o ${name}.sorted.bam -T tmp ${name}.sam
+
+# remove clonal
+java -Xmx20g -classpath /usr/local/apps/eb/picard/2.16.0-Java-1.8.0_144 -jar \
+  /usr/local/apps/eb/picard/2.16.0-Java-1.8.0_144/picard.jar MarkDuplicates \
+  INPUT=${name}.sorted.bam OUTPUT=${name}.clean.bam METRICS_FILE=XXX.txt \
+  REMOVE_DUPLICATES=true VALIDATION_STRINGENCY=LENIENT
+
+# bam to bed
+bedtools bamtobed -i ${name}.clean.bam > ${name}.bed
+
+# Genome_coverage
+bedtools genomecov -i ${name}.bed -split -bg -g $chrom_info > ${name}.bg
+wigToBigWig ${name}.bg $chrom_info ${name}.bw
+
+# Tn5_coverage
+awk 'BEGIN {OFS = "\t"} ; {if ($6 == "+") print $1, $2 + 4, $2 + 5; else print $1, $3 - 6, $3 - 5}' ${name}.bed > ${name}.Tn5.bed
+```
+
+
+
+
