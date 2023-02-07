@@ -1,0 +1,242 @@
+$ cat config.raw | while read id;
+do echo $id 
+  arr=($id)
+  sample=${arr[0]}
+
+  macs2 callpeak  -g mm -f BEDPE --nomodel \
+  --shift 100 --extsize 200 -n ${sample} -t ./${sample}.Tn5.bedpe \
+  --outdir ../peaks/ 
+done
+
+
+SRR11539111 SRR11539111_1_val_1.fq.gz SRR11539111_2_val_2.fq.gz
+INFO  @ Tue, 07 Feb 2023 02:55:39:
+# Command line: callpeak -g mm -f BEDPE --nomodel --shift 100 --extsize 200 -n SRR11539111 -t ./SRR11539111.Tn5.bedpe --outdir ../peaks/
+# ARGUMENTS LIST:
+# name = SRR11539111
+# format = BEDPE
+# ChIP-seq file = ['./SRR11539111.Tn5.bedpe']
+# control file = None
+# effective genome size = 1.87e+09
+# band width = 300
+# model fold = [5, 50]
+# qvalue cutoff = 5.00e-02
+# The maximum gap between significant sites is assigned as the read length/tag size.
+# The minimum length of peaks is assigned as the predicted fragment length "d".
+# Larger dataset will be scaled towards smaller dataset.
+# Range for calculating regional lambda is: 10000 bps
+# Broad region calling is off
+# Paired-End mode is on
+
+INFO  @ Tue, 07 Feb 2023 02:55:39: #1 read fragment files...
+INFO  @ Tue, 07 Feb 2023 02:55:39: #1 read treatment fragments...
+INFO  @ Tue, 07 Feb 2023 02:55:41:  1000000
+INFO  @ Tue, 07 Feb 2023 02:55:42:  2000000
+INFO  @ Tue, 07 Feb 2023 02:55:44:  3000000
+INFO  @ Tue, 07 Feb 2023 02:55:47:  4000000
+INFO  @ Tue, 07 Feb 2023 02:55:49:  5000000
+INFO  @ Tue, 07 Feb 2023 02:55:52:  6000000
+INFO  @ Tue, 07 Feb 2023 02:55:54:  7000000
+INFO  @ Tue, 07 Feb 2023 02:55:56:  8000000
+INFO  @ Tue, 07 Feb 2023 02:55:59:  9000000
+INFO  @ Tue, 07 Feb 2023 02:56:01:  10000000
+INFO  @ Tue, 07 Feb 2023 02:56:03:  11000000
+INFO  @ Tue, 07 Feb 2023 02:56:05:  12000000
+INFO  @ Tue, 07 Feb 2023 02:56:07:  13000000
+INFO  @ Tue, 07 Feb 2023 02:56:10:  14000000
+INFO  @ Tue, 07 Feb 2023 02:56:12:  15000000
+INFO  @ Tue, 07 Feb 2023 02:56:14:  16000000
+INFO  @ Tue, 07 Feb 2023 02:56:16:  17000000
+INFO  @ Tue, 07 Feb 2023 02:56:18:  18000000
+INFO  @ Tue, 07 Feb 2023 02:56:21:  19000000
+INFO  @ Tue, 07 Feb 2023 02:56:23:  20000000
+INFO  @ Tue, 07 Feb 2023 02:56:25:  21000000
+INFO  @ Tue, 07 Feb 2023 02:56:28:  22000000
+INFO  @ Tue, 07 Feb 2023 02:56:30:  23000000
+INFO  @ Tue, 07 Feb 2023 02:56:32:  24000000
+INFO  @ Tue, 07 Feb 2023 02:56:45: #1 mean fragment size is determined as 253.1 bp from treatment
+INFO  @ Tue, 07 Feb 2023 02:56:45: #1 fragment size = 253.1
+INFO  @ Tue, 07 Feb 2023 02:56:45: #1  total fragments in treatment: 24055872
+INFO  @ Tue, 07 Feb 2023 02:56:45: #1 user defined the maximum fragments...
+INFO  @ Tue, 07 Feb 2023 02:56:45: #1 filter out redundant fragments by allowing at most 1 identical fragment(s)
+INFO  @ Tue, 07 Feb 2023 02:57:13: #1  fragments after filtering in treatment: 24055531
+INFO  @ Tue, 07 Feb 2023 02:57:13: #1  Redundant rate of treatment: 0.00
+INFO  @ Tue, 07 Feb 2023 02:57:13: #1 finished!
+INFO  @ Tue, 07 Feb 2023 02:57:13: #2 Build Peak Model...
+INFO  @ Tue, 07 Feb 2023 02:57:13: #2 Skipped...
+INFO  @ Tue, 07 Feb 2023 02:57:13: #3 Call peaks...
+INFO  @ Tue, 07 Feb 2023 02:57:13: #3 Pre-compute pvalue-qvalue table...
+INFO  @ Tue, 07 Feb 2023 02:58:14: #3 Call peaks for each chromosome...
+INFO  @ Tue, 07 Feb 2023 02:58:47: #4 Write output xls file... ../peaks/SRR11539111_peaks.xls
+INFO  @ Tue, 07 Feb 2023 02:58:47: #4 Write peak in narrowPeak format file... ../peaks/SRR11539111_peaks.narrowPeak
+INFO  @ Tue, 07 Feb 2023 02:58:47: #4 Write summits bed file... ../peaks/SRR11539111_summits.bed
+INFO  @ Tue, 07 Feb 2023 02:58:47: Done!
+SRR11539112 SRR11539112_1_val_1.fq.gz SRR11539112_2_val_2.fq.gz
+INFO  @ Tue, 07 Feb 2023 02:58:47:
+# Command line: callpeak -g mm -f BEDPE --nomodel --shift 100 --extsize 200 -n SRR11539112 -t ./SRR11539112.Tn5.bedpe --outdir ../peaks/
+# ARGUMENTS LIST:
+# name = SRR11539112
+# format = BEDPE
+# ChIP-seq file = ['./SRR11539112.Tn5.bedpe']
+# control file = None
+# effective genome size = 1.87e+09
+# band width = 300
+# model fold = [5, 50]
+# qvalue cutoff = 5.00e-02
+# The maximum gap between significant sites is assigned as the read length/tag size.
+# The minimum length of peaks is assigned as the predicted fragment length "d".
+# Larger dataset will be scaled towards smaller dataset.
+# Range for calculating regional lambda is: 10000 bps
+# Broad region calling is off
+# Paired-End mode is on
+
+INFO  @ Tue, 07 Feb 2023 02:58:47: #1 read fragment files...
+INFO  @ Tue, 07 Feb 2023 02:58:47: #1 read treatment fragments...
+INFO  @ Tue, 07 Feb 2023 02:58:50:  1000000
+INFO  @ Tue, 07 Feb 2023 02:58:54:  2000000
+INFO  @ Tue, 07 Feb 2023 02:58:57:  3000000
+INFO  @ Tue, 07 Feb 2023 02:59:00:  4000000
+INFO  @ Tue, 07 Feb 2023 02:59:02:  5000000
+INFO  @ Tue, 07 Feb 2023 02:59:05:  6000000
+INFO  @ Tue, 07 Feb 2023 02:59:07:  7000000
+INFO  @ Tue, 07 Feb 2023 02:59:09:  8000000
+INFO  @ Tue, 07 Feb 2023 02:59:12:  9000000
+INFO  @ Tue, 07 Feb 2023 02:59:14:  10000000
+INFO  @ Tue, 07 Feb 2023 02:59:16:  11000000
+INFO  @ Tue, 07 Feb 2023 02:59:18:  12000000
+INFO  @ Tue, 07 Feb 2023 02:59:21:  13000000
+INFO  @ Tue, 07 Feb 2023 02:59:23:  14000000
+INFO  @ Tue, 07 Feb 2023 02:59:25:  15000000
+INFO  @ Tue, 07 Feb 2023 02:59:27:  16000000
+INFO  @ Tue, 07 Feb 2023 02:59:29:  17000000
+INFO  @ Tue, 07 Feb 2023 02:59:31:  18000000
+INFO  @ Tue, 07 Feb 2023 02:59:33:  19000000
+INFO  @ Tue, 07 Feb 2023 02:59:35:  20000000
+INFO  @ Tue, 07 Feb 2023 02:59:37:  21000000
+INFO  @ Tue, 07 Feb 2023 02:59:39:  22000000
+INFO  @ Tue, 07 Feb 2023 02:59:41:  23000000
+INFO  @ Tue, 07 Feb 2023 02:59:55: #1 mean fragment size is determined as 269.1 bp from treatment
+INFO  @ Tue, 07 Feb 2023 02:59:55: #1 fragment size = 269.1
+INFO  @ Tue, 07 Feb 2023 02:59:55: #1  total fragments in treatment: 23816205
+INFO  @ Tue, 07 Feb 2023 02:59:55: #1 user defined the maximum fragments...
+INFO  @ Tue, 07 Feb 2023 02:59:55: #1 filter out redundant fragments by allowing at most 1 identical fragment(s)
+INFO  @ Tue, 07 Feb 2023 03:00:22: #1  fragments after filtering in treatment: 23815905
+INFO  @ Tue, 07 Feb 2023 03:00:22: #1  Redundant rate of treatment: 0.00
+INFO  @ Tue, 07 Feb 2023 03:00:22: #1 finished!
+INFO  @ Tue, 07 Feb 2023 03:00:22: #2 Build Peak Model...
+INFO  @ Tue, 07 Feb 2023 03:00:22: #2 Skipped...
+INFO  @ Tue, 07 Feb 2023 03:00:22: #3 Call peaks...
+INFO  @ Tue, 07 Feb 2023 03:00:22: #3 Pre-compute pvalue-qvalue table...
+INFO  @ Tue, 07 Feb 2023 03:01:24: #3 Call peaks for each chromosome...
+INFO  @ Tue, 07 Feb 2023 03:01:57: #4 Write output xls file... ../peaks/SRR11539112_peaks.xls
+INFO  @ Tue, 07 Feb 2023 03:01:57: #4 Write peak in narrowPeak format file... ../peaks/SRR11539112_peaks.narrowPeak
+INFO  @ Tue, 07 Feb 2023 03:01:57: #4 Write summits bed file... ../peaks/SRR11539112_summits.bed
+INFO  @ Tue, 07 Feb 2023 03:01:57: Done!
+SRR11539115 SRR11539115_1_val_1.fq.gz SRR11539115_2_val_2.fq.gz
+INFO  @ Tue, 07 Feb 2023 03:01:57:
+# Command line: callpeak -g mm -f BEDPE --nomodel --shift 100 --extsize 200 -n SRR11539115 -t ./SRR11539115.Tn5.bedpe --outdir ../peaks/
+# ARGUMENTS LIST:
+# name = SRR11539115
+# format = BEDPE
+# ChIP-seq file = ['./SRR11539115.Tn5.bedpe']
+# control file = None
+# effective genome size = 1.87e+09
+# band width = 300
+# model fold = [5, 50]
+# qvalue cutoff = 5.00e-02
+# The maximum gap between significant sites is assigned as the read length/tag size.
+# The minimum length of peaks is assigned as the predicted fragment length "d".
+# Larger dataset will be scaled towards smaller dataset.
+# Range for calculating regional lambda is: 10000 bps
+# Broad region calling is off
+# Paired-End mode is on
+
+INFO  @ Tue, 07 Feb 2023 03:01:57: #1 read fragment files...
+INFO  @ Tue, 07 Feb 2023 03:01:57: #1 read treatment fragments...
+INFO  @ Tue, 07 Feb 2023 03:02:01:  1000000
+INFO  @ Tue, 07 Feb 2023 03:02:05:  2000000
+INFO  @ Tue, 07 Feb 2023 03:02:08:  3000000
+INFO  @ Tue, 07 Feb 2023 03:02:12:  4000000
+INFO  @ Tue, 07 Feb 2023 03:02:14:  5000000
+INFO  @ Tue, 07 Feb 2023 03:02:16:  6000000
+INFO  @ Tue, 07 Feb 2023 03:02:18:  7000000
+INFO  @ Tue, 07 Feb 2023 03:02:21:  8000000
+INFO  @ Tue, 07 Feb 2023 03:02:24:  9000000
+INFO  @ Tue, 07 Feb 2023 03:02:26:  10000000
+INFO  @ Tue, 07 Feb 2023 03:02:28:  11000000
+INFO  @ Tue, 07 Feb 2023 03:02:30:  12000000
+INFO  @ Tue, 07 Feb 2023 03:02:33:  13000000
+INFO  @ Tue, 07 Feb 2023 03:02:35:  14000000
+INFO  @ Tue, 07 Feb 2023 03:02:37:  15000000
+INFO  @ Tue, 07 Feb 2023 03:02:39:  16000000
+INFO  @ Tue, 07 Feb 2023 03:02:42:  17000000
+INFO  @ Tue, 07 Feb 2023 03:02:44:  18000000
+INFO  @ Tue, 07 Feb 2023 03:02:46:  19000000
+INFO  @ Tue, 07 Feb 2023 03:02:56: #1 mean fragment size is determined as 286.7 bp from treatment
+INFO  @ Tue, 07 Feb 2023 03:02:56: #1 fragment size = 286.7
+INFO  @ Tue, 07 Feb 2023 03:02:56: #1  total fragments in treatment: 19110134
+INFO  @ Tue, 07 Feb 2023 03:02:56: #1 user defined the maximum fragments...
+INFO  @ Tue, 07 Feb 2023 03:02:56: #1 filter out redundant fragments by allowing at most 1 identical fragment(s)
+INFO  @ Tue, 07 Feb 2023 03:03:17: #1  fragments after filtering in treatment: 19109846
+INFO  @ Tue, 07 Feb 2023 03:03:17: #1  Redundant rate of treatment: 0.00
+INFO  @ Tue, 07 Feb 2023 03:03:17: #1 finished!
+INFO  @ Tue, 07 Feb 2023 03:03:17: #2 Build Peak Model...
+INFO  @ Tue, 07 Feb 2023 03:03:17: #2 Skipped...
+INFO  @ Tue, 07 Feb 2023 03:03:17: #3 Call peaks...
+INFO  @ Tue, 07 Feb 2023 03:03:17: #3 Pre-compute pvalue-qvalue table...
+INFO  @ Tue, 07 Feb 2023 03:04:10: #3 Call peaks for each chromosome...
+INFO  @ Tue, 07 Feb 2023 03:04:40: #4 Write output xls file... ../peaks/SRR11539115_peaks.xls
+INFO  @ Tue, 07 Feb 2023 03:04:40: #4 Write peak in narrowPeak format file... ../peaks/SRR11539115_peaks.narrowPeak
+INFO  @ Tue, 07 Feb 2023 03:04:40: #4 Write summits bed file... ../peaks/SRR11539115_summits.bed
+INFO  @ Tue, 07 Feb 2023 03:04:40: Done!
+SRR11539116 SRR11539116_1_val_1.fq.gz SRR11539116_2_val_2.fq.gz
+INFO  @ Tue, 07 Feb 2023 03:04:40:
+# Command line: callpeak -g mm -f BEDPE --nomodel --shift 100 --extsize 200 -n SRR11539116 -t ./SRR11539116.Tn5.bedpe --outdir ../peaks/
+# ARGUMENTS LIST:
+# name = SRR11539116
+# format = BEDPE
+# ChIP-seq file = ['./SRR11539116.Tn5.bedpe']
+# control file = None
+# effective genome size = 1.87e+09
+# band width = 300
+# model fold = [5, 50]
+# qvalue cutoff = 5.00e-02
+# The maximum gap between significant sites is assigned as the read length/tag size.
+# The minimum length of peaks is assigned as the predicted fragment length "d".
+# Larger dataset will be scaled towards smaller dataset.
+# Range for calculating regional lambda is: 10000 bps
+# Broad region calling is off
+# Paired-End mode is on
+
+INFO  @ Tue, 07 Feb 2023 03:04:40: #1 read fragment files...
+INFO  @ Tue, 07 Feb 2023 03:04:40: #1 read treatment fragments...
+INFO  @ Tue, 07 Feb 2023 03:04:43:  1000000
+INFO  @ Tue, 07 Feb 2023 03:04:49:  2000000
+INFO  @ Tue, 07 Feb 2023 03:04:53:  3000000
+INFO  @ Tue, 07 Feb 2023 03:04:57:  4000000
+INFO  @ Tue, 07 Feb 2023 03:05:01:  5000000
+INFO  @ Tue, 07 Feb 2023 03:05:05:  6000000
+INFO  @ Tue, 07 Feb 2023 03:05:09:  7000000
+INFO  @ Tue, 07 Feb 2023 03:05:13:  8000000
+INFO  @ Tue, 07 Feb 2023 03:05:18:  9000000
+INFO  @ Tue, 07 Feb 2023 03:05:22:  10000000
+INFO  @ Tue, 07 Feb 2023 03:05:27:  11000000
+INFO  @ Tue, 07 Feb 2023 03:05:31:  12000000
+INFO  @ Tue, 07 Feb 2023 03:05:36:  13000000
+INFO  @ Tue, 07 Feb 2023 03:05:44: #1 mean fragment size is determined as 272.6 bp from treatment
+INFO  @ Tue, 07 Feb 2023 03:05:44: #1 fragment size = 272.6
+INFO  @ Tue, 07 Feb 2023 03:05:44: #1  total fragments in treatment: 13403866
+INFO  @ Tue, 07 Feb 2023 03:05:44: #1 user defined the maximum fragments...
+INFO  @ Tue, 07 Feb 2023 03:05:44: #1 filter out redundant fragments by allowing at most 1 identical fragment(s)
+INFO  @ Tue, 07 Feb 2023 03:06:00: #1  fragments after filtering in treatment: 13403585
+INFO  @ Tue, 07 Feb 2023 03:06:00: #1  Redundant rate of treatment: 0.00
+INFO  @ Tue, 07 Feb 2023 03:06:00: #1 finished!
+INFO  @ Tue, 07 Feb 2023 03:06:00: #2 Build Peak Model...
+INFO  @ Tue, 07 Feb 2023 03:06:00: #2 Skipped...
+INFO  @ Tue, 07 Feb 2023 03:06:00: #3 Call peaks...
+INFO  @ Tue, 07 Feb 2023 03:06:00: #3 Pre-compute pvalue-qvalue table...
+INFO  @ Tue, 07 Feb 2023 03:06:35: #3 Call peaks for each chromosome...
+INFO  @ Tue, 07 Feb 2023 03:06:54: #4 Write output xls file... ../peaks/SRR11539116_peaks.xls
+INFO  @ Tue, 07 Feb 2023 03:06:54: #4 Write peak in narrowPeak format file... ../peaks/SRR11539116_peaks.narrowPeak
+INFO  @ Tue, 07 Feb 2023 03:06:54: #4 Write summits bed file... ../peaks/SRR11539116_summits.bed
+INFO  @ Tue, 07 Feb 2023 03:06:54: Done!
