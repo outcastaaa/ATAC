@@ -267,31 +267,17 @@ wget https://data.broadinstitute.org/igv/projects/downloads/2.16/IGV_Win_2.16.0-
 在IGV中查看对齐的首选文件格式为BAM格式，除 BAM 外，其他受支持的与对齐相关的文件格式包括GOBY、 VCF、 PSL、 BED和TDF。IGV 还要求 BAM 文件具有关联的索引文件，并且必须与BAM文件位于同一目录中。  
 
 
-
-
-## 2.8 HTseq
-```
-pip install -i https://pypi.tuna.tsinghua.edu.cn/simple HTseq
-```
-
-## 2.9 R
-最新版本4.2.1_2  
+## 2.11 R
+最新版本4.2.2_1  
 先进入官网，用清华镜像源下载合适版本的R，再`brew install r`
-
 ```
-xuruizhi@DESKTOP-HI65AUV:~$ brew install r
-HOMEBREW_BREW_GIT_REMOTE set: using https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/brew.git for Homebrew/brew Git remote.
-HOMEBREW_CORE_GIT_REMOTE set: using https://mirrors.tuna.tsinghua.edu.cn/git/homebrew/homebrew-core.git for Homebrew/core Git remote.
-Running `brew update --auto-update`...
-Warning: r 4.2.1_2 is already installed and up-to-date.
-To reinstall 4.2.1_2, run:
-  brew reinstall r
+$ brew install r
   ```
 * !R 安装时多次尝试，RStudio都识别不到，因此直接在官网选择`Download R for Windows; install R for the first time`下载安装包即可；注意可以将两个文件放在同一个文件夹内  
 [参考](https://blog.csdn.net/m0_49354332/article/details/116059239)  
 
 
-## 2.10 Rstudio
+## 2.12 Rstudio
 进入网站：`https://www.rstudio.com/products/rstudio/download/`  
 R studio 可以在 Windows 下安装;
 选择版本下载,下载完成之后双击安装。  
@@ -299,7 +285,7 @@ R studio 可以在 Windows 下安装;
 Windows 10/11	   
 RStudio-2022.07.1-554.exe
 `
-## 2.11 parallel  
+## 2.13 parallel  
 ```
 brew install parallel
 ```
@@ -1323,6 +1309,15 @@ b <-read.table('../frag_length/SRR11539112.fragment_length_count.txt')
 c <-read.table('../frag_length/SRR11539115.fragment_length_count.txt')
 d <-read.table('../frag_length/SRR11539116.fragment_length_count.txt')
 ```
+* 结果：  
+![SRR11539111](../ATAC/pictures/SRR11539111.png)   
+
+![SRR11539116](../ATAC/pictures/SRR11539116.png)  
+
+
+
+
+
 
 
 
