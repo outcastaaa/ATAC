@@ -1137,8 +1137,11 @@ done
 --nomodel的意思是让其不要建立双峰模型来使两个“相邻”的峰shift成一个峰，而是向外shift(也就是在nomodel后要加上--shift -75 --extsize 150的参数);  
 -P/–PVALUE：设定p值时， qvalue不再起作用。  
 –NOMODEL：MACS 不构建模型。  
-–EXTSIZE：设定–nomodel，MACS 会沿着 5’->3’方向延伸reads；如果转录因子结合区域长200bp，把所有的reads都统一成200bp长，并且移动了100bp，这样就保证了这200bp的中心是酶切位点.  
-–SHIFT：–shiftsize已经被 –extsize所替代；–nomodel设定之后，MACS 会用这个参数剪切reads5’，利用–extsize 延伸reads 3’端；如果设为负数，方向相反(3’->5’ );ChIP-Seq建议设置为0；当检测富集切割位点时，例如DNAseI-Seq datasets，此参数应该设为 -1 * half of EXTSIZE( EXTSIZE设为200，此参数为-100).    
+–EXTSIZE：设定–nomodel，MACS 会沿着 5’->3’方向延伸reads；如果转录因子结合区域长200bp，把所有的reads都统一成200bp长，
+            并且移动了100bp，这样就保证了这200bp的中心是酶切位点.  
+–SHIFT：–shiftsize已经被 –extsize所替代；–nomodel设定之后，MACS 会用这个参数剪切reads5’，利用–extsize 延伸reads 3’端；
+            如果设为负数，方向相反(3’->5’ );ChIP-Seq建议设置为0；当检测富集切割位点时，
+            例如DNAseI-Seq datasets，此参数应该设为 -1 * half of EXTSIZE( EXTSIZE设为200，此参数为-100).    
 -f      {AUTO,BAM,SAM,BED,ELAND,ELANDMULTI,ELANDEXPORT,BOWTIE,BAMPE,BEDPE},       --format
        {AUTO,BAM,SAM,BED,ELAND,ELANDMULTI,ELANDEXPORT,BOWTIE,BAMPE,BEDPE}
               Format  of  tag  file, "AUTO", "BED" or "ELAND" or "ELANDMULTI" or "ELANDEXPORT" or
@@ -1150,7 +1153,8 @@ done
               instead of predicting the fragment size first and extending reads. Also please note
               that the BEDPE only contains three columns, and is NOT the same BEDPE  format  used
               by BEDTOOLS.  DEFAULT: "AUTO"    
---nolambda: 如果为真，MACS 将使用固定背景 lambda 作为每个峰区域的本地 lambda。 通常，MACS 计算动态局部 lambda 以反映由于潜在的染色质可及性而导致的局部偏差。  
+--nolambda: 如果为真，MACS 将使用固定背景 lambda 作为每个峰区域的本地 lambda。 
+             通常，MACS 计算动态局部 lambda 以反映由于潜在的染色质可及性而导致的局部偏差。  
 --cutoff-analysis
               While set, MACS2 will analyze number or total length of peaks that can be called by
               different p-value cutoff then output a summary table to help user decide  a  better
