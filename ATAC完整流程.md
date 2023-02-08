@@ -1132,16 +1132,24 @@ done
 * macs2 callpeaks [参数](https://manpages.ubuntu.com/manpages/impish/man1/macs2_callpeak.1.html#:~:text=Please%20note%20that%20if%20the%20format%20is%20set,predicting%20the%20fragment%20size%20first%20and%20extending%20reads.)   
 
 ```bash
--t bed文件;  -g 比对基因组;  -n 前缀;  
--Q/–QVALUE：qvalue (minimum FDR)设定call significant regions的阈值；默认，0.01；    
+-t bed文件;  -g 比对基因组;  -n 前缀;
+
+-Q/–QVALUE：qvalue (minimum FDR)设定call significant regions的阈值；默认，0.01； 
+
 --nomodel的意思是让其不要建立双峰模型来使两个“相邻”的峰shift成一个峰，而是向外shift(也就是在nomodel后要加上--shift -75 --extsize 150的参数);  
+
 -P/–PVALUE：设定p值时， qvalue不再起作用。  
+
 –NOMODEL：MACS 不构建模型。  
-–EXTSIZE：设定–nomodel，MACS 会沿着 5’->3’方向延伸reads；如果转录因子结合区域长200bp，把所有的reads都统一成200bp长，
-            并且移动了100bp，这样就保证了这200bp的中心是酶切位点.  
+
+–EXTSIZE：设定–nomodel，MACS 会沿着 5’->3’方向延伸reads；如果转录因子结合区域长200bp，
+把所有的reads都统一成200bp长，并且移动了100bp，这样就保证了这200bp的中心是酶切位点.  
+
 –SHIFT：–shiftsize已经被 –extsize所替代；–nomodel设定之后，MACS 会用这个参数剪切reads5’，利用–extsize 延伸reads 3’端；
-            如果设为负数，方向相反(3’->5’ );ChIP-Seq建议设置为0；当检测富集切割位点时，
-            例如DNAseI-Seq datasets，此参数应该设为 -1 * half of EXTSIZE( EXTSIZE设为200，此参数为-100).    
+如果设为负数，方向相反(3’->5’ );
+ChIP-Seq建议设置为0；当检测富集切割位点时，例如DNAseI-Seq datasets，
+此参数应该设为 -1 * half of EXTSIZE( EXTSIZE设为200，此参数为-100).  
+
 -f      {AUTO,BAM,SAM,BED,ELAND,ELANDMULTI,ELANDEXPORT,BOWTIE,BAMPE,BEDPE},       --format
        {AUTO,BAM,SAM,BED,ELAND,ELANDMULTI,ELANDEXPORT,BOWTIE,BAMPE,BEDPE}
               Format  of  tag  file, "AUTO", "BED" or "ELAND" or "ELANDMULTI" or "ELANDEXPORT" or
