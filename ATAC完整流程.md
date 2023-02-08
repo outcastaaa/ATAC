@@ -1131,7 +1131,7 @@ done
 ```
 * macs2 callpeaks [参数](https://manpages.ubuntu.com/manpages/impish/man1/macs2_callpeak.1.html#:~:text=Please%20note%20that%20if%20the%20format%20is%20set,predicting%20the%20fragment%20size%20first%20and%20extending%20reads.)   
 
-
+```bash
 -t bed文件;  -g 比对基因组;  -n 前缀;  
 -Q/–QVALUE：qvalue (minimum FDR)设定call significant regions的阈值；默认，0.01；    
 --nomodel的意思是让其不要建立双峰模型来使两个“相邻”的峰shift成一个峰，而是向外shift(也就是在nomodel后要加上--shift -75 --extsize 150的参数);  
@@ -1158,7 +1158,7 @@ done
               maxgap may affect the results. WARNING: May take ~30 folds longer time  to  finish.
               The  result  can  be useful for users to decide a reasonable cutoff value. DEFAULT:
               False
-
+```
 
 * 两个例子：  
 
