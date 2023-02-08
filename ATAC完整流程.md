@@ -686,7 +686,7 @@ index: 比对后的分析步骤通常要求sam/bam文件被进一步处理，例
 cd /mnt/d/ATAC/alignment
 # sam to bam
 parallel -k -j 6 "
-  samtools sort {1}.fq.gz.sam > {1}.sort.bam    
+  samtools sort  {1}.fq.gz.sam > {1}.sort.bam    
 " ::: $(ls *.sam | perl -p -e 's/\.fq\.gz\.sam$//')
 
 # index and stat
@@ -945,7 +945,14 @@ samtools index -@ 6 condition1.merged.bam
 
 
 # 7.shift_reads
-1. 目的：由于Tn5酶是以二聚体的形式结合到染色体上的，其跨度大致是9bp，在第一篇ATAC-seq出来的时候，作者就考虑到了这个问题，在分析的时候，需要回补这个9个bp的碱基差。具体做法就是将正链正向移动4bp，将负链负向移动5个bp。一般用alignmentSieve 一步到位。注意，不做reads shift 对单碱基分辨高的分析会有影响，例如TF motif footprinting，但也不是所有TF footprinting分析软件需要shifted reads，很多可以自己转换，e.g. NucleoATAC。  
+1. 目的：  
+
+由于Tn5酶是以二聚体的形式结合到染色体上的，其跨度大致是9bp，在第一篇ATAC-seq出来的时候，作者就考虑到了这个问题，在分析的时候，需要回补这个9个bp的碱基差。具体做法就是将正链正向移动4bp，将负链负向移动5个bp。一般用alignmentSieve 一步到位。注意，不做reads shift 对单碱基分辨高的分析会有影响，例如TF motif footprinting，但也不是所有TF footprinting分析软件需要shifted reads，很多可以自己转换，e.g. NucleoATAC。   
+
+方法：
+分别对正链和负链的 reads 进行 + 4bp 和 -5bp 的移位（这个长度近似于一个完整的DNA螺旋[why参考文章](https://www.jianshu.com/p/13779b89e76b)），以解释 Tn5 转座酶修复损伤 DNA 所产生的 9bp 的重复，并实现 TF footprint 和 motif 相关分析的碱基对分辨率。  
+
+
 2. 使用软件：该步有很多种[方法](https://yiweiniu.github.io/blog/2019/03/ATAC-seq-data-analysis-from-FASTQ-to-peaks/)，本流程采用 `bedtools` and `awk`.
 
 3. 代码：
@@ -1081,9 +1088,9 @@ ls *.Tn5.bedpe| while read id; do
 done
 
 或者
-# 加了几个参数，删除了shift和extsize
+# 与/peaks相比，/peaks1加了几个参数，删除了shift和extsize
 cp /mnt/d/ATAC/rmdup/config.raw /mnt/d/ATAC/shifted/config.raw
-mkdir -p /mnt/d/ATAC/peaks/
+mkdir -p /mnt/d/ATAC/peaks1/
 cat config.raw | while read id;
 do echo $id 
   arr=($id)
@@ -1091,7 +1098,7 @@ do echo $id
 
   macs2 callpeak  -g mm -f BEDPE --nomodel --keep-dup all \
    --cutoff-analysis -n ${sample} -t ./${sample}.Tn5.bedpe \
-  --outdir ../peaks/ 
+  --outdir ../peaks1/ 
 done
 
 # 如果用的不是专门双端测序的bedpe，而是bed文件，采用下面代码
@@ -1211,7 +1218,7 @@ wc -l SRR11539111_peaks.narrowPeak
 * 比对率 The alignment rate, or percentage of mapped reads, should be greater than 95%, though values >80% may be acceptable. 
 * IDR value Replicate concordance is measured by calculating IDR values (Irreproducible Discovery Rate). The experiment passes if both rescue and self consistency ratios are less than 2.
 * Library complexity is measured using the Non-Redundant Fraction (NRF) and PCR Bottlenecking Coefficients 1 and 2, or PBC1 and PBC2. The preferred values are as follows: NRF>0.9, PBC1>0.9, and PBC2>3. 
-* Various peak files must meet certain requirements. Please visit the section on output files under the pipeline overview for more information on peak files.
+* Various peak files must meet certain requirements. Please visit the section on output files under the pipeline overview for more information on peak files.  
 ** The number of peaks within a replicated peak file should be >150,000, though values >100,000 may be acceptable.   
 ** The number of peaks within an IDR peak file should be >70,000, though values >50,000 may be acceptable.  
 ** A nucleosome free region (NFR) must be present.  
@@ -1318,19 +1325,101 @@ d <-read.table('../frag_length/SRR11539116.fragment_length_count.txt')
 
 
 
+## 9.2 FRiP
+1. FRiP简介：  
+* 定义：FRiP（Fraction of reads in peaks，Fraction of all mapped reads that fall into the called peak regions）表示的是位于peak区域的reads的比例，FRiP score是一个比值，其分子是位于peak区域的reads总数，分母是比对到参考基因组上的reads总数。
+* 数值大小范围：The fraction of reads in called peak regions (FRiP score) should be >0.3, though values greater than 0.2 are acceptable. 对于不符合FRiP score值的样本，应当结合TSS Enrichment score值等其他指标来进一步衡量其文库质量。 
+
+2. 软件：这些可以通过`bedtools intersect`工具进行评估。[intersect工作原理](https://bedtools.readthedocs.io/en/latest/content/tools/intersect.html)  
+
+3. 代码：这里为了比较`picard等去重`和`未去重`两种数据分别进行了计算，实际操作时应使用`没有经过PCR去重等filter过程的原始比对文件`来计算  
+
+* 已去重，采用shifted bedpe，该结果肯定比实际未去重的bam文件callpeak小很多
+```bash
+# 1. 计算比对上参考基因组的reads总数
+cd /mnt/d/ATAC/shifted
+wc -l ${sample}.Tn5.bedpe
+# 2.  计算peak区域的reads总数:转换为peak区域与bed文件取交集的操作，统计交集的行数即可
+bedtools intersect -a ${sample}.Tn5.bedpe -b ../peaks1/${sample}_peaks.narrowPeak | wc -l
+# 3. 写循环
+mkdir -p /mnt/d/ATAC/FRiP
+cd /mnt/d/ATAC/shifted
+cat config.raw | while read id;
+do echo $id 
+  arr=($id)
+  sample=${arr[0]}
+  wc -l ${sample}.Tn5.bedpe | awk '{print $1}' >> ../FRiP/bedpe_totalReads.txt
+  bedtools intersect -a ${sample}.Tn5.bedpe -b ../peaks1/${sample}_peaks.narrowPeak |wc -l| awk '{print $1}' >> ../FRiP/bedpe_peakReads.txt
+done
+
+# 准备好文件
+cd /mnt/d/ATAC/shifted
+cat config.raw | while read id;
+do  
+  arr=($id)
+  sample=${arr[0]}
+  echo ${sample} >> ../FRiP/name.txt
+done
+cd /mnt/d/ATAC/FRiP
+paste name.txt bedpe_peakReads.txt  bedpe_totalReads.txt > bedpe_FRiP.txt
+
+# 计算FRiP value = peakReads/totalReads
+cat bedpe_FRiP.txt | awk '{print $1, $2,$3,$2/$3*100"%"}' > bedpe_FRiP.txt
+```
+* 结果
+```bash
+/mnt/d/ATAC/FRiP$ cat bedpe_FRiP.txt
+SRR11539111 1762657 24055872 7.32735%
+SRR11539112 1743887 23816205 7.32227%
+SRR11539115 2235554 19110134 11.6983%
+SRR11539116 1871362 13403866 13.9614%
+```
+* 推荐使用未去重，采用比对完后的bam文件callpeak作为peak reads
+```bash
+# 以SRR11539111演示一遍
+# 将比对后的sam转bam，且按照名字排序
+samtools sort -n SRR11539111.fq.gz.sam > SRR11539111.sort.bam  
+# bamtobed
+bedtools bamtobed -i SRR11539111.sort.bam -bedpe >../SRR11539111.bedpe
+# callpeak，得到narrowpeak文件
+macs2 callpeak  -g mm --nomodel \
+  -n SRR11539111 -t ./SRR11539111.bedpe \
+  --outdir /mnt/d/ATAC/peaks #(举例)
+
+
+# 1. 计算比对上参考基因组的reads总数
+wc -l SRR11539111.bedpe
+# 2.  计算peak区域的reads总数:
+bedtools intersect -a SRR11539111.bedpe -b SRR11539111_peaks.narrowPeak | wc -l
+# 准备好文件
+# 计算FRiP value = peakReads/totalReads
+```
+
+## 9.3 IDR
+1. 目的:评价重复样本间peaks一致性的常用方法是IDR。IDR是经过比较一对经过排序的regions/peaks的列表，然后核算反映其重复性的值，合并一致性peaks。
+2. 意义： 
+
+IDR是看两重复样本一致性好坏的重要参考指标。前文提到过，如果是技术重复，可以在前期合并测序文件增加测序深度；如果是生物重复，最好别合并。那对于生物学重复应该如何处理呢？  
+——可以用IDR合并重复，但是IDR不支持三个以上的重复且peak并不能只简单合并成一个pool。  
+接下来我们对这些问题分别给出较合理的解决办法。  
+1. 合并peak的几种策略  
+对于CHIP_seq、ATAC_seg等实验而言，生物学重复样本的peak calling结果很难完全一致。对于多个生物学重复样本的peak calling结果，如何筛选出最终的可以代表这一组样本的peak是一个难题。  
+① 直接合并生物学重复样本的reads，然后进行peak calling，这样一组样本只会有一个peak calling的结果，这样的做法投机取巧，丢失了生物学重复的意义忽略重复样本之间的异质性，简单粗暴的当做1个样本来进行操作。  
+② 对多个生物学重复样本的peak结果取交集，在取交集的过程中，peak calling的阈值，overlap区间的阈值都会对最终结果造成影响，所以这种方式的结果波动大，不够稳定。  
+③ 采用IDR软件评估生物学重复样本间的相关性，并根据阈值筛选出最终的一组peak。  
+
+2. 有三到四组生物学重复：12，23，34分别合并，看每个重复之间的一致性，一致性较好的才可找 consensus peak。  
+  
+因此本流程采取了`分别call peak`--> `IDR`看一致性 --> 找`union（consensus peak）`的策略  
 
 
 
 
 
-## ATACseqQC:FRiP
 
-
-
-
-这些可以通过 ATACseqQC工具进行评估。最后，分别对正链和负链的 reads 进行 + 4bp 和 -5bp 的移位（目标DNA最后产生9bp的重复在ATAC-seq后续分析里要处理。这个长度近似于一个完整的DNA螺旋[参考文章](https://www.jianshu.com/p/13779b89e76b)），以解释 Tn5 转座酶修复损伤 DNA 所产生的 9bp 的重复，并实现 TF footprint 和 motif 相关分析的碱基对分辨率。 
-## IDR：样本内的重复性检测，合并一致性peaks
-
+ATACseqQC
+## 9.4 TSS富集
+## 9.5 还有很多其他评估指标[Library complexity](https://yiweiniu.github.io/blog/2019/03/ATAC-seq-data-analysis-from-FASTQ-to-peaks/)（PBC1,PBC2,NFR）等
 ## phantompeakqualtools：评估实验中信噪比、富集信号等
 
 
