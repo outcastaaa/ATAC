@@ -289,7 +289,31 @@ RStudio-2022.07.1-554.exe
 ```
 brew install parallel
 ```
+* [详细用法](https://github.com/outcastaaa/ATAC/blob/main/biotools/parallel.md)  
 
+## 2.14 IDR
+* 下载    
+
+根据官方[GitHub](https://github.com/nboley/idr)上提供的方法
+```bash
+cd /mnt/d/biosoft
+wget https://github.com/nboley/idr/archive/2.0.3.zip
+unzip 2.0.3.zip
+rm 2.0.3.zip
+cd idr-2.0.3/
+python setup.py install
+# 报错 AttributeError: module 'numpy' has no attribute 'get_include'
+# 解决方法：卸载旧版本的numpy，安装最新的numpy，再加载py就可以了
+pip uninstall numpy
+pip install numpy
+```
+* conda 安装
+```bash
+conda install -c bioconda idr
+conda create -n py3 -y python=3 idr
+```
+
+* [详细用法](https://github.com/outcastaaa/ATAC/blob/main/biotools/idr.md)
 
 
 
@@ -1118,6 +1142,7 @@ ls *.bed| while read id; do
 done
 
 或者
+
 cp /mnt/d/ATAC/rmdup/config.raw /mnt/d/ATAC/shifted/config.raw
 cat config.raw | while read id;
 do echo $id 
@@ -1407,24 +1432,50 @@ bedtools intersect -a SRR11539111.bedpe -b SRR11539111_peaks.narrowPeak | wc -l
 # 计算FRiP value = peakReads/totalReads
 ```
 
-## 9.3 IDR
-1. 目的:评价重复样本间peaks一致性的常用方法是IDR。IDR是经过比较一对经过排序的regions/peaks的列表，然后核算反映其重复性的值，合并一致性peaks。
+## 9.3 IDR (important)
+1. 目的: 评价重复样本间peaks一致性的常用方法是IDR(Irreproducibility Discovery Rate)。IDR是经过比较一对经过排序的regions/peaks的列表，然后核算反映其重复性的值，合并一致性peaks。
 2. 意义： 
 
 IDR是看两重复样本一致性好坏的重要参考指标。前文提到过，如果是技术重复，可以在前期合并测序文件增加测序深度；如果是生物重复，最好别合并。那对于生物学重复应该如何处理呢？  
 ——可以用IDR合并重复，但是IDR不支持三个以上的重复且peak并不能只简单合并成一个pool。  
 接下来我们对这些问题分别给出较合理的解决办法。  
-1. 合并peak的几种策略  
-对于CHIP_seq、ATAC_seg等实验而言，生物学重复样本的peak calling结果很难完全一致。对于多个生物学重复样本的peak calling结果，如何筛选出最终的可以代表这一组样本的peak是一个难题。  
+
+
+<1>. 合并peak的几种策略  
+对于CHIP_seq、ATAC_seq等实验而言，生物学重复样本的peak calling结果很难完全一致。对于多个生物学重复样本的peak calling结果，如何筛选出最终的可以代表这一组样本的peak是一个难题。  
 ① 直接合并生物学重复样本的reads，然后进行peak calling，这样一组样本只会有一个peak calling的结果，这样的做法投机取巧，丢失了生物学重复的意义忽略重复样本之间的异质性，简单粗暴的当做1个样本来进行操作。  
-② 对多个生物学重复样本的peak结果取交集，在取交集的过程中，peak calling的阈值，overlap区间的阈值都会对最终结果造成影响，所以这种方式的结果波动大，不够稳定。  
+② 对多个生物学重复样本的peak结果取交集，在取交集的过程中，peak calling的阈值，overlap区间的阈值都会对最终结果造成影响，所以这种方式的结果波动大，不够稳定。`bedtools intersect`   
+```bash
+bedtools intersect -a macs2/rep1_peaks.narrowPeak -b macs2/rep2_peaks.narrowPeak -wo > bedtools/overlaps.bed
+```  
 ③ 采用IDR软件评估生物学重复样本间的相关性，并根据阈值筛选出最终的一组peak。  
+IDR的长处：  避免了初始阈值的选择，处理了不同callers的不行比较性。IDR不依靠于阈值的选择，一切regions/peaks都被考虑在内。它是依靠regions/peaks的排序，不要求对输入信号进行校准或规范化。[对该段的解释](https://mbd.baidu.com/ug_share/mbox/4a83aa9e65/share?product=smartapp&tk=d8a8687f3aa19279e39c5415ccedf749&share_url=https%3A%2F%2Fkfs479.smartapps.cn%2Fpages%2Fblogdetail%2Fblogdetail%3Fid%3D5398770%26_swebfr%3D1%26_swebFromHost%3Dbaiduboxapp&domain=mbd.baidu.com)   
 
-2. 有三到四组生物学重复：12，23，34分别合并，看每个重复之间的一致性，一致性较好的才可找 consensus peak。  
+
+因此本流程采取了`分别call peak`--> `IDR`看一致性 --> 找`union（consensus peak）`的策略。  
+
+
+<2>. 有三到四组生物学重复：12，23，34分别合并，看每个重复之间的一致性，一致性较好的才可找 consensus peak。  
+3. 注意事项及其原理：  
+* 主张运用IDR时，MACS2 call peaks的步骤参数设置不要过于严格，以便鉴定出更多的peaks。  
+* 在IDR软件中，摒弃了用经验阈值来区分signal和noise的方法，直接输入全部的结果即可，软件会自动根据在生物学重复样本中的分布来确定合适的阈值，所以要强调一点，对于IDR的输入文件，事先不需要做任何过滤和筛选，直接使用最原始的peak calling结果即可。     
+* 将signal和noise区分开之后，进一步将signal分成reproducible和inreproducible 两类， 默认情况下只选取存在overlap的peak进行分析, 首先对其排序，排序的依据可以是fold enrichment, pvalue或者qvalue,这个参数可以调整，将所有信号排序之后给每个信号赋值一个IDR value, 来衡量这个信号在生物重复样本中的一致性，数值越大，不可重复性越高。最终根据IDR value的阈值，筛选小于阈值的peak即可。    
+
+
+```bash
+#Sort peak by -log10(p-value)
+mkdir -p /mnt/d/ATAC/IDR
+cd /mnt/d/ATAC/peaks1
+sort -k8,8nr SRR11539111_peaks.narrowPeak > ../IDR/SRR11539111_peaks.narrowPeak
+
+idr --samples sample_Rep1_sorted_peaks.narrowPeak sample_Rep2_sorted_peaks.narrowPeak --input-file-type narrowPeak --rank p.value --output-file sample-idr --plot --log-output-file sample.idr.log
+```
   
-因此本流程采取了`分别call peak`--> `IDR`看一致性 --> 找`union（consensus peak）`的策略  
+* 结果：  
+默认情况下统计IDR < 0.05的peak, 这个阈值可以通过​​​soft-idr-threshold​​参数来调整。在输出文件中，保存的是所有peak的结果，需要自己通过IDR value的值来进行筛选，输出文件的第12列记录了peak对应的global  IDR value的值，通过这个值进行筛选即可。
+通过IDR软件可以很方便的处理生物学重复样本的peak calling结果，筛选出一组一致性高的peak。
 
-
+## Bam文件的重复性 deeptools时的plotCorrelation
 
 
 
