@@ -17,13 +17,10 @@
     - [2.8 bedtools](#28-bedtools)
     - [2.9 MACS2](#29-MACS2)
     - [2.10 IGV](#210-IGV)
-
-
-
-    - [2.9 R](#29-r)
-    - [2.10 Rstudio](#210-rstudio)
-    - [2.11 parallel](#211-parallel)
-    - [StringTie[可选]](#stringtie可选)
+    - [2.11 R](#211-R)
+    - [2.12 Rstudio](#212-rstudio)
+    - [2.13 parallel](#213-parallel)
+    - [2.14 IDR](#214-IDR)
 
 - [3.Data](#3.Data)
     - [3.1 sequence](#31-sequence)
@@ -31,18 +28,23 @@
 - [4.Pre-alinment](#4.Pre-alinment)
     - [4.1 quality_control_checking](#41-quality_control_checking)
     - [4.2 pre-alinment_QC](#42-pre-alinment_QC)
-- [5.alignment](#5.alignment)
+- [5.Alignment](#5.Alignment)
 	- [5.1 alignment](#51-alignment)
-	- [5.2 transfer_samtobam](#52-transfer_samtobam)
+	- [5.2 sort_transfer-to-bam_index](#52-sort_transfer-to-bam_index)
 - [6.Post-alignment_processing](#6.Post-alignment_processing)
-	- [6.1 make_bam_index](#6.1-make_bam_index)
-	- [6.2 remove_duplicate_reads](#6.2-remove_duplicate_reads)
-
-- [Methylation analysis](#methylation-analysis)
-	- [Genome indexing](#genome-indexing)
-	- [Read alignment](#read-alignment)
-	- [Aligned reads deduplication](#aligned-reads-deduplication)
-	- [Methylation information extracting](#methylation-information-extracting)
+	- [6.1 remove_PCR-duplicate_reads](#61-remove_PCR-duplicate_reads)
+	- [6.2 remove_badquality_reads](#62-remove_badquality_reads)
+  - [6.3 remove_chrM_reads](#63-remove_chrM_reads)
+  - [6.4 bamtobed](#64-bamtobed)
+- [Merging BAMs (optional)](#merging-bams-optional)  
+- [7.shift_reads](#7.shift_reads)
+- [Bempe2Bw (optional)](#Bempe2Bw (optional))
+- [8.call_peaks](#8.call_peaks)
+- [9.Quality_check](#9.Quality_check)
+	- [9.1 fragment_length_distribution](#91-fragment_length_distribution)
+	- [9.2 FRiP](#92-FRiP)
+  - [9.3 IDR(important)](#93-idrimportant)
+	- [9.4 TSS_enrichment](#94-tss_enrichment)
 - [Downstream analysis](#downstream-analysis)
 	- [Input data preparation](#input-data-preparation)
 	- [DML/DMR detection](#dmldmr-detection)
@@ -710,7 +712,7 @@ done
         434718 (16.27%) aligned >1 times
 98.39% overall alignment rate
 ```
-## 5.2 sort_transfer-to-bam_index
+## 5.2 transfer_samtobam
 1. 目的：  
 
 samtobam: SAM格式是目前用来存放大量核酸比对结果信息的通用格式，bam文件是sam文件的二进制格式，将文件夹内sam文件全部转换为其二进制bam文件以减少内存。    
@@ -1295,7 +1297,7 @@ wc -l SRR11539111_peaks.narrowPeak
 | mm10 Refseq TSS annotation   | 10--15 | Acceptable             |
 | mm10 Refseq TSS annotation   | > 15   | Ideal                  |
 
-## 9.1 fragment length distribution
+## 9.1 fragment_length_distribution
 1. 目的： 查看片段长度的分布情况  
 2. 原理：通常，一个成功的 ATAC-seq 实验应该生成一个片段大小分布图，其峰值与无核小体区域 (nucleosome-free regions: NFR) (<100 bp) 和单、二、三核小体 (~ 200、400、600 bp) (Fig. 1b) 相对应，呈递减和周期性。来自 NFR 的片段预计会在基因的转录起始位点 (transcription start site, TSS) 附近富集，而来自核小体结合区域的片段预计会在 TSS 附近被耗尽，在 TSS 附近的侧翼区域会有少量富集 (Fig. 1c)。  
 
@@ -1445,7 +1447,8 @@ bedtools intersect -a SRR11539111.bedpe -b SRR11539111_peaks.narrowPeak | wc -l
 # 计算FRiP value = peakReads/totalReads
 ```
 
-## 9.3 IDR (important)
+## 9.3 IDR(important)
+
 1. 目的: 评价重复样本间peaks一致性的常用方法是IDR(Irreproducibility Discovery Rate)。IDR是经过比较一对经过排序的regions/peaks的列表，然后核算反映其重复性的值，合并一致性peaks。[参考文章](https://github.com/hbctraining/In-depth-NGS-Data-Analysis-Course/blob/master/sessionV/lessons/07_handling-replicates-idr.md)   
 
 The basic idea is that if two replicates measure the same underlying biology, the most significant peaks, which are likely to be genuine signals, are expected to have high consistency between replicates, whereas peaks with low significance, which are more likely to be noise, are expected to have low consistency.  
@@ -1599,6 +1602,7 @@ awk '{if($5 >= 540) print $0}' 12_pvalue.txt > 12_IDR0.05.txt
 wc -l 12_IDR0.05.txt #9716
 awk '{if($5 >= 540) print $0}' 56_pvalue.txt > 56_IDR0.05.txt
 wc -l 56_IDR0.05.txt #11520
+# 因此俩两组处理两两重复之间各有9716、11520个consensus peak
 ```
 
 
@@ -1606,13 +1610,13 @@ wc -l 56_IDR0.05.txt #11520
 
 
 
-## Bam文件的重复性 deeptools时的plotCorrelation
+## Bam文件的重复性：deeptools plotCorrelation
 
 
 
 
 ATACseqQC
-## 9.4 TSS富集
+## 9.4 TSS_enrichment
 ## 9.5 还有很多其他评估指标[Library complexity](https://yiweiniu.github.io/blog/2019/03/ATAC-seq-data-analysis-from-FASTQ-to-peaks/)（PBC1,PBC2,NFR）等
 ## phantompeakqualtools：评估实验中信噪比、富集信号等
 
