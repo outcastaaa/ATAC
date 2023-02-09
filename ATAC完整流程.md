@@ -1446,7 +1446,11 @@ bedtools intersect -a SRR11539111.bedpe -b SRR11539111_peaks.narrowPeak | wc -l
 ```
 
 ## 9.3 IDR (important)
-1. 目的: 评价重复样本间peaks一致性的常用方法是IDR(Irreproducibility Discovery Rate)。IDR是经过比较一对经过排序的regions/peaks的列表，然后核算反映其重复性的值，合并一致性peaks。
+1. 目的: 评价重复样本间peaks一致性的常用方法是IDR(Irreproducibility Discovery Rate)。IDR是经过比较一对经过排序的regions/peaks的列表，然后核算反映其重复性的值，合并一致性peaks。[参考文章](https://github.com/hbctraining/In-depth-NGS-Data-Analysis-Course/blob/master/sessionV/lessons/07_handling-replicates-idr.md)   
+
+The basic idea is that if two replicates measure the same underlying biology, the most significant peaks, which are likely to be genuine signals, are expected to have high consistency between replicates, whereas peaks with low significance, which are more likely to be noise, are expected to have low consistency.  
+
+
 2. 意义： 
 
 IDR是看两重复样本一致性好坏的重要参考指标。前文提到过，如果是技术重复，可以在前期合并测序文件增加测序深度；如果是生物重复，最好别合并。那对于生物学重复应该如何处理呢？  
@@ -1480,8 +1484,18 @@ IDR的长处：  避免了初始阈值的选择，处理了不同callers的不�
                         Defaults:
                                 narrowPeak/broadPeak: signal.value
                                 bed: score-log10(pvalue)
+* 关于IDR临界值的选择：  
+
+An example for our analysis is described below:  
+
+
+If starting with < 100K pre-IDR peaks for large genomes (human/mouse): For true replicates and self-consistency replicates an IDR threshold of 0.05 is more appropriate.  
+
+Use a tighter threshold for pooled-consistency since pooling and subsampling equalizes the pseudo-replicates in terms of data quality. Err on the side of caution and use more stringent IDR threshold of 0.01.  
+
 ```
-4. 代码：尝试分别用默认signal.value和-log10(p-value)排序比较结果，发现都可以，选择其中一种即可  
+4. 代码：尝试分别用默认signal.value和-log10(p-value)排序比较结果，发现都可以，有的教程推荐使用pvalue排序。In addition the narrowPeak files have to be sorted by the -log10(p-value) column.    
+
 * signal.value排序
 ```bash
 mkdir -p /mnt/d/ATAC/IDR
@@ -1517,19 +1531,21 @@ sort -k8,8nr {1} > {1}.8thsorted
 # 处理1：1&2
 idr --samples SRR11539111_peaks.narrowPeak.8thsorted SRR11539112_peaks.narrowPeak.8thsorted \
 --input-file-type narrowPeak \
+--rank p.value \
 --output-file 12_pvalue.txt \
 --log-output-file 12_pvalue.log \
 --plot
 # 处理2：5&6
 idr --samples SRR11539115_peaks.narrowPeak.8thsorted SRR11539116_peaks.narrowPeak.8thsorted \
 --input-file-type narrowPeak \
+--rank p.value \
 --output-file 56_pvalue.txt \
 --log-output-file 56_pvalue.log \
 --plot
 ```
 
 5. 结果：  
-默认情况下统计IDR < 0.05的peak, 这个阈值可以通过​​​soft-idr-threshold​​参数来调整。在输出文件中，保存的是所有peak的结果，需要自己通过IDR value的值来进行筛选，输出文件的第12列记录了peak对应的global  IDR value的值，通过这个值进行筛选即可。
+默认情况下统计IDR < 0.05的peak, 这个阈值可以通过​​​soft-idr-threshold​​参数来调整。在输出文件中，保存的是所有peak的结果，需要自己通过IDR value的值来进行筛选。0.05 IDR means that peak has a 5% chance of being an irreproducible discovery。  
 通过IDR软件可以很方便的处理生物学重复样本的peak calling结果，筛选出一组一致性高的peak。  
 
 * 生成了合并peak的txt文件+写入结果的log文件+绘图的png文件   
@@ -1545,9 +1561,18 @@ Contains the scaled IDR value, min(int(log2(-125IDR), 1000). e.g. peaks with an 
 
 * 图片  
 ![12.idr.png](../ATAC/pictures/12_pvalue.txt.png)  
-[12.idr.png](../ATAC/pictures/12_pvalue.txt.png)
+[12.idr.png](https://github.com/outcastaaa/ATAC/blob/main/pictures/12_pvalue.txt.png)  
 ![56.idr.png](../ATAC/pictures/56_pvalue.txt.png)    
-[56.idr.png](../ATAC/pictures/12_pvalue.txt.png)
+[56.idr.png](https://github.com/outcastaaa/ATAC/blob/main/pictures/56_pvalue.txt.png)   
+
+
+```bash
+Upper Left: Replicate 1 peak ranks versus replicate 2 peak ranks - peaks that do not pass the specified idr threshold are colered red.
+
+Upper Right: Replicate 1 log10 peak scores versus replicate 2 log10 peak scores - peaks that do not pass the specified idr threshold are colered red.
+
+Bottom Row: Peaks rank versus idr scores are plotted in black. The overlayed boxplots display the distribution of idr values in each 5% quantile. The idr values are thresholded at the optimization precision - 1e-6 bny default.
+```
 
 * 计算conmmon peaks
 ```bash
@@ -1570,9 +1595,9 @@ wc -l *.txt
 # 不管用什么排序方法，commonpeak都是一样的，下面采用pvalue排序文件
 
 # 筛选出IDR<0.05，IDR=0.05, int(-125log2(0.05)) = 540，即第五列>=540
-awk '{if($5 >= 540) print $0}' 12_signal_value.txt > 12_IDR0.05.txt
+awk '{if($5 >= 540) print $0}' 12_pvalue.txt > 12_IDR0.05.txt
 wc -l 12_IDR0.05.txt #6656
-awk '{if($5 >= 540) print $0}' 56_signal_value.txt > 56_IDR0.05.txt
+awk '{if($5 >= 540) print $0}' 56_pvalue.txt > 56_IDR0.05.txt
 wc -l 56_IDR0.05.txt #7814
 ```
 
