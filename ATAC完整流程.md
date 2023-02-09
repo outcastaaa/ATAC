@@ -234,12 +234,12 @@ usage: macs2 [-h] [--version]
 
 # 方法2：使用miniconda安装
 1. 打开清华大学开源镜像网站 https://mirrors.tuna.tsinghua.edu.cn -> 获取下载链接  
-2. 右键复制链接 https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/Miniconda3-py38_4.12.0-Linux-x86_64.sh
+2. 右键复制链接 wget https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/Miniconda3-latest-Linux-x86_64.sh
 3. 下载
 mkdir -p /mnt/d/biosoft/miniconda
 cd /mnt/d/biosoft/miniconda
-wget https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/Miniconda3-py38_4.12.0-Linux-x86_64.sh
-sh Miniconda3-py38_4.12.0-Linux-x86_64.sh
+wget wget https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/Miniconda3-latest-Linux-x86_64.sh
+bash Miniconda3-latest-Linux-x86_64.sh
 # Miniconda3 will now be installed into this location:/home/xuruizhi/miniconda3
 source ~/miniconda3/bin/activate
 
@@ -296,6 +296,7 @@ brew install parallel
 
 根据官方[GitHub](https://github.com/nboley/idr)上提供的方法
 ```bash
+# 版本2.0.3
 cd /mnt/d/biosoft
 wget https://github.com/nboley/idr/archive/2.0.3.zip
 unzip 2.0.3.zip
@@ -305,17 +306,29 @@ python setup.py install
 # 报错 AttributeError: module 'numpy' has no attribute 'get_include'
 # 解决方法：卸载旧版本的numpy，安装最新的numpy，再加载py就可以了
 pip uninstall numpy
-pip install numpy
+pip install numpy  
+
+cd /mnt/d/biosoft/idr-2.0.3/bin
+sudo chmod 777 idr 
+# 写入环境
+export PATH=/mnt/d/biosoft/idr-2.0.3/bin/:$PATH
 ```
 * conda 安装
 ```bash
-conda install -c bioconda idr
-conda create -n py3 -y python=3 idr
+# miniconda3/bin/conda install -c bioconda idr
+conda create -n py3 python=3 idr
+conda activate py3
+# 使用idr报错
+# conda install numpy 解决不了
+conda deactivate
 ```
+* 不要使用`pip install`安装，版本太老了  
+* [详细用法](https://github.com/outcastaaa/ATAC/blob/main/biotools/idr.md)  
 
-* [详细用法](https://github.com/outcastaaa/ATAC/blob/main/biotools/idr.md)
-
-
+* 画图需要matplotlib
+```bash
+pip install matplotlib
+```
 
 
 # 3.Data
@@ -1460,20 +1473,113 @@ IDR的长处：  避免了初始阈值的选择，处理了不同callers的不�
 * 主张运用IDR时，MACS2 call peaks的步骤参数设置不要过于严格，以便鉴定出更多的peaks。  
 * 在IDR软件中，摒弃了用经验阈值来区分signal和noise的方法，直接输入全部的结果即可，软件会自动根据在生物学重复样本中的分布来确定合适的阈值，所以要强调一点，对于IDR的输入文件，事先不需要做任何过滤和筛选，直接使用最原始的peak calling结果即可。     
 * 将signal和noise区分开之后，进一步将signal分成reproducible和inreproducible 两类， 默认情况下只选取存在overlap的peak进行分析, 首先对其排序，排序的依据可以是fold enrichment, pvalue或者qvalue,这个参数可以调整，将所有信号排序之后给每个信号赋值一个IDR value, 来衡量这个信号在生物重复样本中的一致性，数值越大，不可重复性越高。最终根据IDR value的阈值，筛选小于阈值的peak即可。    
+* 排序  
+```bash
+--rank RANK           Which column to use to rank peaks.
+                        Options: signal.value p.value q.value columnIndex
+                        Defaults:
+                                narrowPeak/broadPeak: signal.value
+                                bed: score-log10(pvalue)
+```
+4. 代码：尝试分别用默认signal.value和-log10(p-value)排序比较结果，发现都可以，选择其中一种即可  
+* signal.value排序
+```bash
+mkdir -p /mnt/d/ATAC/IDR
+cd /mnt/d/ATAC/IDR
+cp ../peaks1/*.narrowPeak ./
+# 处理1：1&2
+idr --samples SRR11539111_peaks.narrowPeak SRR11539112_peaks.narrowPeak \
+--input-file-type narrowPeak \
+--output-file 12_signal_value.txt \
+--log-output-file 12_signal_value.log \
+--plot
+# 处理2：5&6
+idr --samples SRR11539115_peaks.narrowPeak SRR11539116_peaks.narrowPeak \
+--input-file-type narrowPeak \
+--output-file 56_signal_value.txt \
+--log-output-file 56_signal_value.log \
+--plot
+```
 
 
+* -log10(p-value)排序
 ```bash
 #Sort peak by -log10(p-value)
 mkdir -p /mnt/d/ATAC/IDR
-cd /mnt/d/ATAC/peaks1
-sort -k8,8nr SRR11539111_peaks.narrowPeak > ../IDR/SRR11539111_peaks.narrowPeak
+cd /mnt/d/ATAC/IDR
+cp ../peaks1/*.narrowPeak ./
 
-idr --samples sample_Rep1_sorted_peaks.narrowPeak sample_Rep2_sorted_peaks.narrowPeak --input-file-type narrowPeak --rank p.value --output-file sample-idr --plot --log-output-file sample.idr.log
+parallel -j 6 "
+sort -k8,8nr {1} > {1}.8thsorted
+" ::: $(ls *.narrowPeak)
+
+
+# 处理1：1&2
+idr --samples SRR11539111_peaks.narrowPeak.8thsorted SRR11539112_peaks.narrowPeak.8thsorted \
+--input-file-type narrowPeak \
+--output-file 12_pvalue.txt \
+--log-output-file 12_pvalue.log \
+--plot
+# 处理2：5&6
+idr --samples SRR11539115_peaks.narrowPeak.8thsorted SRR11539116_peaks.narrowPeak.8thsorted \
+--input-file-type narrowPeak \
+--output-file 56_pvalue.txt \
+--log-output-file 56_pvalue.log \
+--plot
 ```
-  
-* 结果：  
+
+5. 结果：  
 默认情况下统计IDR < 0.05的peak, 这个阈值可以通过​​​soft-idr-threshold​​参数来调整。在输出文件中，保存的是所有peak的结果，需要自己通过IDR value的值来进行筛选，输出文件的第12列记录了peak对应的global  IDR value的值，通过这个值进行筛选即可。
-通过IDR软件可以很方便的处理生物学重复样本的peak calling结果，筛选出一组一致性高的peak。
+通过IDR软件可以很方便的处理生物学重复样本的peak calling结果，筛选出一组一致性高的peak。  
+
+* 生成了合并peak的txt文件+写入结果的log文件+绘图的png文件   
+[详解](https://github.com/nboley/idr)  
+
+* 含有common peaks的txt文件
+```bash
+chr9    123461801       123462182       .       1000    .       54.89443        -1      -1      195     2.415815       2.415815 123461801       123462182       28.05049        196     123461801       123462182       26.84394        194
+# chr， 起始位置， 终止位置， name， score， 链， signalValue float， p-value float，q-value float，summit，Local IDR value，Global IDR value，rep1_chromStart，rep1_chromEnd，rep2_chromStart，rep2_chromEnd  
+```
+！ 注意：第五列score int  
+Contains the scaled IDR value, min(int(log2(-125IDR), 1000). e.g. peaks with an IDR of 0 have a score of 1000, idr 0.05 have a score of int(-125log2(0.05)) = 540, and idr 1.0 has a score of 0.即idr数值越大，不可重复性越高  
+
+* 图片  
+![12.idr.png](../ATAC/pictures/12_pvalue.txt.png)  
+[12.idr.png](../ATAC/pictures/12_pvalue.txt.png)
+![56.idr.png](../ATAC/pictures/56_pvalue.txt.png)    
+[56.idr.png](../ATAC/pictures/12_pvalue.txt.png)
+
+* 计算conmmon peaks
+```bash
+# 单个样本的peak总数
+ wc -l *.narrowPeak
+#   17002 SRR11539111_peaks.narrowPeak
+#   16158 SRR11539112_peaks.narrowPeak
+#   20405 SRR11539115_peaks.narrowPeak
+#   19080 SRR11539116_peaks.narrowPeak
+#   72645 total
+
+# 核算conmmon peaks的总数
+wc -l *.txt
+  # 13340 12_pvalue.txt
+  # 13340 12_signal_value.txt
+  # 15709 56_pvalue.txt
+  # 15709 56_signal_value.txt
+  # 58098 total
+# 相当于 样本1和2有13340个overlap的peaks，样本5和6有15709个overlap的peaks
+# 不管用什么排序方法，commonpeak都是一样的，下面采用pvalue排序文件
+
+# 筛选出IDR<0.05，IDR=0.05, int(-125log2(0.05)) = 540，即第五列>=540
+awk '{if($5 >= 540) print $0}' 12_signal_value.txt > 12_IDR0.05.txt
+wc -l 12_IDR0.05.txt #6656
+awk '{if($5 >= 540) print $0}' 56_signal_value.txt > 56_IDR0.05.txt
+wc -l 56_IDR0.05.txt #7814
+```
+
+
+
+
+
 
 ## Bam文件的重复性 deeptools时的plotCorrelation
 
