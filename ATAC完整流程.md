@@ -1494,7 +1494,7 @@ If starting with < 100K pre-IDR peaks for large genomes (human/mouse): For true 
 Use a tighter threshold for pooled-consistency since pooling and subsampling equalizes the pseudo-replicates in terms of data quality. Err on the side of caution and use more stringent IDR threshold of 0.01.  
 
 ```
-4. 代码：尝试分别用默认signal.value和-log10(p-value)排序比较结果，发现都可以，有的教程推荐使用pvalue排序。In addition the narrowPeak files have to be sorted by the -log10(p-value) column.    
+4. 代码：尝试分别用默认signal.value和-log10(p-value)排序比较结果，推荐使用pvalue排序。In addition the narrowPeak files have to be sorted by the -log10(p-value) column.    
 
 * signal.value排序
 ```bash
@@ -1553,7 +1553,8 @@ idr --samples SRR11539115_peaks.narrowPeak.8thsorted SRR11539116_peaks.narrowPea
 
 * 含有common peaks的txt文件
 ```bash
-chr9    123461801       123462182       .       1000    .       54.89443        -1      -1      195     2.415815       2.415815 123461801       123462182       28.05049        196     123461801       123462182       26.84394        194
+
+chr16   11143929        11144303        .       1000    .       -1      622.33362       -1      185     5.000000       5.000000 11143929        11144303        759.39752       187     11143932        11144299        622.33362       180
 # chr， 起始位置， 终止位置， name， score， 链， signalValue float， p-value float，q-value float，summit，Local IDR value，Global IDR value，rep1_chromStart，rep1_chromEnd，rep2_chromStart，rep2_chromEnd  
 ```
 ！ 注意：第五列score int  
@@ -1590,15 +1591,14 @@ wc -l *.txt
   # 13340 12_signal_value.txt
   # 15709 56_pvalue.txt
   # 15709 56_signal_value.txt
-  # 58098 total
 # 相当于 样本1和2有13340个overlap的peaks，样本5和6有15709个overlap的peaks
 # 不管用什么排序方法，commonpeak都是一样的，下面采用pvalue排序文件
 
 # 筛选出IDR<0.05，IDR=0.05, int(-125log2(0.05)) = 540，即第五列>=540
 awk '{if($5 >= 540) print $0}' 12_pvalue.txt > 12_IDR0.05.txt
-wc -l 12_IDR0.05.txt #6656
+wc -l 12_IDR0.05.txt #9716
 awk '{if($5 >= 540) print $0}' 56_pvalue.txt > 56_IDR0.05.txt
-wc -l 56_IDR0.05.txt #7814
+wc -l 56_IDR0.05.txt #11520
 ```
 
 
