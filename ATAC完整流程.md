@@ -1,6 +1,8 @@
 
 # ATAC-seq分析
-[很好的参考文章](https://yiweiniu.github.io/blog/2019/03/ATAC-seq-data-analysis-from-FASTQ-to-peaks/)  
+[很好的参考文章](https://yiweiniu.github.io/blog/2019/03/ATAC-seq-data-analysis-from-FASTQ-to-peaks/)    
+[术语列表](https://www.encodeproject.org/data-standards/terms/#enrichment)  
+
 
 - [0.Introduction](#0.Introduction)
 - [1.Prepare](#1.Prepare)
@@ -944,7 +946,8 @@ chr1    3000935 3001035 SRR11539111.16779100/2  36      -
 chr1    3000966 3001066 SRR11539111.47139289/1  37      +
 chr1    3001028 3001096 SRR11539111.19849957/1  39      +
 ```
-* bedpe文件格式
+* bedpe文件格式  [bed文件格式](https://www.cnblogs.com/djx571/p/9499795.html#:~:text=BED%20%E6%96%87%E4%BB%B6%28Browser%20Extensible%20Data%29%E6%A0%BC%E5%BC%8F%E6%98%AFucsc,%E7%9A%84genome%20browser%E7%9A%84%E4%B8%80%E4%B8%AA%E6%A0%BC%E5%BC%8F%20%2C%E6%8F%90%E4%BE%9B%E4%BA%86%E4%B8%80%E7%A7%8D%E7%81%B5%E6%B4%BB%E7%9A%84%E6%96%B9%E5%BC%8F%E6%9D%A5%E5%AE%9A%E4%B9%89%E7%9A%84%E6%95%B0%E6%8D%AE%E8%A1%8C%EF%BC%8C%E4%BB%A5%E7%94%A8%E6%9D%A5%E6%8F%8F%E8%BF%B0%E6%B3%A8%E9%87%8A%E4%BF%A1%E6%81%AF%E3%80%82%20BED%E8%A1%8C%E6%9C%893%E4%B8%AA%E5%BF%85%E9%A1%BB%E7%9A%84%E5%88%97%E5%92%8C9%E4%B8%AA%E9%A2%9D%E5%A4%96%E5%8F%AF%E9%80%89%E7%9A%84%E5%88%97%E3%80%82)  
+
 ```bash
 # 必选的三列：
 chrom - 染色体的名称（例如chr3，chrY，chr2_random）或支架（例如scaffold10671）。
@@ -1002,7 +1005,8 @@ mkdir -p /mnt/d/ATAC/shifted
 cd /mnt/d/ATAC/filter
 # the BAM file should be sorted by read name beforehand
 parallel -j 7 "
-samtools sort -n -o ../shifted/{1}.named {1}
+  
+  samtools sort -n -o ../shifted/{1}.named {1}
 " ::: $( ls *.filter.bam)
 
 cd /mnt/d/ATAC/shifted
@@ -1069,25 +1073,7 @@ $ wc -l SRR11539111.Tn5.bed
 # 48111744
 ```
 
-# Bempe2Bw (optional) 
-bw文件是用于方便可视化peak的文件，因为上游处理完的bam文件通常都较大，不方便于快速展示，而将其转变成bw(bigwig)或者wig就会方便的多，而bigWig文件的显示性能又相较wig文件快得多，故bw是更常用的。而相较于bed文件相说，它不只提供了peak的位置，还有peak的高低。 
-```bash
-# 排序->把bed文件转成bedgraph文件->bedgraph转bw
-mkdir -p  /mnt/d/ATAC/bw
-cd /mnt/d/ATAC/shifted
-# cp ./*.Tn5.sorted.bedpe /mnt/d/ATAC/bw/
 
-cat config.raw | while read id;
-do echo $id 
-  arr=($id)
-  sample=${arr[0]}
-
-  cat ${sample}.Tn5.bedpe | sort -V > ${sample}.Tn5.sorted.bedpe
-  # 未完成
-  bedtools genomecov -i ${name}.bed -split -bg -g $chrom_info > ${name}.bg
-  wigToBigWig ${name}.bg $chrom_info ${name}.bw
-done
-```
 
 
 # 8.call_peaks 
@@ -1301,12 +1287,11 @@ wc -l SRR11539111_peaks.narrowPeak
 
 ## 9.1 fragment_length_distribution
 1. 目的： 查看片段长度的分布情况  
-2. 原理：通常，一个成功的 ATAC-seq 实验应该生成一个片段大小分布图，其峰值与无核小体区域 (nucleosome-free regions: NFR) (<100 bp) 和单、二、三核小体 (~ 200、400、600 bp) (Fig. 1b) 相对应，呈递减和周期性。来自 NFR 的片段预计会在基因的转录起始位点 (transcription start site, TSS) 附近富集，而来自核小体结合区域的片段预计会在 TSS 附近被耗尽，在 TSS 附近的侧翼区域会有少量富集 (Fig. 1c)。  
+2. 原理：通常，一个成功的 ATAC-seq 实验应该生成一个片段大小分布图，其峰值与无核小体区域 (nucleosome-free regions: NFR) (<100 bp) 和单、二、三核小体 (~ 200、400、600 bp)[ (Fig. 1b) ](https://github.com/outcastaaa/ATAC/blob/main/pictures/1b.png)相对应，呈递减和周期性。 
 
 ![b](../ATAC/pictures/1b.png)    
 b: 片段大小在 100bp 和 200bp 左右有明显的富集，表示没有核小体结合和单核小体结合的片段。
-![c](../ATAC/pictures/1c.png)  
-  c：TSS 富集可视化可以看出，没有核小体结合的片段在 TSS 处富集，而但核小体结合的片段在 TSS 上缺失，在 TSS 两侧富集。  
+  
 
 
 3. 软件：有很多种方式可以画出该图，且都很简单，本流程采用`Picard`统计，`R`画图.
@@ -1326,7 +1311,6 @@ do echo $id
   -O ../frag_length/${sample}.insert_size_metrics.txt \
   -H ../frag_length/${sample}.insert_size_histogram.pdf
 done
-#ERROR   2023-02-07 21:08:40     ProcessExecutor /home/linuxbrew/.linuxbrew/Cellar/r/4.2.1_2/lib/R/bin/exec/R: error while loading shared libraries: libicuuc.so.70: cannot open shared object file: No such file or directory
 
 #--Histogram_FILE,-H <File>    File to write insert size Histogram chart to.  
 #--INPUT,-I <File>             Input SAM/BAM/CRAM file. 
@@ -1370,7 +1354,7 @@ b <-read.table('../frag_length/SRR11539112.fragment_length_count.txt')
 c <-read.table('../frag_length/SRR11539115.fragment_length_count.txt')
 d <-read.table('../frag_length/SRR11539116.fragment_length_count.txt')
 ```
-* 结果：  
+* 结果举例：   
 [SRR11539111](https://github.com/outcastaaa/ATAC/blob/main/pictures/SRR11539111.png)
 ![SRR11539111](../ATAC/pictures/SRR11539111.png)   
 [SRR11539116](https://github.com/outcastaaa/ATAC/blob/main/pictures/SRR11539116.png)
@@ -1386,9 +1370,10 @@ d <-read.table('../frag_length/SRR11539116.fragment_length_count.txt')
 
 2. 软件：这些可以通过`bedtools intersect`工具进行评估。[intersect工作原理](https://bedtools.readthedocs.io/en/latest/content/tools/intersect.html)  
 
-3. 代码：这里为了比较`picard等去重`和`未去重`两种数据分别进行了计算，实际操作时应使用`没有经过PCR去重等filter过程的原始比对文件`来计算  
+3. 代码：这里为了比较`picard等去重`和`未去重`两种数据分别进行了计算，实际操作时应使用`没有经过PCR去重等filter过程的原始比对文件`来计算    
 
-* 已去重，采用shifted bedpe，该结果肯定比实际未去重的bam文件callpeak小很多
+
+* 已去重，采用shifted bedpe，该结果肯定比实际未去重的bam文件callpeak小很多  
 ```bash
 # 1. 计算比对上参考基因组的reads总数
 cd /mnt/d/ATAC/shifted
@@ -1428,7 +1413,8 @@ SRR11539112 1743887 23816205 7.32227%
 SRR11539115 2235554 19110134 11.6983%
 SRR11539116 1871362 13403866 13.9614%
 ```
-* 推荐使用未去重，采用比对完后的bam文件callpeak作为peak reads
+
+* 推荐使用未去重、只比对完后的bam文件
 ```bash
 # 以SRR11539111演示一遍
 # 将比对后的sam转bam，且按照名字排序
@@ -1447,8 +1433,7 @@ wc -l SRR11539111.bedpe
 bedtools intersect -a SRR11539111.bedpe -b SRR11539111_peaks.narrowPeak | wc -l
 # 准备好文件
 # 计算FRiP value = peakReads/totalReads
-```
-
+```  
 ## 9.3 IDR(important)
 
 1. 目的: 评价重复样本间peaks一致性的常用方法是IDR(Irreproducibility Discovery Rate)。IDR是经过比较一对经过排序的regions/peaks的列表，然后核算反映其重复性的值，合并一致性peaks。[参考文章](https://github.com/hbctraining/In-depth-NGS-Data-Analysis-Course/blob/master/sessionV/lessons/07_handling-replicates-idr.md)   
@@ -1499,27 +1484,7 @@ If starting with < 100K pre-IDR peaks for large genomes (human/mouse): For true 
 Use a tighter threshold for pooled-consistency since pooling and subsampling equalizes the pseudo-replicates in terms of data quality. Err on the side of caution and use more stringent IDR threshold of 0.01.  
 
 ```
-4. 代码：尝试分别用默认signal.value和-log10(p-value)排序比较结果，推荐使用pvalue排序。In addition the narrowPeak files have to be sorted by the -log10(p-value) column.    
-
-* signal.value排序
-```bash
-mkdir -p /mnt/d/ATAC/IDR
-cd /mnt/d/ATAC/IDR
-cp ../peaks1/*.narrowPeak ./
-# 处理1：1&2
-idr --samples SRR11539111_peaks.narrowPeak SRR11539112_peaks.narrowPeak \
---input-file-type narrowPeak \
---output-file 12_signal_value.txt \
---log-output-file 12_signal_value.log \
---plot
-# 处理2：5&6
-idr --samples SRR11539115_peaks.narrowPeak SRR11539116_peaks.narrowPeak \
---input-file-type narrowPeak \
---output-file 56_signal_value.txt \
---log-output-file 56_signal_value.log \
---plot
-```
-
+4. 代码：尝试分别用默认signal.value和-log10(p-value)排序比较结果，推荐使用`pvalue`排序。In addition the narrowPeak files have to be sorted by the -log10(p-value) column.   
 
 * -log10(p-value)排序
 ```bash
@@ -1549,7 +1514,30 @@ idr --samples SRR11539115_peaks.narrowPeak.8thsorted SRR11539116_peaks.narrowPea
 --plot
 ```
 
+* signal.value排序
+```bash
+mkdir -p /mnt/d/ATAC/IDR
+cd /mnt/d/ATAC/IDR
+cp ../peaks1/*.narrowPeak ./
+# 处理1：1&2
+idr --samples SRR11539111_peaks.narrowPeak SRR11539112_peaks.narrowPeak \
+--input-file-type narrowPeak \
+--output-file 12_signal_value.txt \
+--log-output-file 12_signal_value.log \
+--plot
+# 处理2：5&6
+idr --samples SRR11539115_peaks.narrowPeak SRR11539116_peaks.narrowPeak \
+--input-file-type narrowPeak \
+--output-file 56_signal_value.txt \
+--log-output-file 56_signal_value.log \
+--plot
+```
+
+
+
+
 5. 结果：  
+
 默认情况下统计IDR < 0.05的peak, 这个阈值可以通过​​​soft-idr-threshold​​参数来调整。在输出文件中，保存的是所有peak的结果，需要自己通过IDR value的值来进行筛选。0.05 IDR means that peak has a 5% chance of being an irreproducible discovery。  
 通过IDR软件可以很方便的处理生物学重复样本的peak calling结果，筛选出一组一致性高的peak。  
 
@@ -1558,12 +1546,11 @@ idr --samples SRR11539115_peaks.narrowPeak.8thsorted SRR11539116_peaks.narrowPea
 
 * 含有common peaks的txt文件
 ```bash
-
 chr16   11143929        11144303        .       1000    .       -1      622.33362       -1      185     5.000000       5.000000 11143929        11144303        759.39752       187     11143932        11144299        622.33362       180
 # chr， 起始位置， 终止位置， name， score， 链， signalValue float， p-value float，q-value float，summit，Local IDR value，Global IDR value，rep1_chromStart，rep1_chromEnd，rep2_chromStart，rep2_chromEnd  
 ```
-！ 注意：第五列score int  
-Contains the scaled IDR value, min(int(log2(-125IDR), 1000). e.g. peaks with an IDR of 0 have a score of 1000, idr 0.05 have a score of int(-125log2(0.05)) = 540, and idr 1.0 has a score of 0.即idr数值越大，不可重复性越高  
+！ 注意：第五列score int —— Contains the scaled IDR value, min(int(log2(-125IDR), 1000). e.g. peaks with an IDR of 0 have a score of 1000, idr 0.05 have a score of int(-125log2(0.05)) = 540, and idr 1.0 has a score of 0.即，idr数值越大，不可重复性越高；筛选的是IDR数值小于0.05的peaks。  
+
 
 * 图片  
 ![12.idr.png](../ATAC/pictures/12_pvalue.txt.png)  
@@ -1573,7 +1560,7 @@ Contains the scaled IDR value, min(int(log2(-125IDR), 1000). e.g. peaks with an 
 
 
 ```bash
-Upper Left: Replicate 1 peak ranks versus replicate 2 peak ranks - peaks that do not pass the specified idr threshold are colered red.
+Upper Left: Replicate 1 peak ranks versus replicate 2 peak ranks - peaks that do not pass the specified idr threshold are colered red.黑色的才是要找的IDR<0.05的可重复（共有的）peak。  
 
 Upper Right: Replicate 1 log10 peak scores versus replicate 2 log10 peak scores - peaks that do not pass the specified idr threshold are colered red.
 
@@ -1597,34 +1584,103 @@ wc -l *.txt
   # 15709 56_pvalue.txt
   # 15709 56_signal_value.txt
 # 相当于 样本1和2有13340个overlap的peaks，样本5和6有15709个overlap的peaks
-# 不管用什么排序方法，commonpeak都是一样的，下面采用pvalue排序文件
+# 不管用什么排序方法，commonpeak都是一样的，但是其他数据都不同；下面采用pvalue排序文件
 
 # 筛选出IDR<0.05，IDR=0.05, int(-125log2(0.05)) = 540，即第五列>=540
 awk '{if($5 >= 540) print $0}' 12_pvalue.txt > 12_IDR0.05.txt
 wc -l 12_IDR0.05.txt #9716
 awk '{if($5 >= 540) print $0}' 56_pvalue.txt > 56_IDR0.05.txt
 wc -l 56_IDR0.05.txt #11520
-# 因此俩两组处理两两重复之间各有9716、11520个consensus peak
+# 因此两组处理两两重复之间各有9716、11520个consensus peak
 ```
+已经找到了最终可用的peaks，下一步进行下游分析。  
 
 
 
 
 
 
-## Bam文件的重复性：deeptools plotCorrelation
+## 类似于IDR检查peak重复性，可以用deeptools plotCorrelation看Bam文件的重复性
 
 
 
 
-ATACseqQC
-## 9.4 TSS_enrichment
+
+## 9.4 TSS_enrichment  
+1. 目的：
+2. 定义和意义：  
+
+Transcription Start Site (TSS) Enrichment Score - The TSS enrichment calculation is a signal to noise calculation. The reads around a reference set of TSSs are collected to form an aggregate distribution of reads centered on the TSSs and extending to 2000 bp in either direction (for a total of 4000bp). This distribution is then normalized by taking the average read depth in the 100 bps at each of the end flanks of the distribution (for a total of 200bp of averaged data) and calculating a fold change at each position over that average read depth. This means that the flanks should start at 1, and if there is high read signal at transcription start sites (highly open regions of the genome) there should be an increase in signal up to a peak in the middle. We take the signal value at the center of the distribution after this normalization as our TSS enrichment metric. Used to evaluate ATAC-seq.   
+来自 NFR（没有核小体的区域） 的片段预计会在基因的转录起始位点 (transcription start site, TSS) 附近富集，而来自核小体结合区域的片段预计会在 TSS 附近被耗尽，在 TSS 附近的侧翼区域会有少量富集 。[(Fig. 1c)](https://github.com/outcastaaa/ATAC/blob/main/pictures/1c.png)  
+![c](../ATAC/pictures/1c.png)    
+  c：TSS 富集可视化可以看出，没有核小体结合的片段在 TSS 处富集，而但核小体结合的片段在 TSS 上缺失，在 TSS 两侧富集。   
+
+
 ## 9.5 other_indexes
 
 还有很多其他评估指标[Library complexity](https://yiweiniu.github.io/blog/2019/03/ATAC-seq-data-analysis-from-FASTQ-to-peaks/)（PBC1,PBC2,NFR）等
-## phantompeakqualtools：评估实验中信噪比、富集信号等
+## phantompeakqualtools：评估实验中信噪比、富集信号等ATACseqQC
+```r
+BiocManager::install("DSS",force = TRUE) 
+
+library(tidyr)
+library(dplyr)
+first_file <- "NC_methylation_result.txt"
+second_file <- "treatment_methylation_result.txt"
+
+mkdir /mnt/d/methylation2/R_analyse/output
+file_prefix <- "mm_all_norm_chr"
+file_save_path <- "../output/"
+
+# import data
+first_raw_data <- read.table(first_file, header = T, stringsAsFactors = F)
+second_raw_data <- read.table(second_file, header = T, stringsAsFactors = F)
+
+# data manipulation to prepare for the BSseq objection
+DSS_first_input_data <- first_raw_data %>%
+	mutate(chr = paste("chr", chr, sep = "")) %>%
+	mutate(pos = start, N = methyled + unmethyled, X = methyled ) %>%
+	select(chr, pos, N, X) 
+    #select只挑选需要的列输出：染色体，位置，总的碱基数（甲基化与未甲基化的），甲基化碱基
+DSS_second_input_data <- second_raw_data %>%
+	mutate(chr = paste("chr", chr, sep = "")) %>%
+	mutate(pos = start, N = methyled + unmethyled, X = methyled) %>%
+	select(chr, pos, N, X)
+
+#％>％来自dplyr包的管道函数，我们可以将其理解为车间里的流水线，经过前一步加工的产品才能进入后一步进一步加工，
+# 其作用是将前一步的结果直接传参给下一步的函数，从而省略了中间的赋值步骤，可以大量减少内存中的对象，节省内存。
+
+write.table(DSS_first_input_data, paste("D:/methylation2/R_analyse/data/", "DSS_first_input_data.txt", sep = ""), row.names = F)
+
+ (echo -e "chr      start      end        length         nCG        meanMethy1         meanMethy2         diff.Methy        areaStat " && cat ./$i.txt) > temp && mv temp ./$i.txt
+done
+```
+# 10. Visualization  
+此处看的是两组处理、每组处理之间有多个生物重复，可以堆在一起比较：每个生物重复之间的peak一致性；or 对于某个位点的两处理的peak信号差异，即，xxx（实验组）细胞显示出不同的染色质可及性区域。
+
+e.g. 在Hcn4和Nppa位点的ATAC-seq信号可视化显示，在Hcn4附近的非编码区，有离散的峰在racm中缺失，而在Nppa和Nppb附近的峰在pc中不存在[（图1D，E）]()。  
+![ide](./pictures/1de.png)  
 
 
+# Bempe2Bw (optional) 
+bw文件是用于方便可视化peak的文件，因为上游处理完的bam文件通常都较大，不方便于快速展示，而将其转变成bw(bigwig)或者wig就会方便的多，而bigWig文件的显示性能又相较wig文件快得多，故bw是更常用的。而相较于bed文件相说，它不只提供了peak的位置，还有peak的高低。 
+```bash
+# 排序->把bed文件转成bedgraph文件->bedgraph转bw
+mkdir -p  /mnt/d/ATAC/bw
+cd /mnt/d/ATAC/shifted
+# cp ./*.Tn5.sorted.bedpe /mnt/d/ATAC/bw/
+
+cat config.raw | while read id;
+do echo $id 
+  arr=($id)
+  sample=${arr[0]}
+
+  cat ${sample}.Tn5.bedpe | sort -V > ${sample}.Tn5.sorted.bedpe
+  # 未完成
+  bedtools genomecov -i ${name}.bed -split -bg -g $chrom_info > ${name}.bg
+  wigToBigWig ${name}.bg $chrom_info ${name}.bw
+done
+```
 # Peak differential analysis
 
 csaw 是通过将 edgeR 框架扩展到将基因组分 bin 而开发的。滑动窗口方法被认为可以对基因组中的 reads 进行更多的无偏估计，但是需要严格的 FDR 控制才能正确合并相邻窗口。
