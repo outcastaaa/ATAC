@@ -44,7 +44,10 @@
 	- [9.1 fragment_length_distribution](#91-fragment_length_distribution)
 	- [9.2 FRiP](#92-FRiP)
   - [9.3 IDR(important)](#93-idrimportant)
+
 	- [9.4 TSS_enrichment](#94-tss_enrichment)
+  - [9.5 other_indexes](#95-other_indexes) 
+  
 - [Downstream analysis](#downstream-analysis)
 	- [Input data preparation](#input-data-preparation)
 	- [DML/DMR detection](#dmldmr-detection)
@@ -1617,7 +1620,9 @@ wc -l 56_IDR0.05.txt #11520
 
 ATACseqQC
 ## 9.4 TSS_enrichment
-## 9.5 还有很多其他评估指标[Library complexity](https://yiweiniu.github.io/blog/2019/03/ATAC-seq-data-analysis-from-FASTQ-to-peaks/)（PBC1,PBC2,NFR）等
+## 9.5 other_indexes
+
+还有很多其他评估指标[Library complexity](https://yiweiniu.github.io/blog/2019/03/ATAC-seq-data-analysis-from-FASTQ-to-peaks/)（PBC1,PBC2,NFR）等
 ## phantompeakqualtools：评估实验中信噪比、富集信号等
 
 
