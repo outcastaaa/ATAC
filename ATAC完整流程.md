@@ -44,8 +44,7 @@
 	- [9.1 fragment_length_distribution](#91-fragment_length_distribution)
 	- [9.2 FRiP](#92-FRiP)
   - [9.3 IDR(important)](#93-idrimportant)
-
-	- [9.4 TSS_enrichment](#94-tss_enrichment)
+  - [9.4 TSS_enrichment](#94-tss_enrichment) 
   - [9.5 other_indexes](#95-other_indexes) 
   
 - [Downstream analysis](#downstream-analysis)
