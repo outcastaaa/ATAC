@@ -1,7 +1,8 @@
 
 # ATAC-seq分析
 [很好的参考文章](https://yiweiniu.github.io/blog/2019/03/ATAC-seq-data-analysis-from-FASTQ-to-peaks/)    
-[术语列表](https://www.encodeproject.org/data-standards/terms/#enrichment)  
+[术语列表](https://www.encodeproject.org/data-standards/terms/#enrichment)   
+[文件格式](https://deeptools.readthedocs.io/en/develop/content/help_glossary.html)   
 
 
 - [0.Introduction](#0.Introduction)
@@ -23,6 +24,7 @@
     - [2.12 Rstudio](#212-rstudio)
     - [2.13 parallel](#213-parallel)
     - [2.14 IDR](#214-IDR)
+    - [2.15 deeptools](#215-deeptools)
 
 - [3.Data](#3.Data)
     - [3.1 sequence](#31-sequence)
@@ -175,8 +177,9 @@ brew install bowtie2
 * [详细用法](https://github.com/outcastaaa/ATAC/blob/main/biotools/bowtie2.md)  
 
 ## 2.6 samtools
-最新版本为1.16  
-本地下载时，在配制这步出错，使用`brew install samtools`安装
+```bash
+brew install samtools
+```
 * [详细用法](https://github.com/outcastaaa/ATAC/blob/main/biotools/samtools_bamfile.md)   
 
 
@@ -256,8 +259,8 @@ conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/
 conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/bioconda/
 
 conda search macs2
-conda create -n python2 python=2
-conda activate python2
+conda create -n python3 python=3
+conda activate python3
 conda install macs2
 ```
 * [详细用法](https://github.com/outcastaaa/ATAC/blob/main/biotools/MACS2.md)  
@@ -277,7 +280,7 @@ wget https://data.broadinstitute.org/igv/projects/downloads/2.16/IGV_Win_2.16.0-
 最新版本4.2.2_1  
 先进入官网，用清华镜像源下载合适版本的R，再`brew install r`
 ```
-$ brew install r
+brew install r
   ```
 * !R 安装时多次尝试，RStudio都识别不到，因此直接在官网选择`Download R for Windows; install R for the first time`下载安装包即可；注意可以将两个文件放在同一个文件夹内  
 [参考](https://blog.csdn.net/m0_49354332/article/details/116059239)  
@@ -335,7 +338,26 @@ conda deactivate
 ```bash
 pip install matplotlib
 ```
+## 2.15 deeptools
+* 下载
+```bash
+# 需要提前安装其他包
+#numpy >= 1.8.0
+pip install numpy #(1.24.2)
+#scipy >= 0.17.0
+pip install scipy #(1.8.1)
+#py2bit >= 0.1.0
+pip install py2bit #0.3.0
+#pyBigWig >= 0.2.1
+conda install pyBigWig #(0.3.18)
+#pysam >= 0.8
+pip install pysam #(0.20.0)
+#matplotlib >= 1.4.0
+pip install matplotlib #(3.6.2)
 
+pip install deeptools
+deeptools -h
+```
 
 # 3.Data
 ## 3.1 sequence
@@ -803,10 +825,10 @@ parallel -j 6 "
      MarkDuplicates -INPUT ${sample}.sort.bam \
 	 -OUTPUT ../rmdup/${sample}.rmdup.bam \
 	 -REMOVE_DUPLICATES true \
-	# VALIDATION_STRINGENCY =LENIENT \
-	 -METRICS_FILE ../rmdup/${sample}.log 
+	 VALIDATION_STRINGENCY =LENIENT \
+   -METRICS_FILE ../rmdup/${sample}.log 
   samtools index -@ 7 ../rmdup/{1}.rmdup.bam 
-	samtools flagstat -@ 7  ../rmdup/{1}.rmdup.bam > ../rmdup/{1}.rmdup.stat 
+  samtools flagstat -@ 7  ../rmdup/{1}.rmdup.bam > ../rmdup/{1}.rmdup.stat 
 " ::: $( ls *.sort.bam)
    
 #--VALIDATION_STRINGENCY <验证严格性>此程序读取的所有 SAM 文件的验证严格性。
@@ -1081,7 +1103,7 @@ $ wc -l SRR11539111.Tn5.bed
 
 2. 软件：目前，`MACS2` 是 ENCODE ATAC-seq 流程的默认 Peak caller 程序。  
 
-3. !!重要：关于是否使用[-f BEDPE的讨论](https://github.com/macs3-project/MACS/issues/331)，可根据需要选择合适的callpeak参数。  
+3. !!!重要：关于是否使用[-f BEDPE的讨论](https://github.com/macs3-project/MACS/issues/331)，可根据需要选择合适的callpeak参数。  
 
 
 4. 其他： 
@@ -1114,7 +1136,7 @@ ls *.Tn5.bedpe| while read id; do
   --outdir ../peaks/ 
 done
 
-或者
+# 推荐使用peaks1代码  
 # 与/peaks相比，/peaks1加了几个参数，删除了shift和extsize
 cp /mnt/d/ATAC/rmdup/config.raw /mnt/d/ATAC/shifted/config.raw
 mkdir -p /mnt/d/ATAC/peaks1/
@@ -1289,7 +1311,7 @@ wc -l SRR11539111_peaks.narrowPeak
 1. 目的： 查看片段长度的分布情况  
 2. 原理：通常，一个成功的 ATAC-seq 实验应该生成一个片段大小分布图，其峰值与无核小体区域 (nucleosome-free regions: NFR) (<100 bp) 和单、二、三核小体 (~ 200、400、600 bp)[ (Fig. 1b) ](https://github.com/outcastaaa/ATAC/blob/main/pictures/1b.png)相对应，呈递减和周期性。 
 
-![b](../ATAC/pictures/1b.png)    
+![b](./pictures/1b.png)      
 b: 片段大小在 100bp 和 200bp 左右有明显的富集，表示没有核小体结合和单核小体结合的片段。
   
 
@@ -1356,9 +1378,9 @@ d <-read.table('../frag_length/SRR11539116.fragment_length_count.txt')
 ```
 * 结果举例：   
 [SRR11539111](https://github.com/outcastaaa/ATAC/blob/main/pictures/SRR11539111.png)
-![SRR11539111](../ATAC/pictures/SRR11539111.png)   
+![SRR11539111](./pictures/SRR11539111.png)   
 [SRR11539116](https://github.com/outcastaaa/ATAC/blob/main/pictures/SRR11539116.png)
-![SRR11539116](../ATAC/pictures/SRR11539116.png)  
+![SRR11539116](./pictures/SRR11539116.png)  
 
 
 
@@ -1553,9 +1575,9 @@ chr16   11143929        11144303        .       1000    .       -1      622.3336
 
 
 * 图片  
-![12.idr.png](../ATAC/pictures/12_pvalue.txt.png)  
+![12.idr.png](./pictures/12_pvalue.txt.png)  
 [12.idr.png](https://github.com/outcastaaa/ATAC/blob/main/pictures/12_pvalue.txt.png)  
-![56.idr.png](../ATAC/pictures/56_pvalue.txt.png)    
+![56.idr.png](./pictures/56_pvalue.txt.png)    
 [56.idr.png](https://github.com/outcastaaa/ATAC/blob/main/pictures/56_pvalue.txt.png)   
 
 
@@ -1612,7 +1634,7 @@ wc -l 56_IDR0.05.txt #11520
 
 Transcription Start Site (TSS) Enrichment Score - The TSS enrichment calculation is a signal to noise calculation. The reads around a reference set of TSSs are collected to form an aggregate distribution of reads centered on the TSSs and extending to 2000 bp in either direction (for a total of 4000bp). This distribution is then normalized by taking the average read depth in the 100 bps at each of the end flanks of the distribution (for a total of 200bp of averaged data) and calculating a fold change at each position over that average read depth. This means that the flanks should start at 1, and if there is high read signal at transcription start sites (highly open regions of the genome) there should be an increase in signal up to a peak in the middle. We take the signal value at the center of the distribution after this normalization as our TSS enrichment metric. Used to evaluate ATAC-seq.   
 来自 NFR（没有核小体的区域） 的片段预计会在基因的转录起始位点 (transcription start site, TSS) 附近富集，而来自核小体结合区域的片段预计会在 TSS 附近被耗尽，在 TSS 附近的侧翼区域会有少量富集 。[(Fig. 1c)](https://github.com/outcastaaa/ATAC/blob/main/pictures/1c.png)  
-![c](../ATAC/pictures/1c.png)    
+![c](./pictures/1c.png)    
   c：TSS 富集可视化可以看出，没有核小体结合的片段在 TSS 处富集，而但核小体结合的片段在 TSS 上缺失，在 TSS 两侧富集。   
 
 
@@ -1658,13 +1680,25 @@ done
 # 10. Visualization  
 此处看的是两组处理、每组处理之间有多个生物重复，可以堆在一起比较：每个生物重复之间的peak一致性；or 对于某个位点的两处理的peak信号差异，即，xxx（实验组）细胞显示出不同的染色质可及性区域。
 
-e.g. 在Hcn4和Nppa位点的ATAC-seq信号可视化显示，在Hcn4附近的非编码区，有离散的峰在racm中缺失，而在Nppa和Nppb附近的峰在pc中不存在[（图1D，E）]()。  
+e.g. 在Hcn4和Nppa位点的ATAC-seq信号可视化显示，在Hcn4附近的非编码区，有离散的峰在racm中缺失，而在Nppa和Nppb附近的峰在pc中不存在[（图1D，E）](https://github.com/outcastaaa/ATAC/blob/main/pictures/1de.png)。  
 ![ide](./pictures/1de.png)  
 
 
-# Bempe2Bw (optional) 
-bw文件是用于方便可视化peak的文件，因为上游处理完的bam文件通常都较大，不方便于快速展示，而将其转变成bw(bigwig)或者wig就会方便的多，而bigWig文件的显示性能又相较wig文件快得多，故bw是更常用的。而相较于bed文件相说，它不只提供了peak的位置，还有peak的高低。 
+## 10.1 Bam2Bw    
+
+1. 目的： bw文件是用于方便可视化peak的文件，因为上游处理完的bam文件通常都较大，不方便于快速展示，而将其转变成bw(bigwig)或者wig就会方便的多，而bigWig文件的显示性能又相较wig文件快得多，故bw是更常用的。而相较于bed文件相说，它不只提供了peak的位置，还有peak的高低。 
+2. 软件：`deeptools`  
+3. 代码：  
+
+* bam转bw: 因为此处不看细节位置，不看共同peak，所以使用filter.bam文件  
+[参考文章](https://github.com/hbctraining/In-depth-NGS-Data-Analysis-Course/blob/master/sessionV/lessons/10_data_visualization.md)  
+
 ```bash
+
+```
+* Tn5.bedpe文件  
+```bash
+# 未完成
 # 排序->把bed文件转成bedgraph文件->bedgraph转bw
 mkdir -p  /mnt/d/ATAC/bw
 cd /mnt/d/ATAC/shifted
@@ -1676,7 +1710,6 @@ do echo $id
   sample=${arr[0]}
 
   cat ${sample}.Tn5.bedpe | sort -V > ${sample}.Tn5.sorted.bedpe
-  # 未完成
   bedtools genomecov -i ${name}.bed -split -bg -g $chrom_info > ${name}.bg
   wigToBigWig ${name}.bg $chrom_info ${name}.bw
 done
