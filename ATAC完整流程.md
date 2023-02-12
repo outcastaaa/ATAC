@@ -374,9 +374,9 @@ Node Development and Function (https://pubmed.ncbi.nlm.nih.gov/33044128/)，2020
 
 
 
-[GSE页面](https://github.com/outcastaaa/ATAC/blob/main/pictures/GSE.png)  
+![GSE页面](./pictures/GSE.png)  
 
-[SRA Run Selector页面](https://github.com/outcastaaa/ATAC/blob/main/pictures/SRA.png)    
+![SRA Run Selector页面](./pictures/SRA.png)    
 
 
 
@@ -1487,7 +1487,7 @@ IDR的长处：  避免了初始阈值的选择，处理了不同callers的不�
 <2>. 有三到四组生物学重复：12，23，34分别合并，看每个重复之间的一致性，一致性较好的才可找 consensus peak。  
 3. 注意事项及其原理：  
 * 主张运用IDR时，MACS2 call peaks的步骤参数设置不要过于严格，以便鉴定出更多的peaks。  
-* 在IDR软件中，摒弃了用经验阈值来区分signal和noise的方法，直接输入全部的结果即可，软件会自动根据在生物学重复样本中的分布来确定合适的阈值，所以要强调一点，对于IDR的输入文件，事先不需要做任何过滤和筛选，直接使用最原始的peak calling结果即可。     
+* 在IDR软件中，摒弃了用经验阈值来区分signal和noise的方法，直接输入全部的结果即可，软件会自动根据在生物学重复样本中的分布来确定合适的阈值，所以要强调一点，对于IDR的输入文件，事先不需要做任何过滤和筛选，直接使用`最原始的peak calling结果`即可。     
 * 将signal和noise区分开之后，进一步将signal分成reproducible和inreproducible 两类， 默认情况下只选取存在overlap的peak进行分析, 首先对其排序，排序的依据可以是fold enrichment, pvalue或者qvalue,这个参数可以调整，将所有信号排序之后给每个信号赋值一个IDR value, 来衡量这个信号在生物重复样本中的一致性，数值越大，不可重复性越高。最终根据IDR value的阈值，筛选小于阈值的peak即可。    
 * 排序  
 ```bash
@@ -1496,16 +1496,16 @@ IDR的长处：  避免了初始阈值的选择，处理了不同callers的不�
                         Defaults:
                                 narrowPeak/broadPeak: signal.value
                                 bed: score-log10(pvalue)
+```
 * 关于IDR临界值的选择：  
 
 An example for our analysis is described below:  
 
-
-If starting with < 100K pre-IDR peaks for large genomes (human/mouse): For true replicates and self-consistency replicates an IDR threshold of 0.05 is more appropriate.  
+If starting with < 100K pre-IDR peaks for large genomes (human/mouse): For true replicates and self-consistency replicates an IDR threshold of 0.05 is more appropriate.  (本流程就是该情况)
 
 Use a tighter threshold for pooled-consistency since pooling and subsampling equalizes the pseudo-replicates in terms of data quality. Err on the side of caution and use more stringent IDR threshold of 0.01.  
 
-```
+
 4. 代码：尝试分别用默认signal.value和-log10(p-value)排序比较结果，推荐使用`pvalue`排序。In addition the narrowPeak files have to be sorted by the -log10(p-value) column.   
 
 * -log10(p-value)排序
@@ -1623,7 +1623,7 @@ wc -l 56_IDR0.05.txt #11520
 
 
 ## 类似于IDR检查peak重复性，可以用deeptools plotCorrelation看Bam文件的重复性
-
+https://github.com/hbctraining/In-depth-NGS-Data-Analysis-Course/blob/master/sessionV/lessons/qc_deeptools.md
 
 
 
@@ -1677,14 +1677,73 @@ write.table(DSS_first_input_data, paste("D:/methylation2/R_analyse/data/", "DSS_
  (echo -e "chr      start      end        length         nCG        meanMethy1         meanMethy2         diff.Methy        areaStat " && cat ./$i.txt) > temp && mv temp ./$i.txt
 done
 ```
-# 10. Visualization  
+
+# 10. Blacklist_filtering
+1. 目的：去除ENCODE blacklisted 区域，通过blacklist的过滤，可以进一步降低peak calling的假阳性。    
+
+2. blacklist 区域：  
+
+① 详细：  
+参考`#6.Post-alignment_processing` 中对`ENCODE blacklisted区域`的介绍。  
+传统的二代测序由于其读长短的特点，对于基因组上的重复区域，在序列比对时无法有效区分到底来自哪一段区域。在比对时不同的软件会有不同算法，或者随机选择一个位置，或者两个位置都计算一次测序深度，造成的结果就是重复区域的测序深度无法准确衡量，这对于后续的数据分析肯定会有一定程度的影响。   
+
+从测序深度分布来看，这些重复区域的测序深度普遍是一种虚高的现象，而且这种虚高无关样本类型，实验处理等条件，只是和物种有关。科学家通过分析各种实验处理，不同样本类型的NGS数据，找出了在所有样本中测序深度普遍偏高的基因组区域，将其定义为blacklist region，这些区域是二代测序技术的软肋，其中的reads信息无法有效利用。
+
+原文链接：https://blog.csdn.net/weixin_43569478/article/details/108079437
+
+② 简单:  
+这些区域通常存在于特定类型的重复序列中，例如着丝粒、端粒和卫星重复序列，并且通常看起来是 proper mapping ，因此上面应用的filter软件不会删除它们。因此该区域具有极高的 reads 覆盖，极易形成peak。  
+
+ENCODE 和 modENCODE 联盟已经为包括人类、小鼠、蠕虫和苍蝇在内的各种物种和基因组版本编制了黑名单。  
+
+③ blacklist下载地址：  
+[http://mitra.stanford.edu/kundaje/akundaje/release/blacklists/](http://mitra.stanford.edu/kundaje/akundaje/release/blacklists/)  
+或者  
+[以人为例https://www.encodeproject.org/annotations/ENCSR636HFF/](https://www.encodeproject.org/annotations/ENCSR636HFF/)  
+
+
+
+
+3. 去除时机：  
+
+① 在peak calling之前去除，比对后的reads 去除PCR重复等后单独去除 blacklist region，再 call peak.  
+② 本流程采用的方法是： 先以一个比较松的标准 call peak，做 peak 质控，通过 IDR 寻找两生物重复之间的 consensus peak，在共有的可用于下游分析的 peaks 中，将已有 peaks 和 blacklist 取交集，在peaks 中去除这些区域即可。   
+
+
+
+  
+[参考文章1The ENCODE Blacklist: Identification of Problematic Regions of the Genome](https://mp.weixin.qq.com/s/SS640LNI5QcvChmZNGEOmw)  
+[参考文章2](https://github.com/hbctraining/In-depth-NGS-Data-Analysis-Course/blob/master/sessionV/lessons/QC_quality_metrics.md)  
+[参考文章3](https://yiweiniu.github.io/blog/2019/03/ATAC-seq-data-analysis-from-FASTQ-to-peaks/)    
+
+4. 使用软件：`bedtools intersect`  
+
+5. 代码：  
+
+```bash
+# 下载 blacklist.bed文件
+mkdir -p /mnt/d/ATAC/finalpeaks
+cd /mnt/d/ATAC/finalpeaks
+wget https://mitra.stanford.edu/kundaje/akundaje/release/blacklists/mm10-mouse/mm10.blacklist.bed.gz
+gzip -dc mm10.blacklist.bed.gz > mm10.blacklist.bed
+rm *.gz
+wc -l  mm10.blacklist.bed #164
+
+# 取交集并删除交集行
+cd /mnt/d/ATAC/IDR
+bedtools intersect -a /mnt/d/mm10.blacklist.bed/mm10.blacklist.bed  -b 12_IDR0.05.txt | wc -l  > blacklist_overlaps2.bed
+cd /mnt/d/ATAC/peaks1
+bedtools intersect -a SRR11539111_peaks.narrowPeak  -b /mnt/d/mm10.blacklist.bed/mm10.blacklist.bed  > blacklist_overlaps1.bed
+```
+
+# 11. Visualization  
 此处看的是两组处理、每组处理之间有多个生物重复，可以堆在一起比较：每个生物重复之间的peak一致性；or 对于某个位点的两处理的peak信号差异，即，xxx（实验组）细胞显示出不同的染色质可及性区域。
 
 e.g. 在Hcn4和Nppa位点的ATAC-seq信号可视化显示，在Hcn4附近的非编码区，有离散的峰在racm中缺失，而在Nppa和Nppb附近的峰在pc中不存在[（图1D，E）](https://github.com/outcastaaa/ATAC/blob/main/pictures/1de.png)。  
 ![ide](./pictures/1de.png)  
 
 
-## 10.1 Bam2Bw    
+## 11.1 Bam2Bw    
 
 1. 目的： bw文件是用于方便可视化peak的文件，因为上游处理完的bam文件通常都较大，不方便于快速展示，而将其转变成bw(bigwig)或者wig就会方便的多，而bigWig文件的显示性能又相较wig文件快得多，故bw是更常用的。而相较于bed文件相说，它不只提供了peak的位置，还有peak的高低。 
 2. 软件：`deeptools`  
@@ -1912,7 +1971,6 @@ wigToBigWig ${name}.bg $chrom_info ${name}.bw
 # Tn5_coverage
 awk 'BEGIN {OFS = "\t"} ; {if ($6 == "+") print $1, $2 + 4, $2 + 5; else print $1, $3 - 6, $3 - 5}' ${name}.bed > ${name}.Tn5.bed
 ```
-
 
 
 
