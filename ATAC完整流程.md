@@ -1629,14 +1629,20 @@ https://github.com/hbctraining/In-depth-NGS-Data-Analysis-Course/blob/master/ses
 
 
 ## 9.4 TSS_enrichment  
-1. 目的：
-2. 定义和意义：  
+1. 目的：通过观察 peaks 围绕 TSS 的分布情况，判断数据与理论推理是否一致；若一致则证明测序正常。  
 
-Transcription Start Site (TSS) Enrichment Score - The TSS enrichment calculation is a signal to noise calculation. The reads around a reference set of TSSs are collected to form an aggregate distribution of reads centered on the TSSs and extending to 2000 bp in either direction (for a total of 4000bp). This distribution is then normalized by taking the average read depth in the 100 bps at each of the end flanks of the distribution (for a total of 200bp of averaged data) and calculating a fold change at each position over that average read depth. This means that the flanks should start at 1, and if there is high read signal at transcription start sites (highly open regions of the genome) there should be an increase in signal up to a peak in the middle. We take the signal value at the center of the distribution after this normalization as our TSS enrichment metric. Used to evaluate ATAC-seq.   
-来自 NFR（没有核小体的区域） 的片段预计会在基因的转录起始位点 (transcription start site, TSS) 附近富集，而来自核小体结合区域的片段预计会在 TSS 附近被耗尽，在 TSS 附近的侧翼区域会有少量富集 。[(Fig. 1c)](https://github.com/outcastaaa/ATAC/blob/main/pictures/1c.png)  
+2. 原理：   
+
+The TSS enrichment calculation is a signal to noise calculation. The reads around a reference set of TSSs are collected to form an aggregate distribution of reads centered on the TSSs and extending to 1000 bp in either direction (for a total of 2000bp). This distribution is then normalized by taking the average read depth in the 100 bps at each of the end flanks of the distribution (for a total of 200bp of averaged data) and calculating a fold change at each position over that average read depth. This means that the flanks should start at 1, and if there is high read signal at transcription start sites (highly open regions of the genome) there should be an increase in signal up to a peak in the middle. We take the signal value at the center of the distribution after this normalization as our TSS enrichment metric.      
+ 
+3. 图例：  
+
+来自 NFR（没有核小体的区域） 的片段预计会在基因的转录起始位点 (transcription start site, TSS) 附近富集，而来自核小体结合区域的片段预计会在 TSS 附近被耗尽，在 TSS 附近的侧翼区域会有少量富集 。  [(Fig. 1c)](https://github.com/outcastaaa/ATAC/blob/main/pictures/1c.png) 
 ![c](./pictures/1c.png)    
   c：TSS 富集可视化可以看出，没有核小体结合的片段在 TSS 处富集，而但核小体结合的片段在 TSS 上缺失，在 TSS 两侧富集。   
+ 
 
+！因为该步骤需要用到bw文件，结果在`#11 Visualization --> #11.2`中展示。
 
 ## 9.5 other_indexes
 
@@ -1793,7 +1799,8 @@ done
 # --binSize Size of the bins, in bases, for the output of the bigwig/bedgraph file. (Default: 50)
 # --smoothLength The smooth length defines a window, larger than the binSize, to average the number of reads.
 # 可选--blackListFileName BED file  A BED or GTF file containing regions that should be excluded from all analyses.  
-# --normalizeUsing {RPKM,CPM,BPM,RPGC,None} Use one of the entered methods to normalize the number of reads per bin. （bw文件夹中last.bam文件使用CPM标准化）
+# --normalizeUsing {RPKM,CPM,BPM,RPGC,None} Use one of the entered methods to normalize the number of reads per bin. 
+# （bw文件夹中last.bam文件使用CPM标准化）--normalizeTo1x: 按照1x测序深度(reads per genome coverage, RPGC)进行标准化
 # --centerReads         By adding this option, reads are centered with respect to the fragment length. For paired-end
 #                         data, the read is centered at the fragment length defined by the two ends of the fragment. For
 #                         single-end data, the given fragment length is used. This option is useful to get a sharper
@@ -1822,7 +1829,113 @@ done
 
 ![igv](./pictures/igv.png)  
 ![igv2](./pictures/igv_snapshot.png)    
-与文章中图片峰几乎一致。  
+与文章中峰图几乎一致。  
+
+
+## 11.2 TSS_enrichment  
+
+1. 目的：通过观察 peaks 围绕 TSS 的分布情况，判断数据与理论推理是否一致；若一致则证明测序正常。  
+
+2. 原理：   
+
+The TSS enrichment calculation is a signal to noise calculation. The reads around a reference set of TSSs are collected to form an aggregate distribution of reads centered on the TSSs and extending to 1000 bp in either direction (for a total of 2000bp). This distribution is then normalized by taking the average read depth in the 100 bps at each of the end flanks of the distribution (for a total of 200bp of averaged data) and calculating a fold change at each position over that average read depth. This means that the flanks should start at 1, and if there is high read signal at transcription start sites (highly open regions of the genome) there should be an increase in signal up to a peak in the middle. We take the signal value at the center of the distribution after this normalization as our TSS enrichment metric.     
+    
+来自 NFR（没有核小体的区域） 的片段预计会在基因的转录起始位点 (transcription start site, TSS) 附近富集，而来自核小体结合区域的片段预计会在 TSS 附近被耗尽，在 TSS 附近的侧翼区域会有少量富集 。  [(Fig. 1c)](https://github.com/outcastaaa/ATAC/blob/main/pictures/1c.png)  
+
+3. 图例：  
+
+![c](./pictures/1c.png)    
+  c：TSS 富集可视化可以看出，没有核小体结合的片段在 TSS 处富集，而但核小体结合的片段在 TSS 上缺失，在 TSS 两侧富集。    
+
+4. 使用软件：`deeptools computeMatrix`[参数](https://github.com/hbctraining/In-depth-NGS-Data-Analysis-Course/blob/master/sessionV/img/computeMatrix_overview.png)，`plotHeatmap`，`plotProfile`  
+
+5. 代码：  
+① make dir
+```bash
+mkdir -p /mnt/d/ATAC/TSS
+cd /mnt/d/ATAC/TSS
+```
+② 下载TSS注释文件：the BED file which contains the coordinates for all genes [下载地址](http://rohsdb.cmb.usc.edu/GBshape/cgi-bin/hgTables?hgsid=6884883_WoMR8YyIAAVII92Rr1Am3Kd0jr5H&clade=mammal&org=Mouse&db=mm10&hgta_group=genes&hgta_track=knownGene&hgta_table=0&hgta_regionType=genome&position=chr12%3A56703576-56703740&hgta_outputType=primaryTable&hgta_outFileName=)   
+[参数选择](https://www.jianshu.com/p/d6cb795af22a)   
+
+genome:mouse --> assemble:mm10 --> gruop:genes and gene predictions --> track:UCSC genes or NCBI RefSeq --> table:如果track选择NCBI RefSeq，这里就选择RefSeq；如果track选择UCSC gene，这里就选knownGene --> output format根据自己的需求选择 --> file type returned这里选gzip compressed，这样就可以下载到压缩包格式的输出文件，选text则下载文本格式 --> output file一定要写上一个文件名字，如果为空则后面无法下载，而只能在浏览器上查看 --> 最后点击get output即可  
+
+将`mm10.reseq.bed`保存在 /mnt/d/ATAC/TSS 文件夹内。  
+
+③ 对比对后的bam文件转化为`bw文件`，保存在  /mnt/d/ATAC/bw 文件夹内，该文件没有经过shift也没有去除blacklist区域，影响不大，可选择性去除  
+
+④ 绘图  
+
+到`computeMatrix`计算，用`plotHeatmap`以热图的方式对覆盖进行可视化，用`plotProfile`以折线图的方式展示覆盖情况。    
+computeMatrix具有两个模式:scale-region和reference-point。前者用来信号在一个区域内分布，后者查看信号相对于某一个点的分布情况。无论是那个模式，都有两个参数是必须的，-S是提供bigwig文件，-R是提供基因的注释信息。还有更多个性化的可视化选项。  
+
+
+```bash
+cd /mnt/d/ATAC/bw 
+# create a matrix 
+ls *.bw | while read id; 
+do 
+  computeMatrix reference-point --referencePoint TSS -p 6 \
+    -b 1000  -a 1000 \
+    -R /mnt/d/ATAC/TSS/mm10.refseq.bed \
+    -S $id \
+    --skipZeros \
+    --bl  /mnt/d/ATAC/finalpeaks/mm10.blacklist.bed \
+    -o /mnt/d/ATAC/TSS/${id%%.*}_matrix.gz \
+    --outFileSortedRegions /mnt/d/ATAC/TSS/${id%%.*}_regions.bed
+done
+# --referencePoint Possible choices: TSS, TES, center
+# -b, --upstream Distance upstream of the reference-point selected. (Default: 500)
+# -a, --downstream Distance downstream of the reference-point selected. (Default: 1500)
+# --missingDataAsZero  If set, missing data (NAs) will be treated as zeros. The default is to ignore such cases, which will be depicted as black areas in a heatmap.
+# --skipZeros Whether regions with only scores of zero should be included or not. Default is to include them.  
+# --binSize Length, in bases, of the non-overlapping bins for averaging the score over the regions length. (Default: 10)  
+# --blackListFileName, -bl A BED file containing regions that should be excluded from all analyses. Currently this works by rejecting genomic chunks that happen to overlap an entry.
+# Consequently, for BAM files, if a read partially overlaps a blacklisted region or a fragment spans over it, then the read/fragment might still be considered.
+
+
+# profile plot
+$ plotProfile -m visualization/matrixNanog_TSS_chr12.gz \
+-out visualization/figures/TSS_Nanog_profile.png \
+--perGroup \
+--colors green purple \
+--plotTitle "" --samplesLabel "Rep1" "Rep2" \
+--refPointLabel "TSS" \
+-T "Nanog read density" \
+-z ""
+ 
+# heatmap
+$ plotHeatmap -m visualization/matrixNanog_TSS_chr12.gz \
+-out visualization/figures/TSS_Nanog_heatmap.png \
+--colorMap RdBu \
+--whatToShow 'heatmap and colorbar' \
+--zMin -4 --zMax 4  
+
+
+plotHeatmap -m matrix1_${sample}_TSS_10K.gz  -out ${sample}_Heatmap_10K.png
+plotHeatmap -m matrix1_${sample}_TSS_10K.gz  -out ${sample}_Heatmap_10K.pdf --plotFileFormat pdf  --dpi 720  
+plotProfile -m matrix1_${sample}_TSS_10K.gz  -out ${sample}_Profile_10K.png
+plotProfile -m matrix1_${sample}_TSS_10K.gz  -out ${sample}_Profile_10K.pdf --plotFileFormat pdf --perGroup --dpi 720 
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
