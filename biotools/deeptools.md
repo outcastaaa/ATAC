@@ -184,3 +184,10 @@ Commands:
 An example usage is:
   computeMatrix reference-point -S <bigwig file(s)> -R <bed file(s)> -b 1000
 ```
+### computeMatrix reference-point
+```bash
+$ computeMatrix reference-point –help
+usage: An example usage is:
+  computeMatrix reference-point -S <biwig file(s)> -R <bed file> -a 3000 -b 3000
+computeMatrix reference-point: error: the following arguments are required: --regionsFileName/-R, --scoreFileName/-S, --outFileName/-out/-o
+```
