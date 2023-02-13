@@ -1615,7 +1615,7 @@ awk '{if($5 >= 540) print $0}' 56_pvalue.txt > 56_IDR0.05.txt
 wc -l 56_IDR0.05.txt #11520
 # 因此两组处理两两重复之间各有9716、11520个consensus peak
 ```
-已经找到了最终可用的peaks，下一步进行下游分析。  
+  
 
 
 
@@ -1717,11 +1717,13 @@ ENCODE 和 modENCODE 联盟已经为包括人类、小鼠、蠕虫和苍蝇在�
 [参考文章3](https://yiweiniu.github.io/blog/2019/03/ATAC-seq-data-analysis-from-FASTQ-to-peaks/)    
 
 4. 使用软件：`bedtools intersect`  
+![intersect原理](./pictures/intersect.png)  
+
 
 5. 代码：  
 
 ```bash
-# 下载 blacklist.bed文件
+# 下载对应物种的 blacklist.bed文件
 mkdir -p /mnt/d/ATAC/finalpeaks
 cd /mnt/d/ATAC/finalpeaks
 wget https://mitra.stanford.edu/kundaje/akundaje/release/blacklists/mm10-mouse/mm10.blacklist.bed.gz
@@ -1729,21 +1731,42 @@ gzip -dc mm10.blacklist.bed.gz > mm10.blacklist.bed
 rm *.gz
 wc -l  mm10.blacklist.bed #164
 
-# 取交集并删除交集行
-cd /mnt/d/ATAC/IDR
-bedtools intersect -a /mnt/d/mm10.blacklist.bed/mm10.blacklist.bed  -b 12_IDR0.05.txt | wc -l  > blacklist_overlaps2.bed
-cd /mnt/d/ATAC/peaks1
-bedtools intersect -a SRR11539111_peaks.narrowPeak  -b /mnt/d/mm10.blacklist.bed/mm10.blacklist.bed  > blacklist_overlaps1.bed
-```
 
-# 11. Visualization  
+cd /mnt/d/ATAC/IDR
+sort -k1,2 12_IDR0.05.txt > ../finalpeaks/12_IDR.sorted.txt
+sort -k1,2 56_IDR0.05.txt > ../finalpeaks/56_IDR.sorted.txt
+wc ../finalpeaks/*.txt
+  #  9716 12_IDR.sorted.txt
+  # 11520 56_IDR.sorted.txt
+
+
+# 取交集看peaks文件和blacklist有多少重合部分
+cd /mnt/d/ATAC/finalpeaks
+bedtools intersect -a 12_IDR.sorted.txt  -b mm10.blacklist.bed | wc -l  
+#23
+bedtools intersect -a 56_IDR.sorted.txt  -b mm10.blacklist.bed | wc -l 
+#21
+
+# 凡是peaks中含有blacklist都删除
+bedtools intersect -v -a 12_IDR.sorted.txt -b mm10.blacklist.bed > 12.finalpeaks.txt
+#9699
+bedtools intersect -v -a 56_IDR.sorted.txt -b mm10.blacklist.bed > 56.finalpeaks.txt
+#11505
+```
+已经找到了最终的peaks，可用于下游分析。    
+
+
+# 11. Visualization    
+1. 目的： 将上文产生的文件放在`IGV`中可视化  
+2. 应用：  
+
 此处看的是两组处理、每组处理之间有多个生物重复，可以堆在一起比较：每个生物重复之间的peak一致性；or 对于某个位点的两处理的peak信号差异，即，xxx（实验组）细胞显示出不同的染色质可及性区域。
 
 e.g. 在Hcn4和Nppa位点的ATAC-seq信号可视化显示，在Hcn4附近的非编码区，有离散的峰在racm中缺失，而在Nppa和Nppb附近的峰在pc中不存在[（图1D，E）](https://github.com/outcastaaa/ATAC/blob/main/pictures/1de.png)。  
 ![ide](./pictures/1de.png)  
 
 
-## 11.1 Bam2Bw    
+## 11.1 filterbam2Bw    
 
 1. 目的： bw文件是用于方便可视化peak的文件，因为上游处理完的bam文件通常都较大，不方便于快速展示，而将其转变成bw(bigwig)或者wig就会方便的多，而bigWig文件的显示性能又相较wig文件快得多，故bw是更常用的。而相较于bed文件相说，它不只提供了peak的位置，还有peak的高低。 
 2. 软件：`deeptools`  
@@ -1751,11 +1774,32 @@ e.g. 在Hcn4和Nppa位点的ATAC-seq信号可视化显示，在Hcn4附近的非�
 
 * bam转bw: 因为此处不看细节位置，不看共同peak，所以使用filter.bam文件  
 [参考文章](https://github.com/hbctraining/In-depth-NGS-Data-Analysis-Course/blob/master/sessionV/lessons/10_data_visualization.md)  
+* filter.bam文件  
+```bash 
+mkdir -p  /mnt/d/ATAC/bw
+cd /mnt/d/ATAC/filter #该目录下需要包含最终过滤后的bam文件和其bai索引
+ls *.bam | while read id; 
+do 
+  bamCoverage -p 6  -b $id \
+  -o ../bw/${id%%.*}.bw \
+  --binSize 20 \
+  --smoothLength 60 \
+  --normalizeUsing RPKM \
+  --centerReads 
+  2> ../bw/${id%%.*}_bamCoverage.log
+done
 
-```bash
-
+# bamCoverage注意大小写
+# --binSize Size of the bins, in bases, for the output of the bigwig/bedgraph file. (Default: 50)
+# --smoothLength The smooth length defines a window, larger than the binSize, to average the number of reads.
+# 可选--blackListFileName BED file  A BED or GTF file containing regions that should be excluded from all analyses.  
+# --normalizeUsing {RPKM,CPM,BPM,RPGC,None} Use one of the entered methods to normalize the number of reads per bin. （bw文件夹中last.bam文件使用CPM标准化）
+# --centerReads         By adding this option, reads are centered with respect to the fragment length. For paired-end
+#                         data, the read is centered at the fragment length defined by the two ends of the fragment. For
+#                         single-end data, the given fragment length is used. This option is useful to get a sharper
+#                         signal around enriched regions. (default: False)
 ```
-* Tn5.bedpe文件  
+* Tn5.bedpe文件 —— 不推荐    
 ```bash
 # 未完成
 # 排序->把bed文件转成bedgraph文件->bedgraph转bw
