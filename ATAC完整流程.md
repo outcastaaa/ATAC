@@ -1866,13 +1866,26 @@ genome:mouse --> assemble:mm10 --> gruop:genes and gene predictions --> track:UC
 
 ④ 绘图  
 
-到`computeMatrix`计算，用`plotHeatmap`以热图的方式对覆盖进行可视化，用`plotProfile`以折线图的方式展示覆盖情况。    
+到`computeMatrix`计算，用`plotHeatmap`以热图的方式对覆盖进行可视化，用`plotProfile`以折线图的方式展示覆盖情况，该图本质上是一个密度图，用于评估所有转录起始位点的reads密度。  
+
 computeMatrix具有两个模式:scale-region和reference-point。前者用来信号在一个区域内分布，后者查看信号相对于某一个点的分布情况。无论是那个模式，都有两个参数是必须的，-S是提供bigwig文件，-R是提供基因的注释信息。还有更多个性化的可视化选项。  
 
 
 ```bash
+pip install "numpy<1.24"
+
 cd /mnt/d/ATAC/bw 
 # create a matrix 
+# 单样本
+computeMatrix reference-point --referencePoint TSS -p 6 \
+    -b 1000  -a 1000 \
+    -R /mnt/d/ATAC/TSS/mm10.refseq.bed \
+    -S SRR11539111.bw \
+    --skipZeros \
+    -o /mnt/d/ATAC/TSS/SRR11539111_matrix.gz \
+    --outFileSortedRegions /mnt/d/ATAC/TSS/SRR11539111_regions.bed
+
+# 循环
 ls *.bw | while read id; 
 do 
   computeMatrix reference-point --referencePoint TSS -p 6 \
@@ -1880,9 +1893,9 @@ do
     -R /mnt/d/ATAC/TSS/mm10.refseq.bed \
     -S $id \
     --skipZeros \
-    --bl  /mnt/d/ATAC/finalpeaks/mm10.blacklist.bed \
-    -o /mnt/d/ATAC/TSS/${id%%.*}_matrix.gz \
+    -o /mnt/d/ATAC/TSS/$id_matrix.gz \
     --outFileSortedRegions /mnt/d/ATAC/TSS/${id%%.*}_regions.bed
+    1 > /mnt/d/ATAC/TSS/${id%%.*}.log
 done
 # --referencePoint Possible choices: TSS, TES, center
 # -b, --upstream Distance upstream of the reference-point selected. (Default: 500)
@@ -1895,29 +1908,43 @@ done
 
 
 # profile plot
-$ plotProfile -m visualization/matrixNanog_TSS_chr12.gz \
--out visualization/figures/TSS_Nanog_profile.png \
---perGroup \
---colors green purple \
---plotTitle "" --samplesLabel "Rep1" "Rep2" \
---refPointLabel "TSS" \
--T "Nanog read density" \
--z ""
- 
-# heatmap
-$ plotHeatmap -m visualization/matrixNanog_TSS_chr12.gz \
--out visualization/figures/TSS_Nanog_heatmap.png \
+ls *.log | while read id; 
+do 
+  plotProfile -m /mnt/d/ATAC/TSS/${id%%.*}_matrix.gz \
+    -out /mnt/d/ATAC/TSS/${id%%.*}_profile.png \
+    --perGroup \
+    --colors green purple \
+    --plotTitle "" \
+    --refPointLabel "TSS" \
+    -T "${id%%.*} read density" \
+    -z ""
+done
+
+# heatmap and profile plot
+ls *.log | while read id; 
+do 
+  plotHeatmap -m /mnt/d/ATAC/TSS/${id%%.*}_matrix.gz \
+    -out /mnt/d/ATAC/TSS/${id%%.*}_heatmap.png \
+    --colorMap RdBu \
+    --zMin -12 --zMax 12
+done
+
+
+#单独heatmap
+ls *.log | while read id; 
+do
+plotHeatmap -m /mnt/d/ATAC/TSS/${id%%.*}_matrix.gz \
+-out /mnt/d/ATAC/TSS/${id%%.*}_heatmap2.png \
 --colorMap RdBu \
 --whatToShow 'heatmap and colorbar' \
---zMin -4 --zMax 4  
-
-
-plotHeatmap -m matrix1_${sample}_TSS_10K.gz  -out ${sample}_Heatmap_10K.png
-plotHeatmap -m matrix1_${sample}_TSS_10K.gz  -out ${sample}_Heatmap_10K.pdf --plotFileFormat pdf  --dpi 720  
-plotProfile -m matrix1_${sample}_TSS_10K.gz  -out ${sample}_Profile_10K.png
-plotProfile -m matrix1_${sample}_TSS_10K.gz  -out ${sample}_Profile_10K.pdf --plotFileFormat pdf --perGroup --dpi 720 
-
+--zMin -8 --zMax 8  
+done
 ```
+
+* 结果： 将四张图合并在一起
+① heatmap + plotmap
+
+② profile plot
 
 
 
