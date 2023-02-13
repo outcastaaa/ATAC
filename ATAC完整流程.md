@@ -1640,7 +1640,7 @@ Transcription Start Site (TSS) Enrichment Score - The TSS enrichment calculation
 
 ## 9.5 other_indexes
 
-还有很多其他评估指标[Library complexity](https://yiweiniu.github.io/blog/2019/03/ATAC-seq-data-analysis-from-FASTQ-to-peaks/)（PBC1,PBC2,NFR）等
+还有很多其他评估指标[Library complexity](https://yiweiniu.github.io/blog/2019/03/ATAC-seq-data-analysis-from-FASTQ-to-peaks/)（PBC1,PBC2,NFR）等。
 ## phantompeakqualtools：评估实验中信噪比、富集信号等ATACseqQC
 ```r
 BiocManager::install("DSS",force = TRUE) 
@@ -1817,6 +1817,15 @@ do echo $id
   wigToBigWig ${name}.bg $chrom_info ${name}.bw
 done
 ```
+
+* 结果：  
+
+![igv](./pictures/igv.png)  
+![igv2](./pictures/igv_snapshot.png)    
+与文章中图片峰几乎一致。  
+
+
+
 # Peak differential analysis
 
 csaw 是通过将 edgeR 框架扩展到将基因组分 bin 而开发的。滑动窗口方法被认为可以对基因组中的 reads 进行更多的无偏估计，但是需要严格的 FDR 控制才能正确合并相邻窗口。
