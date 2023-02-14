@@ -5,9 +5,9 @@
 [文件格式](https://deeptools.readthedocs.io/en/develop/content/help_glossary.html)   
 
 
-- [0.Introduction](#0.Introduction)
-- [1.Prepare](#1.Prepare)
-- [2.Biotools](#2.Biotools)
+- [0. Introduction](#0-introduction)
+- [1. Prepare](#1-Prepare)
+- [2. Biotools](#2.Biotools)
     - [2.0 management](#20-management)
     - [2.1 sratoolkit](#21-sratoolkit)
     - [2.2 fastqc](#22-fastqc)
@@ -34,7 +34,7 @@
     - [4.2 pre-alinment_QC](#42-pre-alinment_QC)
 - [5.Alignment](#5.Alignment)
 	- [5.1 alignment](#51-alignment)
-	- [5.2 sort_transfer-to-bam_index](#52-sort_transfer-to-bam_index)
+	- [5.2 sort_transfertobam_index](#52-sort_transfertobam_index)
 - [6.Post-alignment_processing](#6.Post-alignment_processing)
 	- [6.1 remove_PCR-duplicate_reads](#61-remove_PCR-duplicate_reads)
 	- [6.2 remove_badquality_reads](#62-remove_badquality_reads)
@@ -42,7 +42,6 @@
   - [6.4 bamtobed](#64-bamtobed)
 - [Merging BAMs (optional)](#merging-bams-optional)  
 - [7.shift_reads](#7.shift_reads)
-- [Bempe2Bw (optional)](#Bempe2Bw (optional))
 - [8.call_peaks](#8.call_peaks)
 - [9.Quality_check](#9.Quality_check)
 	- [9.1 fragment_length_distribution](#91-fragment_length_distribution)
@@ -62,7 +61,7 @@
 
 
 
-# 0.Introduction  
+# 0. Introduction  
 
 ATAC-seq（Assay for Transposase-Accessible Chromatin with high throughput sequencing） 是2013年由斯坦福大学William J. Greenleaf和Howard Y. Chang实验室开发的用于研究染色质可及性（通常也理解为染色质的开放性）的方法，原理是通过转座酶Tn5容易结合在开放染色质的特性，然后对Tn5酶捕获到的DNA序列进行测序。  
 
@@ -96,11 +95,11 @@ ATAC-seq可用于：
 
 
 
-# 1.Prepare  
+# 1. Prepare  
 ```bash
 #将目录建在d盘 
 cd /mnt/d 
-# 建立目录
+# 建立目录，后期逐步添加
 mkdir biosoft  
 mkdir ATAC    
 cd ./ATAC
@@ -109,7 +108,7 @@ mkdir genome sequence qc align motif peaks
 @xxx:/mnt/d/ATAC$ tree
 ```
 
-# 2.Biotools 
+# 2. Biotools 
 软件详细用法记录在github的[biotools](https://github.com/outcastaaa/ATAC/tree/main/biotools)文件夹中。  
 
 
@@ -359,7 +358,7 @@ pip install deeptools
 deeptools -h
 ```
 
-# 3.Data
+# 3. Data
 ## 3.1 sequence
 
 1. 文中查找GEO数据库编号  
@@ -526,7 +525,7 @@ rm mm10.zip
 
 
 
-# 4.Pre-alinment
+# 4. Pre-alinment
 
 ## 4.1 quality_control_checking  
 
@@ -667,7 +666,7 @@ multiqc .
 
 
 
-# 5.alignment 
+# 5. Alignment 
 ## 5.1 alignment
 1. 目的：将质控后的reads比对到目的基因组上
 2. 使用软件： BWA-MEM or Bowtie2，本流程采用`Bowtie2`  
@@ -738,7 +737,7 @@ done
         434718 (16.27%) aligned >1 times
 98.39% overall alignment rate
 ```
-## 5.2 transfer_samtobam
+## 5.2 sort_transfertobam_index
 1. 目的：  
 
 samtobam: SAM格式是目前用来存放大量核酸比对结果信息的通用格式，bam文件是sam文件的二进制格式，将文件夹内sam文件全部转换为其二进制bam文件以减少内存。    
@@ -776,7 +775,7 @@ rm *.sam
 ```
 
 
-# 6.Post-alignment_processing 
+# 6. Post-alignment_processing 
 1. 目的：  
 
 去除没有匹配到的、匹配得分较低的、重复的reads(如果两条reads具有相同的长度而且比对到了基因组的同一位置，那么就认为这样的reads是由PCR扩增而来)；去除线粒体中染色质可及区域及ENCODE blacklisted regions。    
@@ -1010,7 +1009,7 @@ samtools index -@ 6 condition1.merged.bam
 
 
 
-# 7.shift_reads
+# 7. shift_reads
 1. 目的：  
 
 由于Tn5酶是以二聚体的形式结合到染色体上的，其跨度大致是9bp，在第一篇ATAC-seq出来的时候，作者就考虑到了这个问题，在分析的时候，需要回补这个9个bp的碱基差。具体做法就是将正链正向移动4bp，将负链负向移动5个bp。一般用alignmentSieve 一步到位。注意，不做reads shift 对单碱基分辨高的分析会有影响，例如TF motif footprinting，但也不是所有TF footprinting分析软件需要shifted reads，很多可以自己转换，e.g. NucleoATAC。   
@@ -1098,7 +1097,7 @@ $ wc -l SRR11539111.Tn5.bed
 
 
 
-# 8.call_peaks 
+# 8. call_peaks 
 1. 目的： 下一步需要在统计学上判断真实的peak，因为Tn5在染色体上结合是个概率事件，如何判断这个位置的reads足够为一个peak，这就需要用到统计检测。ATAC-seq 数据分析的第二个主要步骤是识别开放区域（也称为 Peak），后续高级分析以此为基础。  
 
 2. 软件：目前，`MACS2` 是 ENCODE ATAC-seq 流程的默认 Peak caller 程序。  
