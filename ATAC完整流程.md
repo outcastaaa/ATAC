@@ -1865,12 +1865,13 @@ genome:mouse --> assemble:mm10 --> gruop:genes and gene predictions --> track:UC
 ③ 对比对后的bam文件转化为`bw文件`，保存在  /mnt/d/ATAC/bw 文件夹内，该文件没有经过shift也没有去除blacklist区域，影响不大，可选择性去除  
 
 ④ 绘图  
+`computeMatrix`根据所提供的refseq.bed文件计算bw文件中在TSS附近左右信号强度，选取的左右可以直接调；若某些转录本附近没有reads，不会计算该位点的信号强度，也可以做自己得到的peaks附近的信号强度。    
 
-到`computeMatrix`计算，用`plotHeatmap`以热图的方式对覆盖进行可视化，用`plotProfile`以折线图的方式展示覆盖情况，该图本质上是一个密度图，用于评估所有转录起始位点的reads密度。  
+用`plotHeatmap`以热图的方式对覆盖进行可视化，用`plotProfile`以折线图的方式展示覆盖情况，该图本质上是一个密度图，用于评估所有转录起始位点的reads密度。  
 
 computeMatrix具有两个模式:scale-region和reference-point。前者用来信号在一个区域内分布，后者查看信号相对于某一个点的分布情况。无论是那个模式，都有两个参数是必须的，-S是提供bigwig文件，-R是提供基因的注释信息。还有更多个性化的可视化选项。  
 
-
+* 每个样本单独画图  
 ```bash
 pip install "numpy<1.24"
 
@@ -1905,7 +1906,7 @@ done
 # --binSize Length, in bases, of the non-overlapping bins for averaging the score over the regions length. (Default: 10)  
 # --blackListFileName, -bl A BED file containing regions that should be excluded from all analyses. Currently this works by rejecting genomic chunks that happen to overlap an entry.
 # Consequently, for BAM files, if a read partially overlaps a blacklisted region or a fragment spans over it, then the read/fragment might still be considered.
-
+# --binSize BINSIZE 几个bp分数取平均，默认:10bp  
 
 # profile plot
 ls *.log | while read id; 
@@ -1945,10 +1946,65 @@ plotHeatmap -m /mnt/d/ATAC/TSS/${id%%.*}_matrix.gz \
 done
 ```
 
-* 结果： 将四张图合并在一起
-① heatmap + plotmap
 
-② profile plot
+* 四个样本画在一起  
+```bash
+# create a matrix 
+cd /mnt/d/ATAC/bw
+computeMatrix reference-point --referencePoint TSS -p 6 \
+    -b 1000  -a 1000 \
+    -R /mnt/d/ATAC/TSS/mm10.refseq.bed \
+    -S SRR11539111.bw SRR11539112.bw SRR11539115.bw SRR11539116.bw \
+    --skipZeros \
+    -o /mnt/d/ATAC/TSS/all_matrix.gz \
+    --outFileSortedRegions /mnt/d/ATAC/TSS/all_regions.bed
+
+
+# profile plot
+plotProfile -m /mnt/d/ATAC/TSS/all_matrix.gz \
+    -out /mnt/d/ATAC/TSS/all_profile.png \
+    --perGroup \
+    --colors red yellow green blue \
+    --plotTitle "all samples profile" \
+    --refPointLabel "TSS" \
+    -T "all read density" \
+    -z ""
+
+# heatmap and profile plot
+plotHeatmap -m /mnt/d/ATAC/TSS/all_matrix.gz \
+    -out /mnt/d/ATAC/TSS/all_heatmap.png \
+    --colorMap RdBu \
+    --zMin -12 --zMax 12
+```
+* [更多绘图形式参考](https://www.osgeo.cn/deeptools/content/tools/plotProfile.html)   
+
+* 画 `gene body` 区，使用 `scale-regions`  
+```bash
+cd /mnt/d/ATAC/bw 
+mkdir -p /mnt/d/ATAC/genebody
+# create a matrix 
+computeMatrix scale-regions -p 6 \
+    -b 10000  -a 10000 \
+    -R /mnt/d/ATAC/TSS/mm10.refseq.bed \
+    -S SRR11539111.bw \
+    --skipZeros \
+    -o /mnt/d/ATAC/genebody/SRR11539111_matrix.gz 
+  
+cd /mnt/d/ATAC/genebody
+plotHeatmap -m /mnt/d/ATAC/genebody/SRR11539111_matrix.gz \
+    -out /mnt/d/ATAC/genebody/SRR11539111_heatmap.png 
+
+plotProfile -m /mnt/d/ATAC/genebody/SRR11539111_matrix.gz \
+    -out /mnt/d/ATAC/genebody/SRR11539111_profile.png 
+```
+
+6. 结果：  
+① profile plot  
+![profile](./pictures/all_profile.png)  
+
+
+② heatmap + plotmap
+![heatmap](./pictures/all_heatmap.png)   
 
 
 
