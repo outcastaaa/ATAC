@@ -49,8 +49,11 @@
   - [9.3 IDR(important)](#93-idrimportant)
   - [9.4 TSS_enrichment](#94-tss_enrichment) 
   - [9.5 other_indexes](#95-other_indexes) 
-  
-- [Downstream analysis](#downstream-analysis)
+- [10. Blacklist_filtering](#10-blacklist_filtering)
+- [11. Visualization](#11-visualization)
+  - [11.1 filterbam2Bw](#111-filterbam2bw)
+	- [11.2 TSS_enrichment](#112-tss_enrichment)
+  - [9.3 IDR(important)](#93-idrimportant)
 	- [Input data preparation](#input-data-preparation)
 	- [DML/DMR detection](#dmldmr-detection)
 - [Practical methylation information analysis](#practical-methylation-information-analysis)
@@ -1271,7 +1274,7 @@ wc -l SRR11539111_peaks.narrowPeak
 
 
 
-# 9.Quality_check
+# 9. Quality_check
 判断ATAC-seq是否合格的几个[Current Standards](https://www.encodeproject.org/atac-seq/)  
 
 * 实验重复 Experiments should have two or more biological replicates. Assays performed using EN-TEx samples may be exempted due to limited availability of experimental material, but at least two technical replicates are required. 
@@ -1868,7 +1871,7 @@ genome:mouse --> assemble:mm10 --> gruop:genes and gene predictions --> track:UC
 
 用`plotHeatmap`以热图的方式对覆盖进行可视化，用`plotProfile`以折线图的方式展示覆盖情况，该图本质上是一个密度图，用于评估所有转录起始位点的reads密度。  
 
-computeMatrix具有两个模式:scale-region和reference-point。前者用来信号在一个区域内分布，后者查看信号相对于某一个点的分布情况。无论是那个模式，都有两个参数是必须的，-S是提供bigwig文件，-R是提供基因的注释信息。还有更多个性化的可视化选项。  
+computeMatrix具有两个模式: `scale-region` 和 `reference-point`。前者用来信号在一个区域内分布，后者查看信号相对于某一个点的分布情况。无论是那个模式，都有两个参数是必须的，-S是提供bigwig文件，-R是提供基因的注释信息。还有更多个性化的可视化选项。  
 
 * 每个样本单独画图  
 ```bash
@@ -1995,6 +1998,7 @@ plotHeatmap -m /mnt/d/ATAC/genebody/SRR11539111_matrix.gz \
 
 plotProfile -m /mnt/d/ATAC/genebody/SRR11539111_matrix.gz \
     -out /mnt/d/ATAC/genebody/SRR11539111_profile.png 
+    #还需要调整参数
 ```
 
 6. 结果：  
