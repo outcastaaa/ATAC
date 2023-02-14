@@ -2006,6 +2006,9 @@ plotProfile -m /mnt/d/ATAC/genebody/SRR11539111_matrix.gz \
 ② heatmap + plotmap
 ![heatmap](./pictures/all_heatmap.png)   
 
+③ gene body  
+![genebody](./pictures/SRR11539111_heatmap.png)   
+
 
 
 
