@@ -1913,12 +1913,16 @@ do
   plotProfile -m /mnt/d/ATAC/TSS/${id%%.*}_matrix.gz \
     -out /mnt/d/ATAC/TSS/${id%%.*}_profile.png \
     --perGroup \
-    --colors green purple \
+    --colors green \
     --plotTitle "" \
     --refPointLabel "TSS" \
     -T "${id%%.*} read density" \
     -z ""
 done
+#--perGroup            The default is to plot all groups of regions by sample. Using this option instead plots all
+                        # samples by group of regions. Note that this is only useful if you have multiple groups of
+                        # regions. by sample rather than group. (default: False)
+
 
 # heatmap and profile plot
 ls *.log | while read id; 
