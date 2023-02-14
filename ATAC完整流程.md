@@ -52,8 +52,8 @@
 - [10. Blacklist_filtering](#10-blacklist_filtering)
 - [11. Visualization](#11-visualization)
   - [11.1 filterbam2Bw](#111-filterbam2bw)
-	- [11.2 TSS_enrichment](#112-tss_enrichment)
-  - [9.3 IDR(important)](#93-idrimportant)
+  - [11.2 TSS_enrichment](#112-tss_enrichment)
+
 	- [Input data preparation](#input-data-preparation)
 	- [DML/DMR detection](#dmldmr-detection)
 - [Practical methylation information analysis](#practical-methylation-information-analysis)
