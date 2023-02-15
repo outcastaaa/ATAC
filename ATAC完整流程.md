@@ -40,6 +40,11 @@
 	- [6.2 remove_badquality_reads](#62-remove_badquality_reads)
   - [6.3 remove_chrM_reads](#63-remove_chrM_reads)
   - [6.4 bamtobed](#64-bamtobed)
+
+
+
+
+
 - [Merging BAMs (optional)](#merging-bams-optional)  
 - [7. shift_reads](#7-shift_reads)
 - [8. call_peaks](#8-call_peaks)
@@ -787,7 +792,7 @@ rm *.sam
 
 ①  ATAC-Seq与其他方法不同的一点是需要`过滤去除线粒体`（如果是植物，还需要过滤叶绿体），因为线粒体DNA是裸露的，也可以被Tn5酶识别切割。     
 ② ENCODE blacklisted区域：基因中的重复序列，微卫星序列等，该片段GC含量不稳定，会特异性富集，会呈现假阳性。    
-Inconsistencies in the underlying annotation exist at regions where assembly has been difficult. For instance, repetitive regions may be collapsed or under-represented in the reference sequence relative to the actual underlying genomic sequence. Resulting analysis of these regions can lead to inaccurate interpretation, as there may be significant enrichment of signal because of amplification of noise. 在人基因组手动注释中发现，这种区域多为particularly rRNA, alpha satellites, and other simple repeats，长度covering on average 45 kb with the largest being 1.4 Mb。[参考文献The ENCODE Blacklist: Identification of Problematic Regions of the Genome](https://mp.weixin.qq.com/s/SS640LNI5QcvChmZNGEOmw)    
+Inconsistencies in the underlying annotation exist at regions where assembly has been difficult. For instance, repetitive regions may be collapsed or under-represented in the reference sequence relative to the actual underlying genomic sequence. Resulting analysis of these regions can lead to inaccurate interpretation, as there may be significant enrichment of signal because of amplification of noise. 在人基因组手动注释中发现，这种区域多为particular+ly rRNA, alpha satellites, and other simple repeats，长度covering on average 45 kb with the largest being 1.4 Mb。[参考文献The ENCODE Blacklist: Identification of Problematic Regions of the Genome](https://mp.weixin.qq.com/s/SS640LNI5QcvChmZNGEOmw)    
 
 ③ `PCR`过程中由于偏好性扩增出现的重复reads。      
 
@@ -945,20 +950,41 @@ done
 0 + 0 with mate mapped to a different chr (mapQ>=5)
 ```
 
+
+
 ## 6.4 bamtobed
-1. 目的：后续需要用到'bed'文件，把处理好的bam比对文件转化为bed格式
+1. 目的：后续需要用到 `bed bedpe` 文件，把处理好的bam比对文件转化为bed格式
 2. 使用软件：`bedtools`,[参考文章](https://bedtools.readthedocs.io/en/latest/content/tools/bamtobed.html)  
 3. 代码：
 ```bash
+# bam to bed
 mkdir -p /mnt/d/ATAC/bed
 cd /mnt/d/ATAC/filter
 
 parallel -j 6 "
    bedtools bamtobed -i ./{1} >../bed/{1}.bed
 " ::: $( ls *.filter.bam)
+
+
+# bam to bedpe 
+mkdir -p /mnt/d/ATAC/bedpe
+cd /mnt/d/ATAC/filter
+# the BAM file should be sorted by read name beforehand
+parallel -j 6 "
+  samtools sort -n -o ../bedpe/{1}.named {1}
+" ::: $( ls *.filter.bam)
+
+cd /mnt/d/ATAC/bedpe
+# The bedtools command should extract the paired-end alignments as bedpe format, then the awk command should shift the fragments as needed
+parallel -j 6 "
+  bedtools bamtobed -i {1} -bedpe > {1}.bedpe
+" ::: $( ls *.named)
+
+
 ```
 * 结果：
 ```bash
+# bed
 chr1    3000773 3000873 SRR11539111.41226980/2  32      +
 chr1    3000784 3000884 SRR11539111.41226980/1  32      -
 chr1    3000793 3000893 SRR11539111.46953273/1  34      +
@@ -969,6 +995,10 @@ chr1    3000935 3001035 SRR11539111.6534710/2   38      -
 chr1    3000935 3001035 SRR11539111.16779100/2  36      -
 chr1    3000966 3001066 SRR11539111.47139289/1  37      +
 chr1    3001028 3001096 SRR11539111.19849957/1  39      +
+
+# bedpe
+chr1    100000059       100000150       chr1    100000059       100000150       SRR11539111.28003264    42      +      -
+chr1    100000122       100000185       chr1    100000122       100000185       SRR11539111.27329157    42      +      -
 ```
 * bedpe文件格式  [bed文件格式](https://www.cnblogs.com/djx571/p/9499795.html#:~:text=BED%20%E6%96%87%E4%BB%B6%28Browser%20Extensible%20Data%29%E6%A0%BC%E5%BC%8F%E6%98%AFucsc,%E7%9A%84genome%20browser%E7%9A%84%E4%B8%80%E4%B8%AA%E6%A0%BC%E5%BC%8F%20%2C%E6%8F%90%E4%BE%9B%E4%BA%86%E4%B8%80%E7%A7%8D%E7%81%B5%E6%B4%BB%E7%9A%84%E6%96%B9%E5%BC%8F%E6%9D%A5%E5%AE%9A%E4%B9%89%E7%9A%84%E6%95%B0%E6%8D%AE%E8%A1%8C%EF%BC%8C%E4%BB%A5%E7%94%A8%E6%9D%A5%E6%8F%8F%E8%BF%B0%E6%B3%A8%E9%87%8A%E4%BF%A1%E6%81%AF%E3%80%82%20BED%E8%A1%8C%E6%9C%893%E4%B8%AA%E5%BF%85%E9%A1%BB%E7%9A%84%E5%88%97%E5%92%8C9%E4%B8%AA%E9%A2%9D%E5%A4%96%E5%8F%AF%E9%80%89%E7%9A%84%E5%88%97%E3%80%82)  
 
@@ -996,6 +1026,167 @@ blockStarts - 以逗号分隔的块开始列表。应该相对于chromStart计�
 * [bed bedpe格式的区别](https://www.jianshu.com/p/c73c1dc81c61)  
 BEDPE 格式类似于 BED 格式，可用于描述成对的基因组区域。
 由于bed文件原则上不能表示跨染色体的信息，因此，对于结构变异，一般采用的一种基于bed文件的变种文件bedpe格式进行存储。其格式与bed最大的区别在于，对于必须列即chrom、chromStart、chromEnd三列分别记录两次。  
+
+
+
+
+
+
+## 6.5 Blacklist_filtering
+
+1. 目的：去除ENCODE blacklisted 区域，通过blacklist的过滤，可以进一步降低peak calling的假阳性。    
+
+2. blacklist 区域：  
+
+① 详细：  
+参考`#6.Post-alignment_processing` 中对`ENCODE blacklisted区域`的介绍。  
+传统的二代测序由于其读长短的特点，对于基因组上的重复区域，在序列比对时无法有效区分到底来自哪一段区域。在比对时不同的软件会有不同算法，或者随机选择一个位置，或者两个位置都计算一次测序深度，造成的结果就是重复区域的测序深度无法准确衡量，这对于后续的数据分析肯定会有一定程度的影响。   
+
+从测序深度分布来看，这些重复区域的测序深度普遍是一种虚高的现象，而且这种虚高无关样本类型，实验处理等条件，只是和物种有关。科学家通过分析各种实验处理，不同样本类型的NGS数据，找出了在所有样本中测序深度普遍偏高的基因组区域，将其定义为blacklist region，这些区域是二代测序技术的软肋，其中的reads信息无法有效利用。
+
+原文链接：https://blog.csdn.net/weixin_43569478/article/details/108079437
+
+② 简介:  
+这些区域通常存在于特定类型的重复序列中，例如着丝粒、端粒和卫星重复序列，并且通常看起来是 proper mapping ，因此上面应用的filter软件不会删除它们。因此该区域具有极高的 reads 覆盖，极易形成peak。  
+
+ENCODE 和 modENCODE 联盟已经为包括人类、小鼠、蠕虫和苍蝇在内的各种物种和基因组版本编制了黑名单。  
+
+③ blacklist下载地址：  
+[http://mitra.stanford.edu/kundaje/akundaje/release/blacklists/](http://mitra.stanford.edu/kundaje/akundaje/release/blacklists/)  
+或者  
+[以人为例https://www.encodeproject.org/annotations/ENCSR636HFF/](https://www.encodeproject.org/annotations/ENCSR636HFF/)  
+
+
+
+
+3. 去除时机：  
+
+本流程采用的方法是：在peak calling之前去除，比对后的reads 去除PCR重复等后单独去除 blacklist region，再 call peak.  
+   
+
+
+
+  
+[参考文章1The ENCODE Blacklist: Identification of Problematic Regions of the Genome](https://mp.weixin.qq.com/s/SS640LNI5QcvChmZNGEOmw)  
+[参考文章2](https://github.com/hbctraining/In-depth-NGS-Data-Analysis-Course/blob/master/sessionV/lessons/QC_quality_metrics.md)  
+[参考文章3](https://yiweiniu.github.io/blog/2019/03/ATAC-seq-data-analysis-from-FASTQ-to-peaks/)    
+
+4. 使用软件：`bedtools intersect`  
+![intersect原理](./pictures/intersect.png)  
+
+
+5. 代码：  
+
+```bash
+# 下载对应物种的 blacklist.bed文件
+mkdir -p /mnt/d/ATAC/blklist
+cd /mnt/d/ATAC/blklist
+wget https://mitra.stanford.edu/kundaje/akundaje/release/blacklists/mm10-mouse/mm10.blacklist.bed.gz
+gzip -dc mm10.blacklist.bed.gz > mm10.blacklist.bed
+rm *.gz
+wc -l  mm10.blacklist.bed #164
+
+# bed
+cd /mnt/d/ATAC/bed
+cp /mnt/d/ATAC/trim2/config.raw   /mnt/d/ATAC/bed/config.raw
+cat config.raw | while read id;
+do 
+  echo $id 
+  arr=($id)
+  sample=${arr[0]}
+
+  sort -k1,2 ${sample}.filter.bam.bed > ${sample}.sorted.bed
+  echo ${sample}.bed
+
+  # 取交集看bed文件和blacklist有多少重合部分
+  bedtools intersect -a ${sample}.sorted.bed  -b ../blklist/mm10.blacklist.bed | wc -l  
+  #119162
+  #109301
+  #111787
+  #147446
+
+  # 凡是bed中含有blacklist都删除
+  bedtools intersect -v -a ${sample}.sorted.bed -b ../blklist/mm10.blacklist.bed > ../blklist/${sample}.final.bed
+done
+
+
+# bedpe
+cd /mnt/d/ATAC/bedpe
+cp /mnt/d/ATAC/trim2/config.raw   /mnt/d/ATAC/bedpe/config.raw
+cat config.raw | while read id;
+do 
+  echo $id 
+  arr=($id)
+  sample=${arr[0]}
+
+  sort -k1,2 ${sample}.filter.bam.named.bed > ${sample}.sorted.bedpe
+  echo ${sample}.bedpe
+  # 取交集看bed文件和blacklist有多少重合部分
+  bedtools intersect -a ${sample}.sorted.bedpe  -b ../blklist/mm10.blacklist.bed | wc -l  
+  # 凡是bed中含有blacklist都删除
+  bedtools intersect -v -a ${sample}.sorted.bedpe -b ../blklist/mm10.blacklist.bed > ../blklist/${sample}.final.bedpe
+done
+
+
+
+
+
+```
+6. 结果：  
+```bash
+cd /mnt/d/ATAC/blklist
+# bed 
+wc -l *.bed
+  # 47997002 SRR11539111.final.bed
+  # 47527151 SRR11539112.final.bed
+  # 38112786 SRR11539115.final.bed
+  # 26666006 SRR11539116.final.bed
+  #      164 mm10.blacklist.bed
+
+
+# 以SRR11539111为例
+cd /mnt/d/ATAC/bed
+wc -l SRR11539111.final.bed  #47997002
+wc -l ../filter/SRR11539111.filter.bam 
+#48111744，blacklist共过滤了10，000左右的reads
+```
+
+```bash
+# bedpe
+```
+到这一步，比对文件已经过滤完成，找到了最终的bed/bedpe文件，可用于下游call peak。     
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # Merging BAMs (optional)  
@@ -1026,18 +1217,7 @@ samtools index -@ 6 condition1.merged.bam
 3. 代码：
 ```bash
 mkdir -p /mnt/d/ATAC/shifted
-cd /mnt/d/ATAC/filter
-# the BAM file should be sorted by read name beforehand
-parallel -j 7 "
-  
-  samtools sort -n -o ../shifted/{1}.named {1}
-" ::: $( ls *.filter.bam)
 
-cd /mnt/d/ATAC/shifted
-# The bedtools command should extract the paired-end alignments as bedpe format, then the awk command should shift the fragments as needed
-parallel -j 6 "
-  bedtools bamtobed -i {1} -bedpe > {1}.bedpe
-" ::: $( ls *.named)
 
 cp /mnt/d/ATAC/rmdup/config.raw /mnt/d/ATAC/shifted/config.raw
 cat config.raw | while read id;
@@ -1686,83 +1866,6 @@ write.table(DSS_first_input_data, paste("D:/methylation2/R_analyse/data/", "DSS_
 done
 ```
 
-# 10. Blacklist_filtering
-1. 目的：去除ENCODE blacklisted 区域，通过blacklist的过滤，可以进一步降低peak calling的假阳性。    
-
-2. blacklist 区域：  
-
-① 详细：  
-参考`#6.Post-alignment_processing` 中对`ENCODE blacklisted区域`的介绍。  
-传统的二代测序由于其读长短的特点，对于基因组上的重复区域，在序列比对时无法有效区分到底来自哪一段区域。在比对时不同的软件会有不同算法，或者随机选择一个位置，或者两个位置都计算一次测序深度，造成的结果就是重复区域的测序深度无法准确衡量，这对于后续的数据分析肯定会有一定程度的影响。   
-
-从测序深度分布来看，这些重复区域的测序深度普遍是一种虚高的现象，而且这种虚高无关样本类型，实验处理等条件，只是和物种有关。科学家通过分析各种实验处理，不同样本类型的NGS数据，找出了在所有样本中测序深度普遍偏高的基因组区域，将其定义为blacklist region，这些区域是二代测序技术的软肋，其中的reads信息无法有效利用。
-
-原文链接：https://blog.csdn.net/weixin_43569478/article/details/108079437
-
-② 简单:  
-这些区域通常存在于特定类型的重复序列中，例如着丝粒、端粒和卫星重复序列，并且通常看起来是 proper mapping ，因此上面应用的filter软件不会删除它们。因此该区域具有极高的 reads 覆盖，极易形成peak。  
-
-ENCODE 和 modENCODE 联盟已经为包括人类、小鼠、蠕虫和苍蝇在内的各种物种和基因组版本编制了黑名单。  
-
-③ blacklist下载地址：  
-[http://mitra.stanford.edu/kundaje/akundaje/release/blacklists/](http://mitra.stanford.edu/kundaje/akundaje/release/blacklists/)  
-或者  
-[以人为例https://www.encodeproject.org/annotations/ENCSR636HFF/](https://www.encodeproject.org/annotations/ENCSR636HFF/)  
-
-
-
-
-3. 去除时机：  
-
-① 在peak calling之前去除，比对后的reads 去除PCR重复等后单独去除 blacklist region，再 call peak.  
-② 本流程采用的方法是： 先以一个比较松的标准 call peak，做 peak 质控，通过 IDR 寻找两生物重复之间的 consensus peak，在共有的可用于下游分析的 peaks 中，将已有 peaks 和 blacklist 取交集，在peaks 中去除这些区域即可。   
-
-
-
-  
-[参考文章1The ENCODE Blacklist: Identification of Problematic Regions of the Genome](https://mp.weixin.qq.com/s/SS640LNI5QcvChmZNGEOmw)  
-[参考文章2](https://github.com/hbctraining/In-depth-NGS-Data-Analysis-Course/blob/master/sessionV/lessons/QC_quality_metrics.md)  
-[参考文章3](https://yiweiniu.github.io/blog/2019/03/ATAC-seq-data-analysis-from-FASTQ-to-peaks/)    
-
-4. 使用软件：`bedtools intersect`  
-![intersect原理](./pictures/intersect.png)  
-
-
-5. 代码：  
-
-```bash
-# 下载对应物种的 blacklist.bed文件
-mkdir -p /mnt/d/ATAC/finalpeaks
-cd /mnt/d/ATAC/finalpeaks
-wget https://mitra.stanford.edu/kundaje/akundaje/release/blacklists/mm10-mouse/mm10.blacklist.bed.gz
-gzip -dc mm10.blacklist.bed.gz > mm10.blacklist.bed
-rm *.gz
-wc -l  mm10.blacklist.bed #164
-
-
-cd /mnt/d/ATAC/IDR
-sort -k1,2 12_IDR0.05.txt > ../finalpeaks/12_IDR.sorted.txt
-sort -k1,2 56_IDR0.05.txt > ../finalpeaks/56_IDR.sorted.txt
-wc ../finalpeaks/*.txt
-  #  9716 12_IDR.sorted.txt
-  # 11520 56_IDR.sorted.txt
-
-
-# 取交集看peaks文件和blacklist有多少重合部分
-cd /mnt/d/ATAC/finalpeaks
-bedtools intersect -a 12_IDR.sorted.txt  -b mm10.blacklist.bed | wc -l  
-#23
-bedtools intersect -a 56_IDR.sorted.txt  -b mm10.blacklist.bed | wc -l 
-#21
-
-# 凡是peaks中含有blacklist都删除
-bedtools intersect -v -a 12_IDR.sorted.txt -b mm10.blacklist.bed > 12.finalpeaks.txt
-#9699
-bedtools intersect -v -a 56_IDR.sorted.txt -b mm10.blacklist.bed > 56.finalpeaks.txt
-#11505
-```
-已经找到了最终的peaks，可用于下游分析。    
-
 
 # 11. Visualization    
 1. 目的： 将上文产生的文件放在`IGV`中可视化  
@@ -1849,7 +1952,8 @@ The TSS enrichment calculation is a signal to noise calculation. The reads aroun
 ![c](./pictures/1c.png)    
   c：TSS 富集可视化可以看出，没有核小体结合的片段在 TSS 处富集，而但核小体结合的片段在 TSS 上缺失，在 TSS 两侧富集。    
 
-4. 使用软件：`deeptools computeMatrix`[参数](https://github.com/hbctraining/In-depth-NGS-Data-Analysis-Course/blob/master/sessionV/img/computeMatrix_overview.png)，`plotHeatmap`，`plotProfile`  
+4. 使用软件：`deeptools computeMatrix`[参数](https://github.com/hbctraining/In-depth-NGS-Data-Analysis-Course/blob/master/sessionV/img/computeMatrix_overview.png)，`plotHeatmap`，`plotProfile`   
+
 
 5. 代码：  
 ① make dir
@@ -2012,13 +2116,21 @@ plotProfile -m /mnt/d/ATAC/genebody/SRR11539111_matrix.gz \
 ③ gene body  
 ![genebody](./pictures/SRR11539111_heatmap.png)   
 
+7. 应用：  
+
+该可视化步骤不仅可用于大范围的 TSS 或者 gene body 区域，还可以缩小到某一想研究的转录因子（transcription factor, TF）区段。  
+
+![2d](./pictures/2d.png)  
+
+
+
 
 
 
 # 12. Peak differential analysis    
 
 1. 目的：  
-前面步骤已经找出每个样本的 peaks ，并对相同处理的 Rep 取consensus peaks，本流程共两个样本，下一步通过比对两组 consensus peaks 的差异，寻找处理导致的差异 peaks。  
+前面步骤已经找出每个样本的 peaks ，并对相同处理的 Rep 取consensus peaks，本流程共两个处理组，下一步通过比对两组 consensus peaks 的差异，寻找两组处理导致的差异 peaks （differential enrichment peaks, DE peaks）。  
 
 2. 使用软件：目前，还没有专门针对 ATAC-seq 数据分析开发的差异 Peak 分析工具。该步骤可选的软件有很多，可以根据前面步骤做出相应调整。[参考文章](https://mp.weixin.qq.com/s/SS640LNI5QcvChmZNGEOmw)    
 
@@ -2026,9 +2138,33 @@ plotProfile -m /mnt/d/ATAC/genebody/SRR11539111_matrix.gz \
 
 差异 Peak 分析工具可以被划分为基于 Peak 的差异分析和对全基因组划分滑动窗口的差异分析。其中，基于 Peak 的差异分析可以分为外部的 Peak caller 和 基于 RNA-seq DE 差异分析；基因滑动窗口的方法根据所使用的统计方法和模型进行划分。   
 
-在基于共同 Peak 的工具中，HOMER、DBChIP 和 DiffBind 依赖于 RNA-seq 差异 (DE) 分析包，如 edgeR 、DESeq 或 DESeq2。因此，它们都假设负二项（NB）分布，并且需要生物学重复以估计离散度。建议通过合并所有样本来 call 共同 Peak 以减少假阳性差异 Peak，这是 HOMER 的默认参数。但是，DBChIP 和 DiffBind 通过交集或并集操作生成共同峰 Peak。但是，相交操作会忽略样品或特定条件的 Peak，而并集操作通常会显示出较低的 P 值和更多的假阳性。  
+在基于共同 Peak 的工具中，HOMER、DBChIP 和 DiffBind 依赖于 RNA-seq 差异 (DE) 分析包，如 edgeR 、DESeq 或 DESeq2。因此，它们都假设负二项（NB）分布(相较于泊松分布更灵活)，并且需要生物学重复以估计离散度。建议通过合并所有样本来 call 共同 Peak 以减少假阳性差异 Peak，这是 HOMER 的默认参数。但是，DBChIP 和 DiffBind 通过交集或并集操作生成共同峰 Peak。但是，相交操作会忽略样品或特定条件的 Peak，而并集操作通常会显示出较低的 P 值和更多的假阳性。考虑到重复处理，外部 Peak caller 依赖性和后端统计方法，由于 csaw 的 edgeR 框架易于解释，值得一试。     
 
-大多数研究假设 Peak 区域中的 ATAC-seq reads 遵循 NB 分布，因此本流程选取常用的 `diffbind` 包进行分析。但是，考虑到重复处理，外部 Peak caller 依赖性和后端统计方法，由于 csaw 的 edgeR 框架易于解释，因此值得一试。  
+大多数研究假设 Peak 区域中的 ATAC-seq reads 遵循 NB 分布，且前文已经通过IDR找到了 consensus peaks，避免直接交集或并集影响。 本流程选取常用的 `diffbind` 包进行分析。   
+
+3. Diffbind 原理：[参考文章](https://www.jianshu.com/p/b74c8077d893)    
+
+
+DiffBind is an R package that is used for identifying sites that are differentially bound between two or more sample groups. It works primarily with `sets of peak calls ('peaksets')`.   
+
+It includes functions that support the processing of peaksets, including `overlapping and merging peak sets（取交集或合并）` across an entire dataset, `counting sequencing reads` in overlapping intervals in peak sets, and `identifying statistically significantly differentially sites`  (measured by differences in read densities).   
+
+该包的主要重点是确定样本之间有差异的位点。它包括支持峰集处理的功能，包括重叠和合并峰集，在峰集里进行重叠区间的测序read计数，以及基于结合亲和的证据(通过read密度的差异测定)识别统计上显著的差异结合位点。为此，它使用了在RNA-Seq环境中开发的统计包(edgeR和DESeq2)。此外，这个包构建在Rgraphics的基础上，提供了一组标准化的图来帮助进行结合分析。  
+
+DiffBind主要对峰集(peaksets)进行分析，峰集是一组代表候选蛋白质结合位点的基因组区间(也适用于ATAC-seq的峰集)。每个区间包括 染色体编号+开始+结束位置，通常还有个表示对峰的confidence或强度的分数。与每个峰集相关联的是与产生峰集的实验相关的metadata。此外，包含比对上的测序read文件(.bam文件)可以与每个峰集关联。    
+
+差异结合亲和分析: DiffBind的核心功能是差异结合亲和分析，它可以识别样本间显著的差异结合位点。这一步骤包括将实验数据标准化，建立模型设计和对比(或contrasts)。接下来执行底层的核心分析，默认情况下使用DESeq2。这将为每个候选结合位点分配一个p值和FDR，表明它们的差异结合置信度.  
+
+
+
+
+
+
+
+
+4. 代码：  
+
+
 
 
 
