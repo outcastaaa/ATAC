@@ -2015,26 +2015,23 @@ plotProfile -m /mnt/d/ATAC/genebody/SRR11539111_matrix.gz \
 
 
 
+# 12. Peak differential analysis    
+
+1. 目的：  
+前面步骤已经找出每个样本的 peaks ，并对相同处理的 Rep 取consensus peaks，本流程共两个样本，下一步通过比对两组 consensus peaks 的差异，寻找处理导致的差异 peaks。  
+
+2. 使用软件：目前，还没有专门针对 ATAC-seq 数据分析开发的差异 Peak 分析工具。该步骤可选的软件有很多，可以根据前面步骤做出相应调整。[参考文章](https://mp.weixin.qq.com/s/SS640LNI5QcvChmZNGEOmw)    
+
+![peaksDA](./pictures/peakDA.png)    
+
+差异 Peak 分析工具可以被划分为基于 Peak 的差异分析和对全基因组划分滑动窗口的差异分析。其中，基于 Peak 的差异分析可以分为外部的 Peak caller 和 基于 RNA-seq DE 差异分析；基因滑动窗口的方法根据所使用的统计方法和模型进行划分。   
+
+在基于共同 Peak 的工具中，HOMER、DBChIP 和 DiffBind 依赖于 RNA-seq 差异 (DE) 分析包，如 edgeR 、DESeq 或 DESeq2。因此，它们都假设负二项（NB）分布，并且需要生物学重复以估计离散度。建议通过合并所有样本来 call 共同 Peak 以减少假阳性差异 Peak，这是 HOMER 的默认参数。但是，DBChIP 和 DiffBind 通过交集或并集操作生成共同峰 Peak。但是，相交操作会忽略样品或特定条件的 Peak，而并集操作通常会显示出较低的 P 值和更多的假阳性。  
+
+大多数研究假设 Peak 区域中的 ATAC-seq reads 遵循 NB 分布，因此本流程选取常用的 `diffbind` 包进行分析。但是，考虑到重复处理，外部 Peak caller 依赖性和后端统计方法，由于 csaw 的 edgeR 框架易于解释，因此值得一试。  
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Peak differential analysis
-
-csaw 是通过将 edgeR 框架扩展到将基因组分 bin 而开发的。滑动窗口方法被认为可以对基因组中的 reads 进行更多的无偏估计，但是需要严格的 FDR 控制才能正确合并相邻窗口。
 
 
 # peak annotation
