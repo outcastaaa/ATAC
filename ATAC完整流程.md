@@ -950,89 +950,7 @@ done
 0 + 0 with mate mapped to a different chr (mapQ>=5)
 ```
 
-
-
-## 6.4 bamtobed
-1. 目的：后续需要用到 `bed bedpe` 文件，把处理好的bam比对文件转化为bed格式
-2. 使用软件：`bedtools`,[参考文章](https://bedtools.readthedocs.io/en/latest/content/tools/bamtobed.html)  
-3. 代码：
-```bash
-# bam to bed
-mkdir -p /mnt/d/ATAC/bed
-cd /mnt/d/ATAC/filter
-
-parallel -j 6 "
-   bedtools bamtobed -i ./{1} >../bed/{1}.bed
-" ::: $( ls *.filter.bam)
-
-
-# bam to bedpe 
-mkdir -p /mnt/d/ATAC/bedpe
-cd /mnt/d/ATAC/filter
-# the BAM file should be sorted by read name beforehand
-parallel -j 6 "
-  samtools sort -n -o ../bedpe/{1}.named {1}
-" ::: $( ls *.filter.bam)
-
-cd /mnt/d/ATAC/bedpe
-# The bedtools command should extract the paired-end alignments as bedpe format, then the awk command should shift the fragments as needed
-parallel -j 6 "
-  bedtools bamtobed -i {1} -bedpe > {1}.bedpe
-" ::: $( ls *.named)
-
-
-```
-* 结果：
-```bash
-# bed
-chr1    3000773 3000873 SRR11539111.41226980/2  32      +
-chr1    3000784 3000884 SRR11539111.41226980/1  32      -
-chr1    3000793 3000893 SRR11539111.46953273/1  34      +
-chr1    3000873 3000969 SRR11539111.16779100/1  36      +
-chr1    3000918 3001018 SRR11539111.6534710/1   38      +
-chr1    3000921 3001021 SRR11539111.46953273/2  34      -
-chr1    3000935 3001035 SRR11539111.6534710/2   38      -
-chr1    3000935 3001035 SRR11539111.16779100/2  36      -
-chr1    3000966 3001066 SRR11539111.47139289/1  37      +
-chr1    3001028 3001096 SRR11539111.19849957/1  39      +
-
-# bedpe
-chr1    100000059       100000150       chr1    100000059       100000150       SRR11539111.28003264    42      +      -
-chr1    100000122       100000185       chr1    100000122       100000185       SRR11539111.27329157    42      +      -
-```
-* bedpe文件格式  [bed文件格式](https://www.cnblogs.com/djx571/p/9499795.html#:~:text=BED%20%E6%96%87%E4%BB%B6%28Browser%20Extensible%20Data%29%E6%A0%BC%E5%BC%8F%E6%98%AFucsc,%E7%9A%84genome%20browser%E7%9A%84%E4%B8%80%E4%B8%AA%E6%A0%BC%E5%BC%8F%20%2C%E6%8F%90%E4%BE%9B%E4%BA%86%E4%B8%80%E7%A7%8D%E7%81%B5%E6%B4%BB%E7%9A%84%E6%96%B9%E5%BC%8F%E6%9D%A5%E5%AE%9A%E4%B9%89%E7%9A%84%E6%95%B0%E6%8D%AE%E8%A1%8C%EF%BC%8C%E4%BB%A5%E7%94%A8%E6%9D%A5%E6%8F%8F%E8%BF%B0%E6%B3%A8%E9%87%8A%E4%BF%A1%E6%81%AF%E3%80%82%20BED%E8%A1%8C%E6%9C%893%E4%B8%AA%E5%BF%85%E9%A1%BB%E7%9A%84%E5%88%97%E5%92%8C9%E4%B8%AA%E9%A2%9D%E5%A4%96%E5%8F%AF%E9%80%89%E7%9A%84%E5%88%97%E3%80%82)  
-
-```bash
-# 必选的三列：
-chrom - 染色体的名称（例如chr3，chrY，chr2_random）或支架（例如scaffold10671）。
-chromStart- 染色体或scanfold中特征的起始位置。染色体中的第一个碱基编号为0。
-chromEnd- 染色体或scanfold中特征的结束位置。所述 chromEnd碱没有包括在特征的显示。\
-例如，染色体的前100个碱基定义为chromStart = 0，chromEnd = 100，并跨越编号为0-99的碱基。
-
-# 9个可选的BED字段：
-name - 定义BED行的名称。当轨道打开到完全显示模式时，此标签显示在Genome浏览器窗口中BED行的左侧，或者在打包模式下直接显示在项目的左侧。
-score - 得分在0到1000之间。如果此注释数据集的轨迹线useScore属性设置为1，则得分值将确定显示此要素的灰度级别（较高的数字=较深的灰色）。
-strand - 定义strand。要么“。” （=无绞线）或“+”或“ - ”。
-thickStart- 绘制特征的起始位置（例如，基因显示中的起始密码子）。当没有厚部分时，thickStart和thickEnd通常设置为chromStart位置。
-thickEnd - 绘制特征的结束位置（例如基因显示中的终止密码子）。
-itemRgb- R，G，B形式的RGB值（例如255,0,0）。如果轨道行 itemRgb属性设置为“On”，则此RBG值将确定此BED行中包含的数据的显示颜色。\
-注意：建议使用此属性的简单颜色方案（八种颜色或更少颜色），以避免压倒Genome浏览器和Internet浏览器的颜色资源。
-blockCount- BED行中的块（外显子）数。
-blockSizes- 块大小的逗号分隔列表。此列表中的项目数应与blockCount相对应。
-blockStarts - 以逗号分隔的块开始列表。应该相对于chromStart计算所有 blockStart位置。此列表中的项目数应与blockCount相对应。
-
-链接：https://www.jianshu.com/p/9208c3b89e44
-```
-* [bed bedpe格式的区别](https://www.jianshu.com/p/c73c1dc81c61)  
-BEDPE 格式类似于 BED 格式，可用于描述成对的基因组区域。
-由于bed文件原则上不能表示跨染色体的信息，因此，对于结构变异，一般采用的一种基于bed文件的变种文件bedpe格式进行存储。其格式与bed最大的区别在于，对于必须列即chrom、chromStart、chromEnd三列分别记录两次。  
-
-
-
-
-
-
-## 6.5 Blacklist_filtering
+## 6.4 Blacklist_filtering
 
 1. 目的：去除ENCODE blacklisted 区域，通过blacklist的过滤，可以进一步降低peak calling的假阳性。    
 
@@ -1086,105 +1004,162 @@ gzip -dc mm10.blacklist.bed.gz > mm10.blacklist.bed
 rm *.gz
 wc -l  mm10.blacklist.bed #164
 
-# bed
-cd /mnt/d/ATAC/bed
-cp /mnt/d/ATAC/trim2/config.raw   /mnt/d/ATAC/bed/config.raw
+cd /mnt/d/ATAC/filter
 cat config.raw | while read id;
 do 
   echo $id 
   arr=($id)
   sample=${arr[0]}
 
-  sort -k1,2 ${sample}.filter.bam.bed > ${sample}.sorted.bed
-  echo ${sample}.bed
+  echo ${sample}.filter.bam
 
-  # 取交集看bed文件和blacklist有多少重合部分
-  bedtools intersect -a ${sample}.sorted.bed  -b ../blklist/mm10.blacklist.bed | wc -l  
-  #119162
-  #109301
-  #111787
-  #147446
+  # 取交集看bam文件和blacklist有多少重合部分
+  bedtools intersect -wa -a ${sample}.filter.bam  -b ../blklist/mm10.blacklist.bed | wc -l  
+  # 16559
+  # 15119
+  # 15304
+  # 20212
 
-  # 凡是bed中含有blacklist都删除
-  bedtools intersect -v -a ${sample}.sorted.bed -b ../blklist/mm10.blacklist.bed > ../blklist/${sample}.final.bed
+  # 凡是bam中含有blacklist都删除
+  bedtools intersect -v -a ${sample}.filter.bam -b ../blklist/mm10.blacklist.bed > ../blklist/${sample}.final.bam
+
+  samtools index  -@ 7 ../blklist/${sample}.final.bam 
+	samtools flagstat  -@ 7 ../blklist/${sample}.final.bam > ../blklist/${sample}.final.stat
 done
 
 
-# bedpe
-cd /mnt/d/ATAC/bedpe
-cp /mnt/d/ATAC/trim2/config.raw   /mnt/d/ATAC/bedpe/config.raw
 cat config.raw | while read id;
 do 
   echo $id 
   arr=($id)
   sample=${arr[0]}
 
-  sort -k1,2 ${sample}.filter.bam.named.bed > ${sample}.sorted.bedpe
-  echo ${sample}.bedpe
-  # 取交集看bed文件和blacklist有多少重合部分
-  bedtools intersect -a ${sample}.sorted.bedpe  -b ../blklist/mm10.blacklist.bed | wc -l  
-  # 凡是bed中含有blacklist都删除
-  bedtools intersect -v -a ${sample}.sorted.bedpe -b ../blklist/mm10.blacklist.bed > ../blklist/${sample}.final.bedpe
+  samtools index  -@ 7 ../blklist/${sample}.final.bam 
+	samtools flagstat  -@ 7 ../blklist/${sample}.final.bam > ../blklist/${sample}.final.stat
 done
-
-
-
-
-
 ```
 6. 结果：  
 ```bash
-cd /mnt/d/ATAC/blklist
-# bed 
-wc -l *.bed
-  # 47997002 SRR11539111.final.bed
-  # 47527151 SRR11539112.final.bed
-  # 38112786 SRR11539115.final.bed
-  # 26666006 SRR11539116.final.bed
-  #      164 mm10.blacklist.bed
+# 原比对文件数据，以SRR11539111为例
+98013300 + 0 in total (QC-passed reads + QC-failed reads)
+98013300 + 0 primary
+0 + 0 secondary
+0 + 0 supplementary
+0 + 0 duplicates
+0 + 0 primary duplicates
+96440057 + 0 mapped (98.39% : N/A)
+96440057 + 0 primary mapped (98.39% : N/A)
+98013300 + 0 paired in sequencing
+49006650 + 0 read1
+49006650 + 0 read2
+94727152 + 0 properly paired (96.65% : N/A)
+95584080 + 0 with itself and mate mapped
+855977 + 0 singletons (0.87% : N/A)
+160994 + 0 with mate mapped to a different chr
+89323 + 0 with mate mapped to a different chr (mapQ>=5)
 
+# 删除PCR重复+低质量+chrM后数据
+48111744 + 0 in total (QC-passed reads + QC-failed reads)
+48111744 + 0 primary
+0 + 0 secondary
+0 + 0 supplementary
+0 + 0 duplicates
+0 + 0 primary duplicates
+48111744 + 0 mapped (100.00% : N/A)
+48111744 + 0 primary mapped (100.00% : N/A)
+48111744 + 0 paired in sequencing
+24055872 + 0 read1
+24055872 + 0 read2
+48111744 + 0 properly paired (100.00% : N/A)
+48111744 + 0 with itself and mate mapped
+0 + 0 singletons (0.00% : N/A)
+0 + 0 with mate mapped to a different chr
+0 + 0 with mate mapped to a different chr (mapQ>=5)
 
-# 以SRR11539111为例
-cd /mnt/d/ATAC/bed
-wc -l SRR11539111.final.bed  #47997002
-wc -l ../filter/SRR11539111.filter.bam 
-#48111744，blacklist共过滤了10，000左右的reads
+# 删除blacklist后数据
+47997002 + 0 in total (QC-passed reads + QC-failed reads)
+47997002 + 0 primary
+0 + 0 secondary
+0 + 0 supplementary
+0 + 0 duplicates
+0 + 0 primary duplicates
+47997002 + 0 mapped (100.00% : N/A)
+47997002 + 0 primary mapped (100.00% : N/A)
+47997002 + 0 paired in sequencing
+23998484 + 0 read1
+23998518 + 0 read2
+47997002 + 0 properly paired (100.00% : N/A)
+47997002 + 0 with itself and mate mapped
+0 + 0 singletons (0.00% : N/A)
+0 + 0 with mate mapped to a different chr
+0 + 0 with mate mapped to a different chr (mapQ>=5)
 ```
+到这一步，比对文件已经过滤完成。     
+
+
+## 6.5 bamtobed
+1. 目的：后续需要用到 `bed bedpe` 文件，把处理好的bam比对文件转化为bed格式
+2. 使用软件：`bedtools`,[参考文章](https://bedtools.readthedocs.io/en/latest/content/tools/bamtobed.html)  
+3. 代码：
+```bash
+# bam to bed
+mkdir -p /mnt/d/ATAC/bed
+cd /mnt/d/ATAC/blklist
+
+parallel -j 6 "
+   bedtools bamtobed -i ./{1} >../bed/{1}.bed
+" ::: $( ls *.final.bam)
+
+# bam to bedpe 
+mkdir -p /mnt/d/ATAC/bedpe
+cd /mnt/d/ATAC/blklist
+# the BAM file should be sorted by read name beforehand
+parallel -j 6 "
+  samtools sort -n -o ../bedpe/{1}.named {1}
+" ::: $( ls *.final.bam)
+
+cd /mnt/d/ATAC/bedpe
+# The bedtools command should extract the paired-end alignments as bedpe format, then the awk command should shift the fragments as needed
+parallel -j 6 "
+  bedtools bamtobed -i {1} -bedpe > {1}.bedpe
+" ::: $( ls *.final.bam.named)
+
+
+```
+* 结果：
+```bash
+# bed
+
+# bedpe
+
+
+```
+* bedpe文件格式  [bed文件格式](https://www.cnblogs.com/djx571/p/9499795.html#:~:text=BED%20%E6%96%87%E4%BB%B6%28Browser%20Extensible%20Data%29%E6%A0%BC%E5%BC%8F%E6%98%AFucsc,%E7%9A%84genome%20browser%E7%9A%84%E4%B8%80%E4%B8%AA%E6%A0%BC%E5%BC%8F%20%2C%E6%8F%90%E4%BE%9B%E4%BA%86%E4%B8%80%E7%A7%8D%E7%81%B5%E6%B4%BB%E7%9A%84%E6%96%B9%E5%BC%8F%E6%9D%A5%E5%AE%9A%E4%B9%89%E7%9A%84%E6%95%B0%E6%8D%AE%E8%A1%8C%EF%BC%8C%E4%BB%A5%E7%94%A8%E6%9D%A5%E6%8F%8F%E8%BF%B0%E6%B3%A8%E9%87%8A%E4%BF%A1%E6%81%AF%E3%80%82%20BED%E8%A1%8C%E6%9C%893%E4%B8%AA%E5%BF%85%E9%A1%BB%E7%9A%84%E5%88%97%E5%92%8C9%E4%B8%AA%E9%A2%9D%E5%A4%96%E5%8F%AF%E9%80%89%E7%9A%84%E5%88%97%E3%80%82)  
 
 ```bash
-# bedpe
+# 必选的三列：
+chrom - 染色体的名称（例如chr3，chrY，chr2_random）或支架（例如scaffold10671）。
+chromStart- 染色体或scanfold中特征的起始位置。染色体中的第一个碱基编号为0。
+chromEnd- 染色体或scanfold中特征的结束位置。所述 chromEnd碱没有包括在特征的显示。\
+例如，染色体的前100个碱基定义为chromStart = 0，chromEnd = 100，并跨越编号为0-99的碱基。
+
+# 9个可选的BED字段：
+name - 定义BED行的名称。当轨道打开到完全显示模式时，此标签显示在Genome浏览器窗口中BED行的左侧，或者在打包模式下直接显示在项目的左侧。
+score - 得分在0到1000之间。如果此注释数据集的轨迹线useScore属性设置为1，则得分值将确定显示此要素的灰度级别（较高的数字=较深的灰色）。
+strand - 定义strand。要么“。” （=无绞线）或“+”或“ - ”。
+thickStart- 绘制特征的起始位置（例如，基因显示中的起始密码子）。当没有厚部分时，thickStart和thickEnd通常设置为chromStart位置。
+thickEnd - 绘制特征的结束位置（例如基因显示中的终止密码子）。
+itemRgb- R，G，B形式的RGB值（例如255,0,0）。如果轨道行 itemRgb属性设置为“On”，则此RBG值将确定此BED行中包含的数据的显示颜色。\
+注意：建议使用此属性的简单颜色方案（八种颜色或更少颜色），以避免压倒Genome浏览器和Internet浏览器的颜色资源。
+blockCount- BED行中的块（外显子）数。
+blockSizes- 块大小的逗号分隔列表。此列表中的项目数应与blockCount相对应。
+blockStarts - 以逗号分隔的块开始列表。应该相对于chromStart计算所有 blockStart位置。此列表中的项目数应与blockCount相对应。
+
+链接：https://www.jianshu.com/p/9208c3b89e44
 ```
-到这一步，比对文件已经过滤完成，找到了最终的bed/bedpe文件，可用于下游call peak。     
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+* [bed bedpe格式的区别](https://www.jianshu.com/p/c73c1dc81c61)  
+BEDPE 格式类似于 BED 格式，可用于描述成对的基因组区域。
+由于bed文件原则上不能表示跨染色体的信息，因此，对于结构变异，一般采用的一种基于bed文件的变种文件bedpe格式进行存储。其格式与bed最大的区别在于，对于必须列即chrom、chromStart、chromEnd三列分别记录两次。  
 
 
 
@@ -1216,32 +1191,34 @@ samtools index -@ 6 condition1.merged.bam
 
 3. 代码：
 ```bash
-mkdir -p /mnt/d/ATAC/shifted
-
-
-cp /mnt/d/ATAC/rmdup/config.raw /mnt/d/ATAC/shifted/config.raw
-cat config.raw | while read id;
-do echo $id 
-  arr=($id)
-  sample=${arr[0]}
-
-  cat ${sample}.filter.bam.named.bedpe | awk -v \
-  OFS="\t" '{if($9=="+"){print $1,$2+4,$6+4} \
-   else if($9=="-"){print $1,$2-5,$6-5}}' \
-    > ${sample}.Tn5.bedpe
-done
+mkdir -p /mnt/d/ATAC/Tn5_shift
+cp /mnt/d/ATAC/rmdup/config.raw /mnt/d/ATAC/bedpe/config.raw
 
 # bed转化
-cd /mnt/d/ATAC/shifted/
+cd /mnt/d/ATAC/bed/
 cat config.raw | while read id;
 do echo $id 
   arr=($id)
   sample=${arr[0]}
 
-  cat ../bed/${sample}.filter.bam.bed | awk -v \
+  cat ${sample}.final.bam.bed | awk -v \
   OFS="\t" '{if($6=="+"){print $1,$2+4,$3+4} \
    else if($6=="-"){print $1,$2-5,$3-5}}' \
-    > ${sample}.Tn5.bed
+    > ../Tn5_shift/${sample}.Tn5.bed
+done
+
+
+# bedpe转化
+cd /mnt/d/ATAC/bedpe
+cat config.raw | while read id;
+do echo $id 
+  arr=($id)
+  sample=${arr[0]}
+
+  cat ${sample}.final.bam.named.bedpe | awk -v \
+  OFS="\t" '{if($9=="+"){print $1,$2+4,$6+4} \
+   else if($9=="-"){print $1,$2-5,$6-5}}' \
+    > ../Tn5_shift/${sample}.Tn5.bedpe
 done
 ```
 * 结果：
