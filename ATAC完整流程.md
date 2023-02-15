@@ -770,9 +770,8 @@ do echo $id
   fq1=${arr[1]}
   fq2=${arr[2]}
   sample=${arr[0]}
-
-	samtools index -@ 6 ${sample}.sort.bam
-	samtools flagstat  -@ 6 ${sample}.sort.bam > ${sample}.raw.stat
+  samtools index -@ 6 ${sample}.sort.bam
+  samtools flagstat  -@ 6 ${sample}.sort.bam > ${sample}.raw.stat
 done
 # samtools index为已经基于坐标排序后bam或者cram的文件创建索引，默认在当前文件夹产生*.bai的index文件
 # raw.stat记录匹配后原始文件情况
@@ -1022,9 +1021,8 @@ do
 
   # 凡是bam中含有blacklist都删除
   bedtools intersect -v -a ${sample}.filter.bam -b ../blklist/mm10.blacklist.bed > ../blklist/${sample}.final.bam
-
-  samtools index  -@ 7 ../blklist/${sample}.final.bam 
-	samtools flagstat  -@ 7 ../blklist/${sample}.final.bam > ../blklist/${sample}.final.stat
+  samtools index  -@ 7 ../blklist/${sample}.final.bam
+  samtools flagstat  -@ 7 ../blklist/${sample}.final.bam > ../blklist/${sample}.final.stat
 done
 
 
@@ -1129,7 +1127,11 @@ parallel -j 6 "
 * 结果：
 ```bash
 # bed
-
+chr1    3000773 3000873 SRR11539111.41226980/2  32      +
+chr1    3000784 3000884 SRR11539111.41226980/1  32      -
+chr1    3000793 3000893 SRR11539111.46953273/1  34      +
+chr1    3000873 3000969 SRR11539111.16779100/1  36      +
+chr1    3000918 3001018 SRR11539111.6534710/1   38      +
 # bedpe
 
 
@@ -2140,6 +2142,26 @@ DiffBind主要对峰集(peaksets)进行分析，峰集是一组代表候选蛋�
 
 
 4. 代码：  
+① read in a set of peaksets and associated metadata  
+* 输入文件：CSV表（，分隔）；表格.xls/xlsx
+
+② 找到样本间共有peaks，比较相似性
+* 可得到：consensus peakset
+
+③ create binding affinity matrix
+
+④ Differential binding affinity analysis    
+
+The core functionality of DiffBind is the differential binding affinity analysis, which enables binding sites to be identified that are significantly differentially bound between sample groups.  
+
+这一步包括对实验数据进行归一化，并建立模型设计和对比（或对比）。接下来，默认使用DESeq2执行底层的核心分析例程。这将为每个候选结合位点分配一个p值和FDR，表明它们具有差异结合的confidence。   
+
+⑤ Plotting and reporting  
+
+一旦运行了一个或多个对比，DiffBind就提供了许多用于报告和绘制结果的功能。`MA图`和`火山图`给出了分析结果的概述，而相关`热图`和`PCA图`显示了这些组如何基于差异结合位点聚类。`箱线图`显示了差异结合位点内reads的分布，对应于两个样本组之间是否获得或失去的亲和力。`报告`能够提取差异结合位点用于进一步处理，如注释、motif和pathway分析。  
+
+
+
 
 
 
