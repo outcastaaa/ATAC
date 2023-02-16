@@ -51,7 +51,7 @@
 - [9. Quality_check](#9-Quality_check)
 	- [9.1 fragment_length_distribution](#91-fragment_length_distribution)
 	- [9.2 FRiP](#92-FRiP)
-  - [9.3 IDR(important)](#93-idrimportant)
+  - [9.3 IDR](#93-idr)
   - [9.4 TSS_enrichment](#94-tss_enrichment) 
   - [9.5 other_indexes](#95-other_indexes) 
 - [10. Blacklist_filtering](#10-blacklist_filtering)
@@ -977,6 +977,12 @@ ENCODE 和 modENCODE 联盟已经为包括人类、小鼠、蠕虫和苍蝇在�
 
 
 3. 去除时机：  
+[DiffBind](http://bioconductor.org/packages/release/bioc/vignettes/DiffBind/inst/doc/DiffBind.pdf)中解释的很清楚：    
+
+Within DiffBind, blacklists and greylists are applied to candidate peak regions prior to performing a quantitative analysis. This should be done `① before calculating a consensus peakset` by excluding blacklisted peaks from each individual peakset. It can also be done `② after counting overlapping reads` by excluding consensus peaks that overlap a blacklisted or greylists region.  
+
+Ideally, blacklists and greylists would be applied earlier in the process, to the aligned reads (bam files) themselves, `③ prior to any peak calling`.Popular peak callers, such as MACS, use the control tracks to model the background noise levels which plays a critical role in identifying truly enriched "peak" regions. Excluding the blacklisted reads prior to peak calling should result in more accurate identification of enriched regions in the nonblacklisted areas of the genome.  
+
 
 本流程采用的方法是：在peak calling之前去除，比对后的reads 去除PCR重复等后单独去除 blacklist region，再 call peak.  
    
@@ -1117,23 +1123,38 @@ parallel -j 6 "
 " ::: $( ls *.final.bam)
 
 cd /mnt/d/ATAC/bedpe
+cat config.raw | while read id;
+do echo $id 
+  arr=($id)
+  sample=${arr[0]}
+  samtools flagstat  -@ 7 ${sample}.final.bam.named > ${sample}.final.bam.named.stat
+done
+  
+
+
+cd /mnt/d/ATAC/bedpe
 # The bedtools command should extract the paired-end alignments as bedpe format, then the awk command should shift the fragments as needed
 parallel -j 6 "
   bedtools bamtobed -i {1} -bedpe > {1}.bedpe
 " ::: $( ls *.final.bam.named)
-
-
 ```
+注：bedpe转化一定要按照name排序，把双端reads放一起；因为去除blacklist后有些reads被去除无法组成一个pair被skip
 * 结果：
 ```bash
 # bed
+$ cat SRR11539111.final.bam.bed | head -n 5
 chr1    3000773 3000873 SRR11539111.41226980/2  32      +
 chr1    3000784 3000884 SRR11539111.41226980/1  32      -
 chr1    3000793 3000893 SRR11539111.46953273/1  34      +
 chr1    3000873 3000969 SRR11539111.16779100/1  36      +
-chr1    3000918 3001018 SRR11539111.6534710/1   38      +
-# bedpe
 
+# bedpe
+$ cat SRR11539111.final.bam.named.bedpe | head -n 5
+chr16   79178081        79178149        chr16   79178181        79178281        SRR11539111.1   42      +       -
+chr2    64769626        64769726        chr2    64769944        64770041        SRR11539111.3   40      +       -
+chr13   31981784        31981881        chr13   31981802        31981902        SRR11539111.6   42      +       -
+chr7    45794613        45794710        chr7    45794641        45794740        SRR11539111.12  42      +       -
+chr14   122435898       122435949       chr14   122435898       122435949       SRR11539111.15  42      +       -
 
 ```
 * bedpe文件格式  [bed文件格式](https://www.cnblogs.com/djx571/p/9499795.html#:~:text=BED%20%E6%96%87%E4%BB%B6%28Browser%20Extensible%20Data%29%E6%A0%BC%E5%BC%8F%E6%98%AFucsc,%E7%9A%84genome%20browser%E7%9A%84%E4%B8%80%E4%B8%AA%E6%A0%BC%E5%BC%8F%20%2C%E6%8F%90%E4%BE%9B%E4%BA%86%E4%B8%80%E7%A7%8D%E7%81%B5%E6%B4%BB%E7%9A%84%E6%96%B9%E5%BC%8F%E6%9D%A5%E5%AE%9A%E4%B9%89%E7%9A%84%E6%95%B0%E6%8D%AE%E8%A1%8C%EF%BC%8C%E4%BB%A5%E7%94%A8%E6%9D%A5%E6%8F%8F%E8%BF%B0%E6%B3%A8%E9%87%8A%E4%BF%A1%E6%81%AF%E3%80%82%20BED%E8%A1%8C%E6%9C%893%E4%B8%AA%E5%BF%85%E9%A1%BB%E7%9A%84%E5%88%97%E5%92%8C9%E4%B8%AA%E9%A2%9D%E5%A4%96%E5%8F%AF%E9%80%89%E7%9A%84%E5%88%97%E3%80%82)  
@@ -1226,34 +1247,25 @@ done
 * 结果：
 ！注意，后续callpeak不可直接使用bedtools转化的bedpe文件，只能包含三行信息：chr,chrom_start,chrom_end
 ```bash
-# bedpe文件行数是对应bed文件的一一半
-$ cat SRR11539111.Tn5.bedpe | head -n 10
-chr16   79178085        79178285
-chr2    64769630        64770045
-chr13   31981788        31981906
-chr7    45794617        45794744
-chr14   122435902       122435953
-chr4    10789204        10789384
-chr4    150616790       150616881
-chr7    39964352        39964456
-chr3    51072439        51072481
-chr3    43586562        43587287
-$ wc -l SRR11539111.Tn5.bedpe
-# 24055872
-
-$ cat SRR11539111.Tn5.bed | head -n 10
+cd /mnt/d/ATAC/Tn5_shift
+$ cat SRR11539111.Tn5.bed | head -n 5
 chr1    3000777 3000877
 chr1    3000779 3000879
 chr1    3000797 3000897
 chr1    3000877 3000973
 chr1    3000922 3001022
-chr1    3000916 3001016
-chr1    3000930 3001030
-chr1    3000930 3001030
-chr1    3000970 3001070
-chr1    3001032 3001100
 $ wc -l SRR11539111.Tn5.bed
-# 48111744
+# 47997002
+
+$ cat SRR11539111.Tn5.bedpe | head -n 5
+chr16   79178085        79178285
+chr2    64769630        64770045
+chr13   31981788        31981906
+chr7    45794617        45794744
+chr14   122435902       122435953
+$ wc -l SRR11539111.Tn5.bedpe
+# 23998114
+# bedpe文件行数应该是对应bed文件的一半，但是384对被blacklist去除了
 ```
 
 
@@ -1281,26 +1293,17 @@ $ wc -l SRR11539111.Tn5.bed
 
 4. 代码：
 ```bash
-mkdir -p /mnt/d/ATAC/peaks/
-cd /mnt/d/ATAC/shifted/
+mkdir -p /mnt/d/ATAC/macs2_peaks/
+cd /mnt/d/ATAC/Tn5_shift/
 
 # 注：本流程使用的是经过转化的bedpe
 # 单个样本
-macs2 callpeak  -g mm -f BEDPE --nomodel \
+macs2 callpeak  -g mm -f BEDPE --nomodel --keep-dup all \
   -n SRR11539111 -t ./SRR11539111.Tn5.bedpe \
-  --outdir /mnt/d/ATAC/peaks
+  --outdir /mnt/d/ATAC/macs2_peaks/
 
 # 循环
-ls *.Tn5.bedpe| while read id; do
-  macs2 callpeak  -g mm -f BEDPE --nomodel \
-   -n $id -t $id \
-  --outdir ../peaks/ 
-done
-
-# 推荐使用peaks1代码  
-# 与/peaks相比，/peaks1加了几个参数，删除了shift和extsize
-cp /mnt/d/ATAC/rmdup/config.raw /mnt/d/ATAC/shifted/config.raw
-mkdir -p /mnt/d/ATAC/peaks1/
+cp /mnt/d/ATAC/rmdup/config.raw /mnt/d/ATAC/Tn5_shift/config.raw
 cat config.raw | while read id;
 do echo $id 
   arr=($id)
@@ -1308,28 +1311,19 @@ do echo $id
 
   macs2 callpeak  -g mm -f BEDPE --nomodel --keep-dup all \
    --cutoff-analysis -n ${sample} -t ./${sample}.Tn5.bedpe \
-  --outdir ../peaks1/ 
+  --outdir ../macs2_peaks/
 done
 
 # 如果用的不是专门双端测序的bedpe，而是bed文件，采用下面代码
 # 单个样本
-cd /mnt/d/ATAC/shifted/
+mkdir -p /mnt/d/ATAC/macs2_peaks2/
+cd /mnt/d/ATAC/Tn5_shift/
 macs2 callpeak  -g mm --nomodel \
-  --shift -100 --extsize 200 -n SRR11539111 -t ./SRR11539111.bed \
-  --outdir /mnt/d/ATAC/peaks
+  --shift -100 --extsize 200 -n SRR11539111 -t ./SRR11539111.Tn5.bed \
+  --outdir /mnt/d/ATAC/macs2_peaks2/
 
 # 循环
-mkdir -p /mnt/d/ATAC/peaks2
-cd /mnt/d/ATAC/shifted/
-ls *.bed| while read id; do
-  macs2 callpeak  -g mm --nomodel \
-  --shift -100 --extsize 200 -n $id -t $id \
-  --outdir ../peaks2/ 
-done
-
-或者
-
-cp /mnt/d/ATAC/rmdup/config.raw /mnt/d/ATAC/shifted/config.raw
+cp /mnt/d/ATAC/rmdup/config.raw /mnt/d/ATAC/Tn5_shift/config.raw
 cat config.raw | while read id;
 do echo $id 
   arr=($id)
@@ -1337,7 +1331,7 @@ do echo $id
 
   macs2 callpeak  -g mm --nomodel \
   --shift -100 --extsize 200 -n ${sample} -t ./${sample}.Tn5.bed \
-  --outdir ../peaks2/ 
+  --outdir /mnt/d/ATAC/macs2_peaks2/ 
 done
 ```
 * macs2 callpeaks [参数](https://manpages.ubuntu.com/manpages/impish/man1/macs2_callpeak.1.html#:~:text=Please%20note%20that%20if%20the%20format%20is%20set,predicting%20the%20fragment%20size%20first%20and%20extending%20reads.)   
@@ -1395,38 +1389,41 @@ nucleosome-seq，使用核小体一半大小进行小波分析获得核小体中
 
 
 * 结果： 
-最终生成三个文件：narrowpeak, peaks.xls,summits.bed，[详细解释](https://github.com/hbctraining/In-depth-NGS-Data-Analysis-Course/blob/master/sessionV/lessons/04_peak_calling_macs.md)  
+最终生成三个文件：narrowpeak，peaks.xls，summits.bed，[详细解释](https://github.com/hbctraining/In-depth-NGS-Data-Analysis-Course/blob/master/sessionV/lessons/04_peak_calling_macs.md) ，以及--cutoff-analysis 参数生成的txt文件。  
 
-`_peaks.narrowPea`k：BED6+4格式文件，其中包含峰值位置以及峰值峰值，p值和q值  
+`_peaks.narrowPeak`：BED6+4格式文件，其中包含峰值位置以及峰值峰值，p值和q值  
 `_peaks.xls`：包含有关调用峰的信息的表格文件。其他信息包括堆积和折叠富集  
 `_summits.bed`：每个山峰的峰顶位置。要找到结合位点的基序，建议使用此文件  
 1. narrowpeak  
 ```bash
-chr1	3670812	3672021	SRR11539111_peak_1	125	.	5.29967	15.80579	12.56397	799
-chr1	4785447	4785897	SRR11539111_peak_2	153	.	6.79790	18.76872	15.35057	249
+chr1    3670812 3672021 SRR11539111_peak_1      125     .       5.29808 15.80135        12.55760        799
+chr1    4785447 4785897 SRR11539111_peak_2      153     .       6.79600 18.76433        15.34334        249
 # 染色体 起始位点 结束位点（Tn5转化过）peak名称  score   链 signal_value（fold-change）  -log10(pvalue) -log10qvalue 峰位与peak起点的距离
 ```
 2. peaks.xls
 ```bash
 # chr	start   	end 	length	abs_summit	pileup位置堆积信号  	-log10(pvalue)  fold_enrichment	-log10(qvalue)	name
-chr1	3670813	3672021	1209	3671612	33	15.80579	5.29967	12.56397	SRR11539111_peak_1
+chr1	3670813	3672021	1209	3671612	33	15.80592	5.29972	12.5641	SRR11539111_peak_1
+chr1	4785448	4785897	450	4785697	31	18.76885	6.79796	15.35072	SRR11539111_peak_2
 ```
 3. summits.bed
 ```bash
-chr1    3671611 3671612 SRR11539111_peak_1      12.56397
-chr1    4785696 4785697 SRR11539111_peak_2      15.35057
+chr1    3671611 3671612 SRR11539111_peak_1      12.55760
+chr1    4785696 4785697 SRR11539111_peak_2      15.34334
 #-log10pvalue
 ```
 * bed_bedpe结果比较
 ```bash
 # bedpe
 wc -l SRR11539111_peaks.narrowPeak
-17001
+16974
 
 # bed
-28552
-# bedpe的长度会更长一点，后续分析都采用bedpe
+28521
 ```
+* bed 与 bedpe 的不同：相当于shift-extend模式与paired-end模式的不同，据[参考文章](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6996192/figure/Fig3/)比较可知，pair-end对peak的选择更谨慎，因此数目稍少，而且更易形成大段peak。  下游分析选用bedpe。  
+
+* 与没有去除blacklist直接 call peak相比，去除后pvalue更小peaks，位置信息几乎不变，score不变，峰位与peak起点的距离也不变  
 
 * 可以在IGV查看结果  
 
@@ -1478,19 +1475,20 @@ b: 片段大小在 100bp 和 200bp 左右有明显的富集，表示没有核小
 
 
 3. 软件：有很多种方式可以画出该图，且都很简单，本流程采用`Picard`统计，`R`画图.
-4. 代码：
+4. 代码：注：判断质量的分析步骤不需要Tn5位置转换过的bam，采用处理后的final.bam即可  
+
 ```bash
-# 注：判断质量的分析步骤不需要Tn5位置转换过的bam，采用处理后的filter.bam即可
+# 再Linux中画图  
 mkdir -p /mnt/d/ATAC/frag_length
-cd /mnt/d/ATAC/filter
-cp /mnt/d/ATAC/rmdup/config.raw /mnt/d/ATAC/filter/config.raw
+cd /mnt/d/ATAC/blklist
+cp /mnt/d/ATAC/rmdup/config.raw /mnt/d/ATAC/blklist/config.raw
 
 cat config.raw | while read id;
 do echo $id 
   arr=($id)
   sample=${arr[0]}
   java -jar /mnt/d/biosoft/picard/picard.jar CollectInsertSizeMetrics \
-  -I ${sample}.filter.bam \
+  -I ${sample}.final.bam \
   -O ../frag_length/${sample}.insert_size_metrics.txt \
   -H ../frag_length/${sample}.insert_size_histogram.pdf
 done
@@ -1500,18 +1498,19 @@ done
 #--OUTPUT,-O <File>            The file to write the output to. 
 ```
 ```bash
+# 在Rstudio中画图
 # 画图前准备
-cd /mnt/d/ATAC/filter
+cd /mnt/d/ATAC/blklist
 cat config.raw | while read id;
 do echo $id 
   arr=($id)
   sample=${arr[0]}
-  samtools view ${sample}.filter.bam | awk '$9>0' | cut -f 9 > ../frag_length/${sample}.fragment_length_count.txt
-  # samtools view ${sample}.filter.bam |  cut -f 9 > ../frag_length/${sample}.fragment_length_count2.txt
+  samtools view ${sample}.final.bam | awk '$9>0' | cut -f 9 > ../frag_length/${sample}.fragment_length_count.txt
+  # samtools view ${sample}.final.bam |  cut -f 9 > ../frag_length/${sample}.fragment_length_count2.txt
 done
 ```
 ```r
-# 在Rstudio中画图
+# 画图
 getwd()    #[1] "D:/atac/R_analysize"
 # 以SRR11539111为例
 a<-read.table('../frag_length/SRR11539111.fragment_length_count.txt')
@@ -1559,30 +1558,36 @@ d <-read.table('../frag_length/SRR11539116.fragment_length_count.txt')
 * 已去重，采用shifted bedpe，该结果肯定比实际未去重的bam文件callpeak小很多  
 ```bash
 # 1. 计算比对上参考基因组的reads总数
-cd /mnt/d/ATAC/shifted
+cd /mnt/d/ATAC/Tn5_shift
 wc -l ${sample}.Tn5.bedpe
 # 2.  计算peak区域的reads总数:转换为peak区域与bed文件取交集的操作，统计交集的行数即可
-bedtools intersect -a ${sample}.Tn5.bedpe -b ../peaks1/${sample}_peaks.narrowPeak | wc -l
+bedtools intersect -wa -a ${sample}.Tn5.bedpe \
+-b ../macs2_peaks/${sample}_peaks.narrowPeak \
+   | wc -l
 # 3. 写循环
-mkdir -p /mnt/d/ATAC/FRiP
-cd /mnt/d/ATAC/shifted
+mkdir -p /mnt/d/ATAC/bedpe_FRiP
+cd /mnt/d/ATAC/Tn5_shift
 cat config.raw | while read id;
 do echo $id 
   arr=($id)
   sample=${arr[0]}
-  wc -l ${sample}.Tn5.bedpe | awk '{print $1}' >> ../FRiP/bedpe_totalReads.txt
-  bedtools intersect -a ${sample}.Tn5.bedpe -b ../peaks1/${sample}_peaks.narrowPeak |wc -l| awk '{print $1}' >> ../FRiP/bedpe_peakReads.txt
+
+  wc -l ${sample}.Tn5.bedpe | awk '{print $1}' >> ../bedpe_FRiP/bedpe_totalReads.txt
+
+  bedtools intersect -wa -a ${sample}.Tn5.bedpe \
+  -b ../macs2_peaks/${sample}_peaks.narrowPeak \
+   | wc -l| awk '{print $1}' >> ../bedpe_FRiP/bedpe_peakReads.txt
 done
 
 # 准备好文件
-cd /mnt/d/ATAC/shifted
+cd /mnt/d/ATAC/Tn5_shift
 cat config.raw | while read id;
 do  
   arr=($id)
   sample=${arr[0]}
-  echo ${sample} >> ../FRiP/name.txt
+  echo ${sample} >> ../bedpe_FRiP/name.txt
 done
-cd /mnt/d/ATAC/FRiP
+cd /mnt/d/ATAC/bedpe_FRiP
 paste name.txt bedpe_peakReads.txt  bedpe_totalReads.txt > bedpe_FRiP.txt
 
 # 计算FRiP value = peakReads/totalReads
@@ -1590,11 +1595,12 @@ cat bedpe_FRiP.txt | awk '{print $1, $2,$3,$2/$3*100"%"}' > bedpe_FRiP.txt
 ```
 * 结果
 ```bash
-/mnt/d/ATAC/FRiP$ cat bedpe_FRiP.txt
-SRR11539111 1762657 24055872 7.32735%
-SRR11539112 1743887 23816205 7.32227%
-SRR11539115 2235554 19110134 11.6983%
-SRR11539116 1871362 13403866 13.9614%
+cd /mnt/d/ATAC/bedpe_FRiP
+cat bedpe_FRiP.txt
+# SRR11539111 1710117 23998114 7.12605%
+# SRR11539112 1697481 23763194 7.14332%
+# SRR11539115 2185839 19055921 11.4707%
+# SRR11539116 1802172 13332376 13.5173%
 ```
 
 * 推荐使用未去重、只比对完后的bam文件
@@ -1617,7 +1623,7 @@ bedtools intersect -a SRR11539111.bedpe -b SRR11539111_peaks.narrowPeak | wc -l
 # 准备好文件
 # 计算FRiP value = peakReads/totalReads
 ```  
-## 9.3 IDR(important)
+## 9.3 IDR
 
 1. 目的: 评价重复样本间peaks一致性的常用方法是IDR(Irreproducibility Discovery Rate)。IDR是经过比较一对经过排序的regions/peaks的列表，然后核算反映其重复性的值，合并一致性peaks。[参考文章](https://github.com/hbctraining/In-depth-NGS-Data-Analysis-Course/blob/master/sessionV/lessons/07_handling-replicates-idr.md)   
 
@@ -1673,15 +1679,15 @@ Use a tighter threshold for pooled-consistency since pooling and subsampling equ
 ```bash
 #Sort peak by -log10(p-value)
 mkdir -p /mnt/d/ATAC/IDR
-cd /mnt/d/ATAC/IDR
-cp ../peaks1/*.narrowPeak ./
+cd /mnt/d/ATAC/macs2_peaks
 
 parallel -j 6 "
-sort -k8,8nr {1} > {1}.8thsorted
+sort -k8,8nr {1} > ../IDR/{1}.8thsorted
 " ::: $(ls *.narrowPeak)
 
 
 # 处理1：1&2
+cd /mnt/d/ATAC/IDR
 idr --samples SRR11539111_peaks.narrowPeak.8thsorted SRR11539112_peaks.narrowPeak.8thsorted \
 --input-file-type narrowPeak \
 --rank p.value \
@@ -1699,9 +1705,10 @@ idr --samples SRR11539115_peaks.narrowPeak.8thsorted SRR11539116_peaks.narrowPea
 
 * signal.value排序
 ```bash
+# do not run this
 mkdir -p /mnt/d/ATAC/IDR
 cd /mnt/d/ATAC/IDR
-cp ../peaks1/*.narrowPeak ./
+cp ../macs2_peaks/*.narrowPeak ./
 # 处理1：1&2
 idr --samples SRR11539111_peaks.narrowPeak SRR11539112_peaks.narrowPeak \
 --input-file-type narrowPeak \
@@ -1754,13 +1761,13 @@ Bottom Row: Peaks rank versus idr scores are plotted in black. The overlayed box
 ```bash
 # 单个样本的peak总数
  wc -l *.narrowPeak
-#   17002 SRR11539111_peaks.narrowPeak
-#   16158 SRR11539112_peaks.narrowPeak
-#   20405 SRR11539115_peaks.narrowPeak
-#   19080 SRR11539116_peaks.narrowPeak
-#   72645 total
+  # 16974 SRR11539111_peaks.narrowPeak
+  # 16136 SRR11539112_peaks.narrowPeak
+  # 20384 SRR11539115_peaks.narrowPeak
+  # 19063 SRR11539116_peaks.narrowPeak
+  # 72557 total
 
-# 核算conmmon peaks的总数
+# 核算conmmon peaks的总数，该数据未更新
 wc -l *.txt
   # 13340 12_pvalue.txt
   # 13340 12_signal_value.txt
@@ -1808,42 +1815,12 @@ The TSS enrichment calculation is a signal to noise calculation. The reads aroun
 ## 9.5 other_indexes
 
 还有很多其他评估指标[Library complexity](https://yiweiniu.github.io/blog/2019/03/ATAC-seq-data-analysis-from-FASTQ-to-peaks/)（PBC1,PBC2,NFR）等。
-## phantompeakqualtools：评估实验中信噪比、富集信号等ATACseqQC
-```r
-BiocManager::install("DSS",force = TRUE) 
+## phantompeakqualtools：评估实验中信噪比、富集信号等  
 
-library(tidyr)
-library(dplyr)
-first_file <- "NC_methylation_result.txt"
-second_file <- "treatment_methylation_result.txt"
+## 上述过程都可通过ATACseqQC完成  [参考文章](https://cloud.tencent.com/developer/article/1624515)  
 
-mkdir /mnt/d/methylation2/R_analyse/output
-file_prefix <- "mm_all_norm_chr"
-file_save_path <- "../output/"
+ 
 
-# import data
-first_raw_data <- read.table(first_file, header = T, stringsAsFactors = F)
-second_raw_data <- read.table(second_file, header = T, stringsAsFactors = F)
-
-# data manipulation to prepare for the BSseq objection
-DSS_first_input_data <- first_raw_data %>%
-	mutate(chr = paste("chr", chr, sep = "")) %>%
-	mutate(pos = start, N = methyled + unmethyled, X = methyled ) %>%
-	select(chr, pos, N, X) 
-    #select只挑选需要的列输出：染色体，位置，总的碱基数（甲基化与未甲基化的），甲基化碱基
-DSS_second_input_data <- second_raw_data %>%
-	mutate(chr = paste("chr", chr, sep = "")) %>%
-	mutate(pos = start, N = methyled + unmethyled, X = methyled) %>%
-	select(chr, pos, N, X)
-
-#％>％来自dplyr包的管道函数，我们可以将其理解为车间里的流水线，经过前一步加工的产品才能进入后一步进一步加工，
-# 其作用是将前一步的结果直接传参给下一步的函数，从而省略了中间的赋值步骤，可以大量减少内存中的对象，节省内存。
-
-write.table(DSS_first_input_data, paste("D:/methylation2/R_analyse/data/", "DSS_first_input_data.txt", sep = ""), row.names = F)
-
- (echo -e "chr      start      end        length         nCG        meanMethy1         meanMethy2         diff.Methy        areaStat " && cat ./$i.txt) > temp && mv temp ./$i.txt
-done
-```
 
 
 # 11. Visualization    
@@ -1862,12 +1839,12 @@ e.g. 在Hcn4和Nppa位点的ATAC-seq信号可视化显示，在Hcn4附近的非�
 2. 软件：`deeptools`  
 3. 代码：  
 
-* bam转bw: 因为此处不看细节位置，不看共同peak，所以使用filter.bam文件  
+* bam转bw: 因为此处不看细节位置，不看共同peak，所以使用final.bam文件  
 [参考文章](https://github.com/hbctraining/In-depth-NGS-Data-Analysis-Course/blob/master/sessionV/lessons/10_data_visualization.md)  
 * filter.bam文件  
 ```bash 
 mkdir -p  /mnt/d/ATAC/bw
-cd /mnt/d/ATAC/filter #该目录下需要包含最终过滤后的bam文件和其bai索引
+cd /mnt/d/ATAC/blklist #该目录下需要包含最终过滤后的bam文件和其bai索引
 ls *.bam | while read id; 
 do 
   bamCoverage -p 6  -b $id \
@@ -1876,7 +1853,7 @@ do
   --smoothLength 60 \
   --normalizeUsing RPKM \
   --centerReads 
-  2> ../bw/${id%%.*}_bamCoverage.log
+  1 > ../bw/${id%%.*}_bamCoverage.log
 done
 
 # bamCoverage注意大小写
@@ -2081,7 +2058,7 @@ plotHeatmap -m /mnt/d/ATAC/genebody/SRR11539111_matrix.gz \
 
 plotProfile -m /mnt/d/ATAC/genebody/SRR11539111_matrix.gz \
     -out /mnt/d/ATAC/genebody/SRR11539111_profile.png 
-    #还需要调整参数
+    #不太好看，还需要调整参数
 ```
 
 6. 结果：  
@@ -2109,7 +2086,7 @@ plotProfile -m /mnt/d/ATAC/genebody/SRR11539111_matrix.gz \
 # 12. Peak differential analysis    
 
 1. 目的：  
-前面步骤已经找出每个样本的 peaks ，并对相同处理的 Rep 取consensus peaks，本流程共两个处理组，下一步通过比对两组 consensus peaks 的差异，寻找两组处理导致的差异 peaks （differential enrichment peaks, DE peaks）。  
+前面步骤已经找出每个样本的 peaks ，本流程共两个处理组，下一步通过比对两组 peaks，寻找两组处理导致的差异 peaks （differential enrichment peaks, DE peaks）。  
 
 2. 使用软件：目前，还没有专门针对 ATAC-seq 数据分析开发的差异 Peak 分析工具。该步骤可选的软件有很多，可以根据前面步骤做出相应调整。[参考文章](https://mp.weixin.qq.com/s/SS640LNI5QcvChmZNGEOmw)    
 
@@ -2119,7 +2096,7 @@ plotProfile -m /mnt/d/ATAC/genebody/SRR11539111_matrix.gz \
 
 在基于共同 Peak 的工具中，HOMER、DBChIP 和 DiffBind 依赖于 RNA-seq 差异 (DE) 分析包，如 edgeR 、DESeq 或 DESeq2。因此，它们都假设负二项（NB）分布(相较于泊松分布更灵活)，并且需要生物学重复以估计离散度。建议通过合并所有样本来 call 共同 Peak 以减少假阳性差异 Peak，这是 HOMER 的默认参数。但是，DBChIP 和 DiffBind 通过交集或并集操作生成共同峰 Peak。但是，相交操作会忽略样品或特定条件的 Peak，而并集操作通常会显示出较低的 P 值和更多的假阳性。考虑到重复处理，外部 Peak caller 依赖性和后端统计方法，由于 csaw 的 edgeR 框架易于解释，值得一试。     
 
-大多数研究假设 Peak 区域中的 ATAC-seq reads 遵循 NB 分布，且前文已经通过IDR找到了 consensus peaks，避免直接交集或并集影响。 本流程选取常用的 `diffbind` 包进行分析。   
+大多数研究假设 Peak 区域中的 ATAC-seq reads 遵循 NB 分布，本流程选取常用的 `diffbind` 包进行分析。 也推荐尝试[csaw](https://www.pkimes.com/benchmark-fdr-html/additionalfile36_ChIPseq-CBP-csaw.html)软件。  
 
 3. Diffbind 原理：[参考文章](https://www.jianshu.com/p/b74c8077d893)    
 
@@ -2132,7 +2109,7 @@ It includes functions that support the processing of peaksets, including `overla
 
 DiffBind主要对峰集(peaksets)进行分析，峰集是一组代表候选蛋白质结合位点的基因组区间(也适用于ATAC-seq的峰集)。每个区间包括 染色体编号+开始+结束位置，通常还有个表示对峰的confidence或强度的分数。与每个峰集相关联的是与产生峰集的实验相关的metadata。此外，包含比对上的测序read文件(.bam文件)可以与每个峰集关联。    
 
-差异结合亲和分析: DiffBind的核心功能是差异结合亲和分析，它可以识别样本间显著的差异结合位点。这一步骤包括将实验数据标准化，建立模型设计和对比(或contrasts)。接下来执行底层的核心分析，默认情况下使用DESeq2。这将为每个候选结合位点分配一个p值和FDR，表明它们的差异结合置信度.  
+ 
 
 
 
@@ -2142,19 +2119,63 @@ DiffBind主要对峰集(peaksets)进行分析，峰集是一组代表候选蛋�
 
 
 4. 代码：  
-① read in a set of peaksets and associated metadata  
-* 输入文件：CSV表（，分隔）；表格.xls/xlsx
 
+① read in a set of peaksets and associated metadata  
+
+* 输入文件：  
+文件格式：CSV表（，分隔）；表格.xls/xlsx  
+sample sheet是一个列表，需要包括以下几列:"SamplelD"，"Tissue"，"Factor"，"Condition"Treatment"，"Replicate"， "bamReads"，"ControllD"，"bamControl"，"Peaks"和"PeakCaller"   
+
+![sample](./pictures/sample.png)  
+
+|  SampleID | Tissue  |  Factor | Condition  | Treatment  | Replicate  | bamReads  | controlID  | bamControl  |  peaks |peakCaller|
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| PC1  | Sinus_Node  | accessible_regions  |   | PC  |  1 | D:\atac\blklist\SRR11539111.final.bam  |   |   |D:\atac\macs2_peaks\SRR11539111_summits.bed   | bed  |
+| PC2 | Sinus_Node  |  accessible_regions |   |  PC  | 2 |  D:\atac\blklist\SRR11539112.final.bam |   |   |D:\atac\macs2_peaks\SRR11539112_summits.bed   | bed  |
+| RACM1  | cardiomyocytes  | accessible_regions  |   | RACM  | 1  |  D:\atac\blklist\SRR11539115.final.bam |   |   |D:\atac\macs2_peaks\SRR11539115_summits.bed   | bed  |
+| RACM2  |  cardiomyocytes |  accessible_regions |   |  RACM | 2  | D:\atac\blklist\SRR11539116.final.bam  |   |   |  D:\atac\macs2_peaks\SRR11539116_summits.bed | bed  |
+
+将上面表格写入文件`/mnt/d/ATAC/R_analysize/sample_sheet.csv`，学会使用[格式转换器](https://tableconvert.com/zh-cn/csv-to-excel)，注意csv文件最后一行加一行空格，否则报错。  
+
+
+
+* NOTE: factor不是很重要；"Treatment"就是分组，对照或者不同处理，也可以是对照和过表达/KO等；"bamReads"是bam文件的绝对路径；"Peaks"是call peak之后得到的peak文件的文件夹。
+
+
+* 注：DiffBind 所需的输入是数据集中的所有样本以及每个样本的所有峰（不仅仅是高置信度峰），合并函数会查找覆盖峰的基因组区间，如果某区间出现在两个及以上的样本中，定义为`consensus peakset`；具有rep需要单独使用，不可合并（因此在寻找差异peak时，不可使用IDR找到的consensus peak）
+```r
+# 在 R.studio 中进行操作
+# 下载R包
+BiocManager::install("DiffBind", force = TRUE)
+library(DiffBind)
+# DiffBind 3.8.4
+getwd()
+# [1] "D:/ATAC/R_analysize"
+
+
+# 导入数据
+sample_sheet <- "./sample_sheet.csv"
+samples <- read.csv(sample_sheet)
+dbObj <- dba(sampleSheet=samples)
+```
 ② 找到样本间共有peaks，比较相似性
 * 可得到：consensus peakset
+```bash
+> tamoxifen <- dba(sampleSheet="tamoxifen.csv") %>%
++ dba.blacklist() %>%
++ dba.count() %>%
++ dba.normalize() %>%
++ dba.contrast() %>%
++ dba.analyze()
+```
+③ create binding affinity matrix    
 
-③ create binding affinity matrix
+一旦一个 `consensus peak` 被推导出来，DiffBind可以使用提供的测序read文件来计算每个样本的每个区间有多少reads重叠。默认情况下，为了提供更多标准化的峰值区间，consensus peak中的峰会根据其峰值(最大读重叠点)重新调整中心点和trimmed。计数的最终结果是一个结合亲和矩阵，其中包含每个样本在每个共识结合位点的read count.
 
 ④ Differential binding affinity analysis    
 
-The core functionality of DiffBind is the differential binding affinity analysis, which enables binding sites to be identified that are significantly differentially bound between sample groups.  
-
-这一步包括对实验数据进行归一化，并建立模型设计和对比（或对比）。接下来，默认使用DESeq2执行底层的核心分析例程。这将为每个候选结合位点分配一个p值和FDR，表明它们具有差异结合的confidence。   
+ 差异结合亲和分析: DiffBind的核心功能是差异结合亲和分析，它可以识别样本间显著的差异结合位点。这一步骤包括将实验数据标准化，建立模型设计和对比(或contrasts)。接下来执行底层的核心分析，默认情况下使用DESeq2。这将为每个候选结合位点分配一个p值和FDR，表明它们的差异结合置信度confidence。 
+  
 
 ⑤ Plotting and reporting  
 
