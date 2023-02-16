@@ -1,0 +1,232 @@
+$ cat config.raw | while read id;
+ $id
+ > do echo $id
+>   arr=($id)
+>   sample=${arr[0]}
+>
+acs2 cal>   macs2 callpeak  -g mm -f BEDPE --nomodel --keep-dup all \
+>    --cutoff-analysis -n ${sample} -t ./${sample}.Tn5.bedpe \
+>   --outdir ../macs2_peaks/
+> done
+SRR11539111 SRR11539111_1_val_1.fq.gz SRR11539111_2_val_2.fq.gz
+INFO  @ Thu, 16 Feb 2023 01:34:07:
+# Command line: callpeak -g mm -f BEDPE --nomodel --keep-dup all --cutoff-analysis -n SRR11539111 -t ./SRR11539111.Tn5.bedpe --outdir ../macs2_peaks/
+# ARGUMENTS LIST:
+# name = SRR11539111
+# format = BEDPE
+# ChIP-seq file = ['./SRR11539111.Tn5.bedpe']
+# control file = None
+# effective genome size = 1.87e+09
+# band width = 300
+# model fold = [5, 50]
+# qvalue cutoff = 5.00e-02
+# The maximum gap between significant sites is assigned as the read length/tag size.
+# The minimum length of peaks is assigned as the predicted fragment length "d".
+# Larger dataset will be scaled towards smaller dataset.
+# Range for calculating regional lambda is: 10000 bps
+# Broad region calling is off
+# Paired-End mode is on
+
+INFO  @ Thu, 16 Feb 2023 01:34:07: #1 read fragment files...
+INFO  @ Thu, 16 Feb 2023 01:34:07: #1 read treatment fragments...
+INFO  @ Thu, 16 Feb 2023 01:34:09:  1000000
+INFO  @ Thu, 16 Feb 2023 01:34:10:  2000000
+INFO  @ Thu, 16 Feb 2023 01:34:12:  3000000
+INFO  @ Thu, 16 Feb 2023 01:34:14:  4000000
+INFO  @ Thu, 16 Feb 2023 01:34:16:  5000000
+INFO  @ Thu, 16 Feb 2023 01:34:18:  6000000
+INFO  @ Thu, 16 Feb 2023 01:34:19:  7000000
+INFO  @ Thu, 16 Feb 2023 01:34:21:  8000000
+INFO  @ Thu, 16 Feb 2023 01:34:23:  9000000
+INFO  @ Thu, 16 Feb 2023 01:34:25:  10000000
+INFO  @ Thu, 16 Feb 2023 01:34:26:  11000000
+INFO  @ Thu, 16 Feb 2023 01:34:28:  12000000
+INFO  @ Thu, 16 Feb 2023 01:34:30:  13000000
+INFO  @ Thu, 16 Feb 2023 01:34:32:  14000000
+INFO  @ Thu, 16 Feb 2023 01:34:33:  15000000
+INFO  @ Thu, 16 Feb 2023 01:34:35:  16000000
+INFO  @ Thu, 16 Feb 2023 01:34:37:  17000000
+INFO  @ Thu, 16 Feb 2023 01:34:38:  18000000
+INFO  @ Thu, 16 Feb 2023 01:34:40:  19000000
+INFO  @ Thu, 16 Feb 2023 01:34:42:  20000000
+INFO  @ Thu, 16 Feb 2023 01:34:44:  21000000
+INFO  @ Thu, 16 Feb 2023 01:34:46:  22000000
+INFO  @ Thu, 16 Feb 2023 01:34:48:  23000000
+INFO  @ Thu, 16 Feb 2023 01:35:02: #1 mean fragment size is determined as 253.2 bp from treatment
+INFO  @ Thu, 16 Feb 2023 01:35:02: #1 fragment size = 253.2
+INFO  @ Thu, 16 Feb 2023 01:35:02: #1  total fragments in treatment: 23998114
+INFO  @ Thu, 16 Feb 2023 01:35:02: #1 finished!
+INFO  @ Thu, 16 Feb 2023 01:35:02: #2 Build Peak Model...
+INFO  @ Thu, 16 Feb 2023 01:35:02: #2 Skipped...
+INFO  @ Thu, 16 Feb 2023 01:35:02: #3 Call peaks...
+INFO  @ Thu, 16 Feb 2023 01:35:02: #3 Pre-compute pvalue-qvalue table...
+INFO  @ Thu, 16 Feb 2023 01:35:02: #3 Cutoff vs peaks called will be analyzed!
+INFO  @ Thu, 16 Feb 2023 01:36:26: #3 Analysis of cutoff vs num of peaks or total length has been saved in b'../macs2_peaks/SRR11539111_cutoff_analysis.txt'
+INFO  @ Thu, 16 Feb 2023 01:36:26: #3 Call peaks for each chromosome...
+INFO  @ Thu, 16 Feb 2023 01:37:00: #4 Write output xls file... ../macs2_peaks/SRR11539111_peaks.xls
+INFO  @ Thu, 16 Feb 2023 01:37:00: #4 Write peak in narrowPeak format file... ../macs2_peaks/SRR11539111_peaks.narrowPeak
+INFO  @ Thu, 16 Feb 2023 01:37:00: #4 Write summits bed file... ../macs2_peaks/SRR11539111_summits.bed
+INFO  @ Thu, 16 Feb 2023 01:37:00: Done!
+SRR11539112 SRR11539112_1_val_1.fq.gz SRR11539112_2_val_2.fq.gz
+INFO  @ Thu, 16 Feb 2023 01:37:00:
+# Command line: callpeak -g mm -f BEDPE --nomodel --keep-dup all --cutoff-analysis -n SRR11539112 -t ./SRR11539112.Tn5.bedpe --outdir ../macs2_peaks/
+# ARGUMENTS LIST:
+# name = SRR11539112
+# format = BEDPE
+# ChIP-seq file = ['./SRR11539112.Tn5.bedpe']
+# control file = None
+# effective genome size = 1.87e+09
+# band width = 300
+# model fold = [5, 50]
+# qvalue cutoff = 5.00e-02
+# The maximum gap between significant sites is assigned as the read length/tag size.
+# The minimum length of peaks is assigned as the predicted fragment length "d".
+# Larger dataset will be scaled towards smaller dataset.
+# Range for calculating regional lambda is: 10000 bps
+# Broad region calling is off
+# Paired-End mode is on
+
+INFO  @ Thu, 16 Feb 2023 01:37:00: #1 read fragment files...
+INFO  @ Thu, 16 Feb 2023 01:37:00: #1 read treatment fragments...
+INFO  @ Thu, 16 Feb 2023 01:37:03:  1000000
+INFO  @ Thu, 16 Feb 2023 01:37:06:  2000000
+INFO  @ Thu, 16 Feb 2023 01:37:08:  3000000
+INFO  @ Thu, 16 Feb 2023 01:37:10:  4000000
+INFO  @ Thu, 16 Feb 2023 01:37:12:  5000000
+INFO  @ Thu, 16 Feb 2023 01:37:14:  6000000
+INFO  @ Thu, 16 Feb 2023 01:37:17:  7000000
+INFO  @ Thu, 16 Feb 2023 01:37:19:  8000000
+INFO  @ Thu, 16 Feb 2023 01:37:21:  9000000
+INFO  @ Thu, 16 Feb 2023 01:37:23:  10000000
+INFO  @ Thu, 16 Feb 2023 01:37:25:  11000000
+INFO  @ Thu, 16 Feb 2023 01:37:28:  12000000
+INFO  @ Thu, 16 Feb 2023 01:37:30:  13000000
+INFO  @ Thu, 16 Feb 2023 01:37:32:  14000000
+INFO  @ Thu, 16 Feb 2023 01:37:34:  15000000
+INFO  @ Thu, 16 Feb 2023 01:37:36:  16000000
+INFO  @ Thu, 16 Feb 2023 01:37:38:  17000000
+INFO  @ Thu, 16 Feb 2023 01:37:41:  18000000
+INFO  @ Thu, 16 Feb 2023 01:37:43:  19000000
+INFO  @ Thu, 16 Feb 2023 01:37:45:  20000000
+INFO  @ Thu, 16 Feb 2023 01:37:47:  21000000
+INFO  @ Thu, 16 Feb 2023 01:37:49:  22000000
+INFO  @ Thu, 16 Feb 2023 01:37:51:  23000000
+INFO  @ Thu, 16 Feb 2023 01:38:05: #1 mean fragment size is determined as 269.3 bp from treatment
+INFO  @ Thu, 16 Feb 2023 01:38:05: #1 fragment size = 269.3
+INFO  @ Thu, 16 Feb 2023 01:38:05: #1  total fragments in treatment: 23763194
+INFO  @ Thu, 16 Feb 2023 01:38:05: #1 finished!
+INFO  @ Thu, 16 Feb 2023 01:38:05: #2 Build Peak Model...
+INFO  @ Thu, 16 Feb 2023 01:38:05: #2 Skipped...
+INFO  @ Thu, 16 Feb 2023 01:38:05: #3 Call peaks...
+INFO  @ Thu, 16 Feb 2023 01:38:05: #3 Pre-compute pvalue-qvalue table...
+INFO  @ Thu, 16 Feb 2023 01:38:05: #3 Cutoff vs peaks called will be analyzed!
+INFO  @ Thu, 16 Feb 2023 01:39:26: #3 Analysis of cutoff vs num of peaks or total length has been saved in b'../macs2_peaks/SRR11539112_cutoff_analysis.txt'
+INFO  @ Thu, 16 Feb 2023 01:39:26: #3 Call peaks for each chromosome...
+INFO  @ Thu, 16 Feb 2023 01:40:00: #4 Write output xls file... ../macs2_peaks/SRR11539112_peaks.xls
+INFO  @ Thu, 16 Feb 2023 01:40:00: #4 Write peak in narrowPeak format file... ../macs2_peaks/SRR11539112_peaks.narrowPeak
+INFO  @ Thu, 16 Feb 2023 01:40:00: #4 Write summits bed file... ../macs2_peaks/SRR11539112_summits.bed
+INFO  @ Thu, 16 Feb 2023 01:40:00: Done!
+SRR11539115 SRR11539115_1_val_1.fq.gz SRR11539115_2_val_2.fq.gz
+INFO  @ Thu, 16 Feb 2023 01:40:00:
+# Command line: callpeak -g mm -f BEDPE --nomodel --keep-dup all --cutoff-analysis -n SRR11539115 -t ./SRR11539115.Tn5.bedpe --outdir ../macs2_peaks/
+# ARGUMENTS LIST:
+# name = SRR11539115
+# format = BEDPE
+# ChIP-seq file = ['./SRR11539115.Tn5.bedpe']
+# control file = None
+# effective genome size = 1.87e+09
+# band width = 300
+# model fold = [5, 50]
+# qvalue cutoff = 5.00e-02
+# The maximum gap between significant sites is assigned as the read length/tag size.
+# The minimum length of peaks is assigned as the predicted fragment length "d".
+# Larger dataset will be scaled towards smaller dataset.
+# Range for calculating regional lambda is: 10000 bps
+# Broad region calling is off
+# Paired-End mode is on
+
+INFO  @ Thu, 16 Feb 2023 01:40:00: #1 read fragment files...
+INFO  @ Thu, 16 Feb 2023 01:40:00: #1 read treatment fragments...
+INFO  @ Thu, 16 Feb 2023 01:40:03:  1000000
+INFO  @ Thu, 16 Feb 2023 01:40:06:  2000000
+INFO  @ Thu, 16 Feb 2023 01:40:08:  3000000
+INFO  @ Thu, 16 Feb 2023 01:40:10:  4000000
+INFO  @ Thu, 16 Feb 2023 01:40:13:  5000000
+INFO  @ Thu, 16 Feb 2023 01:40:15:  6000000
+INFO  @ Thu, 16 Feb 2023 01:40:17:  7000000
+INFO  @ Thu, 16 Feb 2023 01:40:19:  8000000
+INFO  @ Thu, 16 Feb 2023 01:40:21:  9000000
+INFO  @ Thu, 16 Feb 2023 01:40:23:  10000000
+INFO  @ Thu, 16 Feb 2023 01:40:25:  11000000
+INFO  @ Thu, 16 Feb 2023 01:40:27:  12000000
+INFO  @ Thu, 16 Feb 2023 01:40:30:  13000000
+INFO  @ Thu, 16 Feb 2023 01:40:32:  14000000
+INFO  @ Thu, 16 Feb 2023 01:40:34:  15000000
+INFO  @ Thu, 16 Feb 2023 01:40:36:  16000000
+INFO  @ Thu, 16 Feb 2023 01:40:39:  17000000
+INFO  @ Thu, 16 Feb 2023 01:40:41:  18000000
+INFO  @ Thu, 16 Feb 2023 01:40:43:  19000000
+INFO  @ Thu, 16 Feb 2023 01:40:53: #1 mean fragment size is determined as 286.9 bp from treatment
+INFO  @ Thu, 16 Feb 2023 01:40:53: #1 fragment size = 286.9
+INFO  @ Thu, 16 Feb 2023 01:40:53: #1  total fragments in treatment: 19055921
+INFO  @ Thu, 16 Feb 2023 01:40:53: #1 finished!
+INFO  @ Thu, 16 Feb 2023 01:40:53: #2 Build Peak Model...
+INFO  @ Thu, 16 Feb 2023 01:40:53: #2 Skipped...
+INFO  @ Thu, 16 Feb 2023 01:40:53: #3 Call peaks...
+INFO  @ Thu, 16 Feb 2023 01:40:53: #3 Pre-compute pvalue-qvalue table...
+INFO  @ Thu, 16 Feb 2023 01:40:53: #3 Cutoff vs peaks called will be analyzed!
+INFO  @ Thu, 16 Feb 2023 01:42:01: #3 Analysis of cutoff vs num of peaks or total length has been saved in b'../macs2_peaks/SRR11539115_cutoff_analysis.txt'
+INFO  @ Thu, 16 Feb 2023 01:42:01: #3 Call peaks for each chromosome...
+INFO  @ Thu, 16 Feb 2023 01:42:32: #4 Write output xls file... ../macs2_peaks/SRR11539115_peaks.xls
+INFO  @ Thu, 16 Feb 2023 01:42:32: #4 Write peak in narrowPeak format file... ../macs2_peaks/SRR11539115_peaks.narrowPeak
+INFO  @ Thu, 16 Feb 2023 01:42:32: #4 Write summits bed file... ../macs2_peaks/SRR11539115_summits.bed
+INFO  @ Thu, 16 Feb 2023 01:42:33: Done!
+SRR11539116 SRR11539116_1_val_1.fq.gz SRR11539116_2_val_2.fq.gz
+INFO  @ Thu, 16 Feb 2023 01:42:33:
+# Command line: callpeak -g mm -f BEDPE --nomodel --keep-dup all --cutoff-analysis -n SRR11539116 -t ./SRR11539116.Tn5.bedpe --outdir ../macs2_peaks/
+# ARGUMENTS LIST:
+# name = SRR11539116
+# format = BEDPE
+# ChIP-seq file = ['./SRR11539116.Tn5.bedpe']
+# control file = None
+# effective genome size = 1.87e+09
+# band width = 300
+# model fold = [5, 50]
+# qvalue cutoff = 5.00e-02
+# The maximum gap between significant sites is assigned as the read length/tag size.
+# The minimum length of peaks is assigned as the predicted fragment length "d".
+# Larger dataset will be scaled towards smaller dataset.
+# Range for calculating regional lambda is: 10000 bps
+# Broad region calling is off
+# Paired-End mode is on
+
+INFO  @ Thu, 16 Feb 2023 01:42:33: #1 read fragment files...
+INFO  @ Thu, 16 Feb 2023 01:42:33: #1 read treatment fragments...
+INFO  @ Thu, 16 Feb 2023 01:42:35:  1000000
+INFO  @ Thu, 16 Feb 2023 01:42:37:  2000000
+INFO  @ Thu, 16 Feb 2023 01:42:39:  3000000
+INFO  @ Thu, 16 Feb 2023 01:42:40:  4000000
+INFO  @ Thu, 16 Feb 2023 01:42:42:  5000000
+INFO  @ Thu, 16 Feb 2023 01:42:44:  6000000
+INFO  @ Thu, 16 Feb 2023 01:42:45:  7000000
+INFO  @ Thu, 16 Feb 2023 01:42:47:  8000000
+INFO  @ Thu, 16 Feb 2023 01:42:49:  9000000
+INFO  @ Thu, 16 Feb 2023 01:42:51:  10000000
+INFO  @ Thu, 16 Feb 2023 01:42:52:  11000000
+INFO  @ Thu, 16 Feb 2023 01:42:54:  12000000
+INFO  @ Thu, 16 Feb 2023 01:42:56:  13000000
+INFO  @ Thu, 16 Feb 2023 01:43:03: #1 mean fragment size is determined as 272.8 bp from treatment
+INFO  @ Thu, 16 Feb 2023 01:43:03: #1 fragment size = 272.8
+INFO  @ Thu, 16 Feb 2023 01:43:03: #1  total fragments in treatment: 13332376
+INFO  @ Thu, 16 Feb 2023 01:43:03: #1 finished!
+INFO  @ Thu, 16 Feb 2023 01:43:03: #2 Build Peak Model...
+INFO  @ Thu, 16 Feb 2023 01:43:03: #2 Skipped...
+INFO  @ Thu, 16 Feb 2023 01:43:03: #3 Call peaks...
+INFO  @ Thu, 16 Feb 2023 01:43:03: #3 Pre-compute pvalue-qvalue table...
+INFO  @ Thu, 16 Feb 2023 01:43:03: #3 Cutoff vs peaks called will be analyzed!
+INFO  @ Thu, 16 Feb 2023 01:44:02: #3 Analysis of cutoff vs num of peaks or total length has been saved in b'../macs2_peaks/SRR11539116_cutoff_analysis.txt'
+INFO  @ Thu, 16 Feb 2023 01:44:02: #3 Call peaks for each chromosome...
+INFO  @ Thu, 16 Feb 2023 01:44:28: #4 Write output xls file... ../macs2_peaks/SRR11539116_peaks.xls
+INFO  @ Thu, 16 Feb 2023 01:44:28: #4 Write peak in narrowPeak format file... ../macs2_peaks/SRR11539116_peaks.narrowPeak
+INFO  @ Thu, 16 Feb 2023 01:44:28: #4 Write summits bed file... ../macs2_peaks/SRR11539116_summits.bed
+INFO  @ Thu, 16 Feb 2023 01:44:28: Done!

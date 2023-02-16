@@ -1,0 +1,331 @@
+$ cat config.raw | while read id;
+> do echo $id
+>   arr=($id)
+>   sample=${arr[0]}
+>
+>   macs2 callpeak  -g mm --nomodel \
+>   --shift -100 --extsize 200 -n ${sample} -t ./${sample}.Tn5.bed \
+>   --outdir /mnt/d/ATAC/macs2_peaks2/
+> done
+SRR11539111 SRR11539111_1_val_1.fq.gz SRR11539111_2_val_2.fq.gz
+INFO  @ Thu, 16 Feb 2023 01:41:53:
+# Command line: callpeak -g mm --nomodel --shift -100 --extsize 200 -n SRR11539111 -t ./SRR11539111.Tn5.bed --outdir /mnt/d/ATAC/macs2_peaks2/
+# ARGUMENTS LIST:
+# name = SRR11539111
+# format = AUTO
+# ChIP-seq file = ['./SRR11539111.Tn5.bed']
+# control file = None
+# effective genome size = 1.87e+09
+# band width = 300
+# model fold = [5, 50]
+# qvalue cutoff = 5.00e-02
+# The maximum gap between significant sites is assigned as the read length/tag size.
+# The minimum length of peaks is assigned as the predicted fragment length "d".
+# Larger dataset will be scaled towards smaller dataset.
+# Range for calculating regional lambda is: 10000 bps
+# Broad region calling is off
+# Paired-End mode is off
+
+INFO  @ Thu, 16 Feb 2023 01:41:53: #1 read tag files...
+INFO  @ Thu, 16 Feb 2023 01:41:53: #1 read treatment tags...
+INFO  @ Thu, 16 Feb 2023 01:41:53: Detected format is: BED
+INFO  @ Thu, 16 Feb 2023 01:41:55:  1000000
+INFO  @ Thu, 16 Feb 2023 01:41:56:  2000000
+INFO  @ Thu, 16 Feb 2023 01:41:58:  3000000
+INFO  @ Thu, 16 Feb 2023 01:42:00:  4000000
+INFO  @ Thu, 16 Feb 2023 01:42:01:  5000000
+INFO  @ Thu, 16 Feb 2023 01:42:03:  6000000
+INFO  @ Thu, 16 Feb 2023 01:42:05:  7000000
+INFO  @ Thu, 16 Feb 2023 01:42:07:  8000000
+INFO  @ Thu, 16 Feb 2023 01:42:08:  9000000
+INFO  @ Thu, 16 Feb 2023 01:42:10:  10000000
+INFO  @ Thu, 16 Feb 2023 01:42:12:  11000000
+INFO  @ Thu, 16 Feb 2023 01:42:14:  12000000
+INFO  @ Thu, 16 Feb 2023 01:42:15:  13000000
+INFO  @ Thu, 16 Feb 2023 01:42:17:  14000000
+INFO  @ Thu, 16 Feb 2023 01:42:19:  15000000
+INFO  @ Thu, 16 Feb 2023 01:42:21:  16000000
+INFO  @ Thu, 16 Feb 2023 01:42:22:  17000000
+INFO  @ Thu, 16 Feb 2023 01:42:24:  18000000
+INFO  @ Thu, 16 Feb 2023 01:42:26:  19000000
+INFO  @ Thu, 16 Feb 2023 01:42:27:  20000000
+INFO  @ Thu, 16 Feb 2023 01:42:29:  21000000
+INFO  @ Thu, 16 Feb 2023 01:42:31:  22000000
+INFO  @ Thu, 16 Feb 2023 01:42:33:  23000000
+INFO  @ Thu, 16 Feb 2023 01:42:35:  24000000
+INFO  @ Thu, 16 Feb 2023 01:42:36:  25000000
+INFO  @ Thu, 16 Feb 2023 01:42:38:  26000000
+INFO  @ Thu, 16 Feb 2023 01:42:40:  27000000
+INFO  @ Thu, 16 Feb 2023 01:42:42:  28000000
+INFO  @ Thu, 16 Feb 2023 01:42:43:  29000000
+INFO  @ Thu, 16 Feb 2023 01:42:45:  30000000
+INFO  @ Thu, 16 Feb 2023 01:42:47:  31000000
+INFO  @ Thu, 16 Feb 2023 01:42:48:  32000000
+INFO  @ Thu, 16 Feb 2023 01:42:50:  33000000
+INFO  @ Thu, 16 Feb 2023 01:42:52:  34000000
+INFO  @ Thu, 16 Feb 2023 01:42:53:  35000000
+INFO  @ Thu, 16 Feb 2023 01:42:55:  36000000
+INFO  @ Thu, 16 Feb 2023 01:42:56:  37000000
+INFO  @ Thu, 16 Feb 2023 01:42:58:  38000000
+INFO  @ Thu, 16 Feb 2023 01:43:00:  39000000
+INFO  @ Thu, 16 Feb 2023 01:43:02:  40000000
+INFO  @ Thu, 16 Feb 2023 01:43:03:  41000000
+INFO  @ Thu, 16 Feb 2023 01:43:05:  42000000
+INFO  @ Thu, 16 Feb 2023 01:43:07:  43000000
+INFO  @ Thu, 16 Feb 2023 01:43:08:  44000000
+INFO  @ Thu, 16 Feb 2023 01:43:10:  45000000
+INFO  @ Thu, 16 Feb 2023 01:43:12:  46000000
+INFO  @ Thu, 16 Feb 2023 01:43:14:  47000000
+INFO  @ Thu, 16 Feb 2023 01:43:16: #1 tag size is determined as 96 bps
+INFO  @ Thu, 16 Feb 2023 01:43:16: #1 tag size = 96.0
+INFO  @ Thu, 16 Feb 2023 01:43:16: #1  total tags in treatment: 47997002
+INFO  @ Thu, 16 Feb 2023 01:43:16: #1 user defined the maximum tags...
+INFO  @ Thu, 16 Feb 2023 01:43:16: #1 filter out redundant tags at the same location and the same strand by allowing at most 1 tag(s)
+INFO  @ Thu, 16 Feb 2023 01:43:16: #1  tags after filtering in treatment: 45170944
+INFO  @ Thu, 16 Feb 2023 01:43:16: #1  Redundant rate of treatment: 0.06
+INFO  @ Thu, 16 Feb 2023 01:43:16: #1 finished!
+INFO  @ Thu, 16 Feb 2023 01:43:16: #2 Build Peak Model...
+INFO  @ Thu, 16 Feb 2023 01:43:16: #2 Skipped...
+INFO  @ Thu, 16 Feb 2023 01:43:16: #2 Use 200 as fragment length
+INFO  @ Thu, 16 Feb 2023 01:43:16: #2 Sequencing ends will be shifted towards 5' by 100 bp(s)
+INFO  @ Thu, 16 Feb 2023 01:43:16: #3 Call peaks...
+INFO  @ Thu, 16 Feb 2023 01:43:16: #3 Pre-compute pvalue-qvalue table...
+INFO  @ Thu, 16 Feb 2023 01:44:48: #3 Call peaks for each chromosome...
+INFO  @ Thu, 16 Feb 2023 01:45:35: #4 Write output xls file... /mnt/d/ATAC/macs2_peaks2/SRR11539111_peaks.xls
+INFO  @ Thu, 16 Feb 2023 01:45:35: #4 Write peak in narrowPeak format file... /mnt/d/ATAC/macs2_peaks2/SRR11539111_peaks.narrowPeak
+INFO  @ Thu, 16 Feb 2023 01:45:36: #4 Write summits bed file... /mnt/d/ATAC/macs2_peaks2/SRR11539111_summits.bed
+INFO  @ Thu, 16 Feb 2023 01:45:36: Done!
+SRR11539112 SRR11539112_1_val_1.fq.gz SRR11539112_2_val_2.fq.gz
+INFO  @ Thu, 16 Feb 2023 01:45:36:
+# Command line: callpeak -g mm --nomodel --shift -100 --extsize 200 -n SRR11539112 -t ./SRR11539112.Tn5.bed --outdir /mnt/d/ATAC/macs2_peaks2/
+# ARGUMENTS LIST:
+# name = SRR11539112
+# format = AUTO
+# ChIP-seq file = ['./SRR11539112.Tn5.bed']
+# control file = None
+# effective genome size = 1.87e+09
+# band width = 300
+# model fold = [5, 50]
+# qvalue cutoff = 5.00e-02
+# The maximum gap between significant sites is assigned as the read length/tag size.
+# The minimum length of peaks is assigned as the predicted fragment length "d".
+# Larger dataset will be scaled towards smaller dataset.
+# Range for calculating regional lambda is: 10000 bps
+# Broad region calling is off
+# Paired-End mode is off
+
+INFO  @ Thu, 16 Feb 2023 01:45:36: #1 read tag files...
+INFO  @ Thu, 16 Feb 2023 01:45:36: #1 read treatment tags...
+INFO  @ Thu, 16 Feb 2023 01:45:36: Detected format is: BED
+INFO  @ Thu, 16 Feb 2023 01:45:38:  1000000
+INFO  @ Thu, 16 Feb 2023 01:45:41:  2000000
+INFO  @ Thu, 16 Feb 2023 01:45:43:  3000000
+INFO  @ Thu, 16 Feb 2023 01:45:45:  4000000
+INFO  @ Thu, 16 Feb 2023 01:45:46:  5000000
+INFO  @ Thu, 16 Feb 2023 01:45:49:  6000000
+INFO  @ Thu, 16 Feb 2023 01:45:51:  7000000
+INFO  @ Thu, 16 Feb 2023 01:45:53:  8000000
+INFO  @ Thu, 16 Feb 2023 01:45:55:  9000000
+INFO  @ Thu, 16 Feb 2023 01:45:57:  10000000
+INFO  @ Thu, 16 Feb 2023 01:45:59:  11000000
+INFO  @ Thu, 16 Feb 2023 01:46:01:  12000000
+INFO  @ Thu, 16 Feb 2023 01:46:03:  13000000
+INFO  @ Thu, 16 Feb 2023 01:46:05:  14000000
+INFO  @ Thu, 16 Feb 2023 01:46:08:  15000000
+INFO  @ Thu, 16 Feb 2023 01:46:10:  16000000
+INFO  @ Thu, 16 Feb 2023 01:46:12:  17000000
+INFO  @ Thu, 16 Feb 2023 01:46:14:  18000000
+INFO  @ Thu, 16 Feb 2023 01:46:16:  19000000
+INFO  @ Thu, 16 Feb 2023 01:46:18:  20000000
+INFO  @ Thu, 16 Feb 2023 01:46:20:  21000000
+INFO  @ Thu, 16 Feb 2023 01:46:22:  22000000
+INFO  @ Thu, 16 Feb 2023 01:46:24:  23000000
+INFO  @ Thu, 16 Feb 2023 01:46:26:  24000000
+INFO  @ Thu, 16 Feb 2023 01:46:28:  25000000
+INFO  @ Thu, 16 Feb 2023 01:46:30:  26000000
+INFO  @ Thu, 16 Feb 2023 01:46:32:  27000000
+INFO  @ Thu, 16 Feb 2023 01:46:34:  28000000
+INFO  @ Thu, 16 Feb 2023 01:46:36:  29000000
+INFO  @ Thu, 16 Feb 2023 01:46:38:  30000000
+INFO  @ Thu, 16 Feb 2023 01:46:40:  31000000
+INFO  @ Thu, 16 Feb 2023 01:46:42:  32000000
+INFO  @ Thu, 16 Feb 2023 01:46:44:  33000000
+INFO  @ Thu, 16 Feb 2023 01:46:46:  34000000
+INFO  @ Thu, 16 Feb 2023 01:46:49:  35000000
+INFO  @ Thu, 16 Feb 2023 01:46:51:  36000000
+INFO  @ Thu, 16 Feb 2023 01:46:53:  37000000
+INFO  @ Thu, 16 Feb 2023 01:46:55:  38000000
+INFO  @ Thu, 16 Feb 2023 01:46:57:  39000000
+INFO  @ Thu, 16 Feb 2023 01:46:59:  40000000
+INFO  @ Thu, 16 Feb 2023 01:47:01:  41000000
+INFO  @ Thu, 16 Feb 2023 01:47:03:  42000000
+INFO  @ Thu, 16 Feb 2023 01:47:05:  43000000
+INFO  @ Thu, 16 Feb 2023 01:47:07:  44000000
+INFO  @ Thu, 16 Feb 2023 01:47:09:  45000000
+INFO  @ Thu, 16 Feb 2023 01:47:12:  46000000
+INFO  @ Thu, 16 Feb 2023 01:47:14:  47000000
+INFO  @ Thu, 16 Feb 2023 01:47:15: #1 tag size is determined as 93 bps
+INFO  @ Thu, 16 Feb 2023 01:47:15: #1 tag size = 93.0
+INFO  @ Thu, 16 Feb 2023 01:47:15: #1  total tags in treatment: 47527150
+INFO  @ Thu, 16 Feb 2023 01:47:15: #1 user defined the maximum tags...
+INFO  @ Thu, 16 Feb 2023 01:47:15: #1 filter out redundant tags at the same location and the same strand by allowing at most 1 tag(s)
+INFO  @ Thu, 16 Feb 2023 01:47:16: #1  tags after filtering in treatment: 44589950
+INFO  @ Thu, 16 Feb 2023 01:47:16: #1  Redundant rate of treatment: 0.06
+INFO  @ Thu, 16 Feb 2023 01:47:16: #1 finished!
+INFO  @ Thu, 16 Feb 2023 01:47:16: #2 Build Peak Model...
+INFO  @ Thu, 16 Feb 2023 01:47:16: #2 Skipped...
+INFO  @ Thu, 16 Feb 2023 01:47:16: #2 Use 200 as fragment length
+INFO  @ Thu, 16 Feb 2023 01:47:16: #2 Sequencing ends will be shifted towards 5' by 100 bp(s)
+INFO  @ Thu, 16 Feb 2023 01:47:16: #3 Call peaks...
+INFO  @ Thu, 16 Feb 2023 01:47:16: #3 Pre-compute pvalue-qvalue table...
+INFO  @ Thu, 16 Feb 2023 01:48:34: #3 Call peaks for each chromosome...
+INFO  @ Thu, 16 Feb 2023 01:49:20: #4 Write output xls file... /mnt/d/ATAC/macs2_peaks2/SRR11539112_peaks.xls
+INFO  @ Thu, 16 Feb 2023 01:49:20: #4 Write peak in narrowPeak format file... /mnt/d/ATAC/macs2_peaks2/SRR11539112_peaks.narrowPeak
+INFO  @ Thu, 16 Feb 2023 01:49:20: #4 Write summits bed file... /mnt/d/ATAC/macs2_peaks2/SRR11539112_summits.bed
+INFO  @ Thu, 16 Feb 2023 01:49:20: Done!
+SRR11539115 SRR11539115_1_val_1.fq.gz SRR11539115_2_val_2.fq.gz
+INFO  @ Thu, 16 Feb 2023 01:49:20:
+# Command line: callpeak -g mm --nomodel --shift -100 --extsize 200 -n SRR11539115 -t ./SRR11539115.Tn5.bed --outdir /mnt/d/ATAC/macs2_peaks2/
+# ARGUMENTS LIST:
+# name = SRR11539115
+# format = AUTO
+# ChIP-seq file = ['./SRR11539115.Tn5.bed']
+# control file = None
+# effective genome size = 1.87e+09
+# band width = 300
+# model fold = [5, 50]
+# qvalue cutoff = 5.00e-02
+# The maximum gap between significant sites is assigned as the read length/tag size.
+# The minimum length of peaks is assigned as the predicted fragment length "d".
+# Larger dataset will be scaled towards smaller dataset.
+# Range for calculating regional lambda is: 10000 bps
+# Broad region calling is off
+# Paired-End mode is off
+
+INFO  @ Thu, 16 Feb 2023 01:49:20: #1 read tag files...
+INFO  @ Thu, 16 Feb 2023 01:49:20: #1 read treatment tags...
+INFO  @ Thu, 16 Feb 2023 01:49:20: Detected format is: BED
+INFO  @ Thu, 16 Feb 2023 01:49:23:  1000000
+INFO  @ Thu, 16 Feb 2023 01:49:25:  2000000
+INFO  @ Thu, 16 Feb 2023 01:49:28:  3000000
+INFO  @ Thu, 16 Feb 2023 01:49:30:  4000000
+INFO  @ Thu, 16 Feb 2023 01:49:32:  5000000
+INFO  @ Thu, 16 Feb 2023 01:49:34:  6000000
+INFO  @ Thu, 16 Feb 2023 01:49:36:  7000000
+INFO  @ Thu, 16 Feb 2023 01:49:39:  8000000
+INFO  @ Thu, 16 Feb 2023 01:49:41:  9000000
+INFO  @ Thu, 16 Feb 2023 01:49:43:  10000000
+INFO  @ Thu, 16 Feb 2023 01:49:45:  11000000
+INFO  @ Thu, 16 Feb 2023 01:49:47:  12000000
+INFO  @ Thu, 16 Feb 2023 01:49:49:  13000000
+INFO  @ Thu, 16 Feb 2023 01:49:51:  14000000
+INFO  @ Thu, 16 Feb 2023 01:49:53:  15000000
+INFO  @ Thu, 16 Feb 2023 01:49:55:  16000000
+INFO  @ Thu, 16 Feb 2023 01:49:57:  17000000
+INFO  @ Thu, 16 Feb 2023 01:50:00:  18000000
+INFO  @ Thu, 16 Feb 2023 01:50:02:  19000000
+INFO  @ Thu, 16 Feb 2023 01:50:04:  20000000
+INFO  @ Thu, 16 Feb 2023 01:50:08:  21000000
+INFO  @ Thu, 16 Feb 2023 01:50:10:  22000000
+INFO  @ Thu, 16 Feb 2023 01:50:12:  23000000
+INFO  @ Thu, 16 Feb 2023 01:50:14:  24000000
+INFO  @ Thu, 16 Feb 2023 01:50:16:  25000000
+INFO  @ Thu, 16 Feb 2023 01:50:18:  26000000
+INFO  @ Thu, 16 Feb 2023 01:50:20:  27000000
+INFO  @ Thu, 16 Feb 2023 01:50:22:  28000000
+INFO  @ Thu, 16 Feb 2023 01:50:24:  29000000
+INFO  @ Thu, 16 Feb 2023 01:50:26:  30000000
+INFO  @ Thu, 16 Feb 2023 01:50:28:  31000000
+INFO  @ Thu, 16 Feb 2023 01:50:30:  32000000
+INFO  @ Thu, 16 Feb 2023 01:50:32:  33000000
+INFO  @ Thu, 16 Feb 2023 01:50:34:  34000000
+INFO  @ Thu, 16 Feb 2023 01:50:36:  35000000
+INFO  @ Thu, 16 Feb 2023 01:50:38:  36000000
+INFO  @ Thu, 16 Feb 2023 01:50:40:  37000000
+INFO  @ Thu, 16 Feb 2023 01:50:42:  38000000
+INFO  @ Thu, 16 Feb 2023 01:50:43: #1 tag size is determined as 91 bps
+INFO  @ Thu, 16 Feb 2023 01:50:43: #1 tag size = 91.0
+INFO  @ Thu, 16 Feb 2023 01:50:43: #1  total tags in treatment: 38112786
+INFO  @ Thu, 16 Feb 2023 01:50:43: #1 user defined the maximum tags...
+INFO  @ Thu, 16 Feb 2023 01:50:43: #1 filter out redundant tags at the same location and the same strand by allowing at most 1 tag(s)
+INFO  @ Thu, 16 Feb 2023 01:50:43: #1  tags after filtering in treatment: 35782323
+INFO  @ Thu, 16 Feb 2023 01:50:43: #1  Redundant rate of treatment: 0.06
+INFO  @ Thu, 16 Feb 2023 01:50:43: #1 finished!
+INFO  @ Thu, 16 Feb 2023 01:50:43: #2 Build Peak Model...
+INFO  @ Thu, 16 Feb 2023 01:50:43: #2 Skipped...
+INFO  @ Thu, 16 Feb 2023 01:50:43: #2 Use 200 as fragment length
+INFO  @ Thu, 16 Feb 2023 01:50:43: #2 Sequencing ends will be shifted towards 5' by 100 bp(s)
+INFO  @ Thu, 16 Feb 2023 01:50:43: #3 Call peaks...
+INFO  @ Thu, 16 Feb 2023 01:50:43: #3 Pre-compute pvalue-qvalue table...
+INFO  @ Thu, 16 Feb 2023 01:51:48: #3 Call peaks for each chromosome...
+INFO  @ Thu, 16 Feb 2023 01:52:26: #4 Write output xls file... /mnt/d/ATAC/macs2_peaks2/SRR11539115_peaks.xls
+INFO  @ Thu, 16 Feb 2023 01:52:27: #4 Write peak in narrowPeak format file... /mnt/d/ATAC/macs2_peaks2/SRR11539115_peaks.narrowPeak
+INFO  @ Thu, 16 Feb 2023 01:52:27: #4 Write summits bed file... /mnt/d/ATAC/macs2_peaks2/SRR11539115_summits.bed
+INFO  @ Thu, 16 Feb 2023 01:52:27: Done!
+SRR11539116 SRR11539116_1_val_1.fq.gz SRR11539116_2_val_2.fq.gz
+INFO  @ Thu, 16 Feb 2023 01:52:27:
+# Command line: callpeak -g mm --nomodel --shift -100 --extsize 200 -n SRR11539116 -t ./SRR11539116.Tn5.bed --outdir /mnt/d/ATAC/macs2_peaks2/
+# ARGUMENTS LIST:
+# name = SRR11539116
+# format = AUTO
+# ChIP-seq file = ['./SRR11539116.Tn5.bed']
+# control file = None
+# effective genome size = 1.87e+09
+# band width = 300
+# model fold = [5, 50]
+# qvalue cutoff = 5.00e-02
+# The maximum gap between significant sites is assigned as the read length/tag size.
+# The minimum length of peaks is assigned as the predicted fragment length "d".
+# Larger dataset will be scaled towards smaller dataset.
+# Range for calculating regional lambda is: 10000 bps
+# Broad region calling is off
+# Paired-End mode is off
+
+INFO  @ Thu, 16 Feb 2023 01:52:27: #1 read tag files...
+INFO  @ Thu, 16 Feb 2023 01:52:27: #1 read treatment tags...
+INFO  @ Thu, 16 Feb 2023 01:52:27: Detected format is: BED
+INFO  @ Thu, 16 Feb 2023 01:52:30:  1000000
+INFO  @ Thu, 16 Feb 2023 01:52:33:  2000000
+INFO  @ Thu, 16 Feb 2023 01:52:36:  3000000
+INFO  @ Thu, 16 Feb 2023 01:52:38:  4000000
+INFO  @ Thu, 16 Feb 2023 01:52:40:  5000000
+INFO  @ Thu, 16 Feb 2023 01:52:42:  6000000
+INFO  @ Thu, 16 Feb 2023 01:52:45:  7000000
+INFO  @ Thu, 16 Feb 2023 01:52:47:  8000000
+INFO  @ Thu, 16 Feb 2023 01:52:49:  9000000
+INFO  @ Thu, 16 Feb 2023 01:52:51:  10000000
+INFO  @ Thu, 16 Feb 2023 01:52:53:  11000000
+INFO  @ Thu, 16 Feb 2023 01:52:55:  12000000
+INFO  @ Thu, 16 Feb 2023 01:52:57:  13000000
+INFO  @ Thu, 16 Feb 2023 01:52:59:  14000000
+INFO  @ Thu, 16 Feb 2023 01:53:01:  15000000
+INFO  @ Thu, 16 Feb 2023 01:53:03:  16000000
+INFO  @ Thu, 16 Feb 2023 01:53:05:  17000000
+INFO  @ Thu, 16 Feb 2023 01:53:07:  18000000
+INFO  @ Thu, 16 Feb 2023 01:53:08:  19000000
+INFO  @ Thu, 16 Feb 2023 01:53:10:  20000000
+INFO  @ Thu, 16 Feb 2023 01:53:12:  21000000
+INFO  @ Thu, 16 Feb 2023 01:53:14:  22000000
+INFO  @ Thu, 16 Feb 2023 01:53:16:  23000000
+INFO  @ Thu, 16 Feb 2023 01:53:18:  24000000
+INFO  @ Thu, 16 Feb 2023 01:53:20:  25000000
+INFO  @ Thu, 16 Feb 2023 01:53:21:  26000000
+INFO  @ Thu, 16 Feb 2023 01:53:23: #1 tag size is determined as 88 bps
+INFO  @ Thu, 16 Feb 2023 01:53:23: #1 tag size = 88.0
+INFO  @ Thu, 16 Feb 2023 01:53:23: #1  total tags in treatment: 26666006
+INFO  @ Thu, 16 Feb 2023 01:53:23: #1 user defined the maximum tags...
+INFO  @ Thu, 16 Feb 2023 01:53:23: #1 filter out redundant tags at the same location and the same strand by allowing at most 1 tag(s)
+INFO  @ Thu, 16 Feb 2023 01:53:23: #1  tags after filtering in treatment: 24909814
+INFO  @ Thu, 16 Feb 2023 01:53:23: #1  Redundant rate of treatment: 0.07
+INFO  @ Thu, 16 Feb 2023 01:53:23: #1 finished!
+INFO  @ Thu, 16 Feb 2023 01:53:23: #2 Build Peak Model...
+INFO  @ Thu, 16 Feb 2023 01:53:23: #2 Skipped...
+INFO  @ Thu, 16 Feb 2023 01:53:23: #2 Use 200 as fragment length
+INFO  @ Thu, 16 Feb 2023 01:53:23: #2 Sequencing ends will be shifted towards 5' by 100 bp(s)
+INFO  @ Thu, 16 Feb 2023 01:53:23: #3 Call peaks...
+INFO  @ Thu, 16 Feb 2023 01:53:23: #3 Pre-compute pvalue-qvalue table...
+INFO  @ Thu, 16 Feb 2023 01:54:05: #3 Call peaks for each chromosome...
+INFO  @ Thu, 16 Feb 2023 01:54:30: #4 Write output xls file... /mnt/d/ATAC/macs2_peaks2/SRR11539116_peaks.xls
+INFO  @ Thu, 16 Feb 2023 01:54:30: #4 Write peak in narrowPeak format file... /mnt/d/ATAC/macs2_peaks2/SRR11539116_peaks.narrowPeak
+INFO  @ Thu, 16 Feb 2023 01:54:30: #4 Write summits bed file... /mnt/d/ATAC/macs2_peaks2/SRR11539116_summits.bed
+INFO  @ Thu, 16 Feb 2023 01:54:30: Done!
