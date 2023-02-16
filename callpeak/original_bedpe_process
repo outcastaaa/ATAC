@@ -4,7 +4,7 @@ do echo $id
   sample=${arr[0]}
 
   macs2 callpeak  -g mm -f BEDPE --nomodel \
-  --shift 100 --extsize 200 -n ${sample} -t ./${sample}.Tn5.bedpe \
+   -n ${sample} -t ./${sample}.Tn5.bedpe \
   --outdir ../peaks/ 
 done
 
