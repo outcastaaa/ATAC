@@ -2118,31 +2118,64 @@ DiffBind主要对峰集(peaksets)进行分析，峰集是一组代表候选蛋�
 
 
 
-4. 代码：  
+4. 步骤：  
+
+```r
+> tamoxifen <- dba(sampleSheet="tamoxifen.csv") %>%
++ dba.blacklist() %>% #可选，因为已经在 call peak 之前去除，该步骤可以省略  
++ dba.count() %>%
++ dba.normalize() %>%
++ dba.contrast() %>%
++ dba.analyze()
+``` 
+
+
 
 ① read in a set of peaksets and associated metadata  
 
-* 输入文件：  
+
+* 原理：DiffBind 所需的输入是数据集中的所有样本以及每个样本的所有峰（不仅仅是高置信度峰），合并函数会查找 `overlap peak` 的基因组区间，如果某区间出现在两个及以上的样本中，定义为`consensus peakset`；具有rep需要单独使用，不可合并（因此在寻找差异peak时，不可使用IDR找到的consensus peak）。  
+
+* [具体参数](https://rdrr.io/bioc/DiffBind/man/dba.html)  
+
+* 输入文件：[参考官网man](https://rdrr.io/bioc/DiffBind/man/dba.html)    
 文件格式：CSV表（，分隔）；表格.xls/xlsx  
-sample sheet是一个列表，需要包括以下几列:"SamplelD"，"Tissue"，"Factor"，"Condition"Treatment"，"Replicate"， "bamReads"，"ControllD"，"bamControl"，"Peaks"和"PeakCaller"   
+sample sheet是一个列表，需要包括以下几列:"SamplelD"，"Tissue"，"Factor"，"Condition"， "Treatment"，"Replicate"， "bamReads"，"ControllD"，"bamControl"，"Peaks"和"PeakCaller"   
 
-![sample](./pictures/sample.png)  
+* 内容格式：  
 
-|  SampleID | Tissue  |  Factor | Condition  | Treatment  | Replicate  | bamReads  | controlID  | bamControl  |  peaks |peakCaller|
-|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| PC1  | Sinus_Node  | accessible_regions  |   | PC  |  1 | D:\atac\blklist\SRR11539111.final.bam  |   |   |D:\atac\macs2_peaks\SRR11539111_summits.bed   | bed  |
-| PC2 | Sinus_Node  |  accessible_regions |   |  PC  | 2 |  D:\atac\blklist\SRR11539112.final.bam |   |   |D:\atac\macs2_peaks\SRR11539112_summits.bed   | bed  |
-| RACM1  | cardiomyocytes  | accessible_regions  |   | RACM  | 1  |  D:\atac\blklist\SRR11539115.final.bam |   |   |D:\atac\macs2_peaks\SRR11539115_summits.bed   | bed  |
-| RACM2  |  cardiomyocytes |  accessible_regions |   |  RACM | 2  | D:\atac\blklist\SRR11539116.final.bam  |   |   |  D:\atac\macs2_peaks\SRR11539116_summits.bed | bed  |
+| header  | detial  |
+|:---:|:---:|
+|  SampleID |  样本ID，给你输入的数据起个名  |
+| Tissue，Factor，Condition，Treatment  |  都为数据的备注，包括组织来源/细胞系，状态，处理等，可不填，但是会影响后面分析的聚类。factor不是很重要；Treatment就是分组，对照或者不同处理，也可以是对照和过表达/KO等 |
+| Replicate  |  第几次重复 |
+| bamReads  |  ChIP-seq得到的bam文件，bam文件的绝对路径|
+| ControlID  | Call peak时使用的input数据的ID，ATAC不需要  |
+|  bamControl |  input对应的bam文件，ATAC不需要 |
+|  Peaks | 峰文件，这里有多种数据格式可作为输入：1. macs2 输出的.narrowPeak等峰文件 2. 包括所有call peak 得到的peak位置信息的.bed 文件，不是Macs2直接得到的bed文件 3. 以上两种格式得到的.gz文件 |
+| PeakCaller  |  用何种方式做的peak calling，默认峰值格式：narrowPeaks 文件 |   
+
+
+
+![sample](./pictures/sample.png) 
+
+
+* 输入：  
+
+| SampleID | Tissue         | Factor              | Condition | Treatment | Replicate | bamReads                                | ControlID | bamControl | Peaks                                               | PeakCaller |
+|:--------:|:--------------:|:-------------------:|:---------:|:---------:|:---------:|:---------------------------------------:|:---------:|:----------:|:---------------------------------------------------:|:----------:|
+| PC1      | Sinus\_Node    | accessible\_regions | PC        | PC        | 1         | D:/ATAC/blklist/SRR11539111\.final\.bam |           |            | D:/ATAC/macs2_peaks/SRR11539111\_peaks\.narrowPeak | narrowPeak |
+| PC2      | Sinus\_Node    | accessible\_regions | PC        | PC        | 2         | D:/ATAC/blklist/SRR11539112\.final\.bam |           |            | D:/ATAC/macs2_peaks/SRR11539112\_peaks\.narrowPeak | narrowPeak |
+| RACM1    | cardiomyocytes | accessible\_regions | RACM      | RACM      | 1         | D:/ATAC/blklist/SRR11539115\.final\.bam |           |            | D:/ATAC/macs2_peaks/SRR11539115\_peaks\.narrowPeak | narrowPeak |
+| RACM2    | cardiomyocytes | accessible\_regions | RACM      | RACM      | 2         | D:/ATAC/blklist/SRR11539116\.final\.bam |           |            | D:/ATAC/macs2_peaks/SRR11539116\_peaks\.narrowPeak | narrowPeak |
+
 
 将上面表格写入文件`/mnt/d/ATAC/R_analysize/sample_sheet.csv`，学会使用[格式转换器](https://tableconvert.com/zh-cn/csv-to-excel)，注意csv文件最后一行加一行空格，否则报错。  
 
 
 
-* NOTE: factor不是很重要；"Treatment"就是分组，对照或者不同处理，也可以是对照和过表达/KO等；"bamReads"是bam文件的绝对路径；"Peaks"是call peak之后得到的peak文件的文件夹。
 
-
-* 注：DiffBind 所需的输入是数据集中的所有样本以及每个样本的所有峰（不仅仅是高置信度峰），合并函数会查找覆盖峰的基因组区间，如果某区间出现在两个及以上的样本中，定义为`consensus peakset`；具有rep需要单独使用，不可合并（因此在寻找差异peak时，不可使用IDR找到的consensus peak）
+* 代码：
 ```r
 # 在 R.studio 中进行操作
 # 下载R包
@@ -2154,23 +2187,110 @@ getwd()
 
 
 # 导入数据
-sample_sheet <- "./sample_sheet.csv"
-samples <- read.csv(sample_sheet)
-dbObj <- dba(sampleSheet=samples)
-```
-② 找到样本间共有peaks，比较相似性
-* 可得到：consensus peakset
-```bash
-> tamoxifen <- dba(sampleSheet="tamoxifen.csv") %>%
-+ dba.blacklist() %>%
-+ dba.count() %>%
-+ dba.normalize() %>%
-+ dba.contrast() %>%
-+ dba.analyze()
-```
-③ create binding affinity matrix    
+> samples <- read.csv("./sample_sheet.csv")
+> names(samples)
+#  [1] "SampleID"   "Tissue"     "Factor"     "Condition"  "Treatment" 
+#  [6] "Replicate"  "bamReads"   "ControlID"  "bamControl" "Peaks"     
+# [11] "PeakCaller"
 
-一旦一个 `consensus peak` 被推导出来，DiffBind可以使用提供的测序read文件来计算每个样本的每个区间有多少reads重叠。默认情况下，为了提供更多标准化的峰值区间，consensus peak中的峰会根据其峰值(最大读重叠点)重新调整中心点和trimmed。计数的最终结果是一个结合亲和矩阵，其中包含每个样本在每个共识结合位点的read count.
+#找到样本间共有peaks，比较相似性
+> dbObj <- dba(sampleSheet = samples)  
+> dbObj
+# 4 Samples, 18428 sites in matrix (26394 total):
+#      ID         Tissue             Factor Condition Treatment Replicate    Intervals
+# 1   PC1     Sinus_Node accessible_regions        PC        PC         1       16974
+# 2   PC2     Sinus_Node accessible_regions        PC        PC         2       16136
+# 3 RACM1 cardiomyocytes accessible_regions      RACM      RACM         1       20384
+# 4 RACM2 cardiomyocytes accessible_regions      RACM      RACM         2       19063   
+``` 
+* 结果解读：    
+
+This shows how many peaks are in each peakset, as well as (in the first line) the total number of unique peaks after merging overlapping ones (`26394`), and the dimensions of the default binding matrix of `4` samples by the `18428` sites that overlap in at least two of the samples.
+
+* heatmap: 生成一个相关热图，利用矩阵的每一行的互相关联cross-correlations来给出样本的初始聚类  
+```r
+> plot(dbObj)
+```
+
+![initial_heatmap](./pictures/initial_heatmap.png)  
+Figure 1: Correlation heatmap, using occupancy (peak caller score) data  
+
+
+② Counting reads and creating a binding affinity matrix    
+
+* 原理：   
+The next step is to calculate a binding matrix with scores based on read counts for every sample (affinity scores), rather than confidence scores for only those peaks called in a specific sample (occupancy scores). 一旦一个 `consensus peak` 被推导出来，DiffBind可以使用提供的测序read文件来计算每个样本的每个区间有多少reads重叠。默认情况下，为了提供更多标准化的峰值区间，consensus peak中的峰会根据其峰值(最大读重叠点)重新调整中心点和trimmed。计数的最终结果是一个结合亲和矩阵，其中包含每个样本在每个共识结合位点的read count.  
+
+
+* [具体参数](https://rdrr.io/bioc/DiffBind/man/dba.count.html)  
+
+* 代码：  
+
+```r
+> db_count <- dba.count(dbObj)  #this step will take you a couple of minutes, be patient.
+# 4 Samples, 18428 sites in matrix:
+#      ID         Tissue             Factor Condition Treatment Replicate    Reads FRiP
+# 1   PC1     Sinus_Node accessible_regions        PC        PC         1 23998501 0.05
+# 2   PC2     Sinus_Node accessible_regions        PC        PC         2 23763576 0.05
+# 3 RACM1 cardiomyocytes accessible_regions      RACM      RACM         1 19056393 0.08
+# 4 RACM2 cardiomyocytes accessible_regions      RACM      RACM         2 13333003 0.10
+
+# 可能报错'package:stats' may not be available when loading，无需担心，
+# 这是 RStudio 本身中的一个错误（在保存环境时有一些内部代码运行使用 stats：：setNames（），这可能会触发此警告）。
+```
+
+* 添加参数：  
+`bUseSummarizeOverlaps`，这个参数会使得运行比较缓慢，但是是一个更标准的计算功能。如果你把它设置为TRUE，所有的read文件必须是bam，并且必须有其自己的索引文件 (.bam.bai) 。另外fragmentSize参数必须是缺省值。
+```r
+> db_count2 <- dba.count(dbObj,bUseSummarizeOverlaps=TRUE)
+> db_count2
+# 4 Samples, 18428 sites in matrix:
+#      ID         Tissue             Factor Condition Treatment
+# 1   PC1     Sinus_Node accessible_regions        PC        PC
+# 2   PC2     Sinus_Node accessible_regions        PC        PC
+# 3 RACM1 cardiomyocytes accessible_regions      RACM      RACM
+# 4 RACM2 cardiomyocytes accessible_regions      RACM      RACM
+#   Replicate    Reads FRiP
+# 1         1 23998501 0.05
+# 2         2 23763576 0.05
+# 3         1 19056393 0.08
+# 4         2 13333003 0.10
+
+# 可能报错'display list redraw incomplete'，加载 dev.off() 即可消除  
+
+> dba.plotPCA(db_count2, attributes=DBA_TREATMENT, label=DBA_ID)
+> plot(db_count2)
+```
+![PCA](./pictures/PCA.png)  
+![plot](./pictures/plot.png)  
+
+
+* 结果解读：
+
+经过 count 后，四个参数聚类更明显了。  
+This shows that all the samples are using the same, `18428` length consensus peakset. Also, two new columns have been added. The first shows `the total number of aligned reads for each sample` (the "Full" library sizes). The second is labeled `FRiP`（和前文的FRiP不同）, which stands for Fraction of Reads in Peaks. This is `the proportion of reads for that sample that overlap a peak in the consensus peakset`, and can be used to indicate which samples show more enrichment overall. 对于每个样本，将Reads列中的值乘以相应的FRiP值将产生与 consensus peak 重叠的reads数。  
+
+
+* 通过 `dba.show` 命令整合：  
+```r
+> info <- dba.show(db_count2)
+> libsizes <- cbind(LibReads=info$Reads, FRiP=info$FRiP, PeakReads=round(info$Reads * info$FRiP))
+> rownames(libsizes) <- info$ID
+> libsizes
+#       LibReads FRiP PeakReads
+# PC1   23998501 0.05   1199925
+# PC2   23763576 0.05   1188179
+# RACM1 19056393 0.08   1524511
+# RACM2 13333003 0.10   1333300
+```
+
+③ Normalizing the data  
+
+The next step is to tell DiffBind how the data are to be normalized.   
+
+* [具体参数](https://rdrr.io/bioc/DiffBind/man/dba.normalize.html)  
+
+* 代码：  
 
 ④ Differential binding affinity analysis    
 
