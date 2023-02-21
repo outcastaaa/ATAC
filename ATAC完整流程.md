@@ -2286,11 +2286,48 @@ This shows that all the samples are using the same, `18428` length consensus pea
 
 ③ Normalizing the data  
 
-The next step is to tell DiffBind how the data are to be normalized.   
+The next step is to tell DiffBind how the data are to be normalized.  实验数据的归一化在ChIP-seq（和ATAC-seq）分析中尤为重要。 ChIP, ATAC, and similar enrichment-based
+sequencing data may not follow the assumptions inherent in popular methods for normalizing RNA-seq data, as well as exhibiting different types of efficiency and other biases.   
 
-* [具体参数](https://rdrr.io/bioc/DiffBind/man/dba.normalize.html)  
+
+* 默认归一化方法：`DBA_LIBSIZE_FULL`, the default normalization in DiffBind uses library size normalization based on full library sizes.  
+
+
+*  `background=TRUE`，特别注意，ATAC-seq要进行背景归一化。核心的背景归一化技术是将基因组划分为大的bin，并计数重叠的reads。由于ChIP-seq（和ATAC-seq）中预期的富集预计发生在相对狭窄的间隔（大约在100-600bp之间），预计在更大的间隔（10000bp或更大）上不应该存在系统差异。所看到的任何差异都应该是技术上的，而不是生物学上的，所以基于这些差异进行标准化更安全。计算背景 reads 需要访问完整的测序数据（bam文件）。  
+
+* `offsets=TRUE`, compute normalization factors for each read count in
+the consensus count matrix (that is, for each consensus peak for each sample).这种归一化方法被确定为有利于显示出趋势偏倚的ATAC-seq数据。  
+
+* 上述三种都是可行的归一化方法，关键是选用什么作为归一化数据集Reference.Reads（reads in peaks or on all the reads in the libraries），比起选用 Normalization.Method（lib,RLE,TMM,loess）更重要；analysis methods (DESeq2 and edgeR )可以都尝试。对于此没有单一的答案，建立正确的规范化方法可能是差异分析中最具挑战性的方面之一。
+
+* In the absence of spike-ins or a parallel factors, the "safest" method is probably to set `background=TRUE` and `normalize=DBA_NORM_NATIVE`, resulting in the use of background reads
+and the native normalization method (TMM for edgeR , and RLE for DESeq2 ).  
+
+
+* 一定要看[具体参数](https://rdrr.io/bioc/DiffBind/man/dba.normalize.html) ，选择合适的代码 
+```r
+dba.normalize(DBA, method = DBA$config$AnalysisMethod,
+              normalize = DBA_NORM_DEFAULT, library = DBA_LIBSIZE_DEFAULT, 
+              background = FALSE, spikein = FALSE, offsets = FALSE,
+              libFun=mean, bRetrieve=FALSE, ...)
+method = DBA_ALL_METHODS #normalize for both both and edgeRDESeq2，都可以尝试一下
+normalize = DBA_NORM_DEFAULT #--> normalize=DBA_NORM_LIB
+background=TRUE #一定要加，和 library = DBA_LIBSIZE_BACKGROUND一样；默认bin大小 15000bp
+offsets=TRUE
+```
 
 * 代码：  
+```r
+BiocManager::install("csaw", force = TRUE)
+library(csaw)
+
+> db_normed <- dba.normalize(db_count2, method = DBA_ALL_METHODS, normalize = DBA_NORM_DEFAULT, background=TRUE, offsets=TRUE )
+> $db_normed.method
+> $db_normed.factors
+> $lib.method
+> $lib.sizes
+> $filter.value
+```
 
 ④ Differential binding affinity analysis    
 
