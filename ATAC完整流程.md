@@ -2267,7 +2267,8 @@ The next step is to calculate a binding matrix with scores based on read counts 
 
 * 结果解读：
 
-经过 count 后，四个参数聚类更明显了。  
+经过 count 后，四个参数聚类更明显了。 因为RACM两样本重复性不好，导致RACM1甚至倾向于PC。  
+
 This shows that all the samples are using the same, `18428` length consensus peakset. Also, two new columns have been added. The first shows `the total number of aligned reads for each sample` (the "Full" library sizes). The second is labeled `FRiP`（和前文的FRiP不同）, which stands for Fraction of Reads in Peaks. This is `the proportion of reads for that sample that overlap a peak in the consensus peakset`, and can be used to indicate which samples show more enrichment overall. 对于每个样本，将Reads列中的值乘以相应的FRiP值将产生与 consensus peak 重叠的reads数。  
 
 
@@ -2283,6 +2284,9 @@ This shows that all the samples are using the same, `18428` length consensus pea
 # RACM1 19056393 0.08   1524511
 # RACM2 13333003 0.10   1333300
 ```
+## 差异结合亲和分析:   
+DiffBind的核心功能是差异结合亲和分析，它可以识别样本间显著的差异结合位点。这一步骤包括将实验数据标准化，建立模型设计和对比(或contrasts)。接下来执行底层的核心分析，默认情况下使用DESeq2。这将为每个候选结合位点分配一个p值和FDR，表明它们的差异结合置信度confidence。  
+
 
 ③ Normalizing the data  
 
@@ -2305,6 +2309,7 @@ and the native normalization method (TMM for edgeR , and RLE for DESeq2 ).
 
 
 * 一定要看[具体参数](https://rdrr.io/bioc/DiffBind/man/dba.normalize.html) ，选择合适的代码 
+
 ```r
 dba.normalize(DBA, method = DBA$config$AnalysisMethod,
               normalize = DBA_NORM_DEFAULT, library = DBA_LIBSIZE_DEFAULT, 
@@ -2321,22 +2326,157 @@ offsets=TRUE
 BiocManager::install("csaw", force = TRUE)
 library(csaw)
 
-> db_normed <- dba.normalize(db_count2, method = DBA_ALL_METHODS, normalize = DBA_NORM_DEFAULT, background=TRUE, offsets=TRUE )
-> $db_normed.method
-> $db_normed.factors
+> db_normed <- dba.normalize(db_count2, method = DBA_ALL_METHODS, background=TRUE,normalize = DBA_LIBSIZE_DEFAULT)
+# offsets=TRUE
+
+# 或者直接在R.studio选择
+# 以DESeq2举例,edgeR同理
+> db_normed[["norm"]][["DESeq2"]][["norm.method"]]
+# [1] "lib"
+
+> $norm.factors
+# [1] 1.2261660 1.1886879 0.9244684 0.6606777
 > $lib.method
+# [1] "background"
 > $lib.sizes
-> $filter.value
+# [1] 20757536 20123077 15650154 11184491
 ```
 
-④ Differential binding affinity analysis    
+④ Differential binding affinity analysis     
 
- 差异结合亲和分析: DiffBind的核心功能是差异结合亲和分析，它可以识别样本间显著的差异结合位点。这一步骤包括将实验数据标准化，建立模型设计和对比(或contrasts)。接下来执行底层的核心分析，默认情况下使用DESeq2。这将为每个候选结合位点分配一个p值和FDR，表明它们的差异结合置信度confidence。 
+在运行差异分析之前，我们需要告诉 DiffBind 如何对数据进行建模，包括我们感兴趣的是哪些比较，随后进行差异分析。  
+
+
+* [contrast具体参数](https://rdrr.io/bioc/DiffBind/man/dba.contrast.html)    
+```r
+dba.contrast(DBA, design=missing(group1), contrast,
+             group1, group2=!group1, name1, name2,
+             minMembers=3, block, bNot=FALSE, bComplex=FALSE,
+             categories=c(DBA_TISSUE,DBA_FACTOR,DBA_CONDITION,DBA_TREATMENT),
+             bGetCoefficients=FALSE, reorderMeta)
+```  
+
+* 代码：  
+```r
+# Establishing a contrast
+> db_contrast <- dba.contrast(db_normed, categories=DBA_TREATMENT, minMembers = 2)
+> db_contrast
+# 4 Samples, 18428 sites in matrix:
+#      ID         Tissue             Factor Condition Treatment Replicate
+# 1   PC1     Sinus_Node accessible_regions        PC        PC         1
+# 2   PC2     Sinus_Node accessible_regions        PC        PC         2
+# 3 RACM1 cardiomyocytes accessible_regions      RACM      RACM         1
+# 4 RACM2 cardiomyocytes accessible_regions      RACM      RACM         2
+#      Reads FRiP
+# 1 23998501 0.05
+# 2 23763576 0.05
+# 3 19056393 0.08
+# 4 13333003 0.10
+
+# Design: [~Treatment] | 1 Contrast:
+#      Factor Group Samples Group2 Samples2
+# 1 Treatment  RACM       2     PC        2
+```
+* 结果解读：
+The `TREATMENT` metadata factor has two values, `RACM` and `PC`, that have at least `2 replicates` each.  本流程只针对treatment进行差异分析，如果需要进行`Multi-factor designs`，请参考[man5](https://rdrr.io/bioc/DiffBind/man/dba.html)。  
+
+
+
+* [analyze具体参数](https://rdrr.io/bioc/DiffBind/man/dba.analyze.html)  
+```r
+dba.analyze(DBA, method=DBA$config$AnalysisMethod, design,
+            bBlacklist=DBA$config$doBlacklist,
+            bGreylist=DBA$config$doGreylist,
+            bRetrieveAnalysis=FALSE, bReduceObjects=TRUE, 
+            bParallel=DBA$config$RunParallel)
+```
+
+* 代码：  
+```r
+> db_analz <- dba.analyze(db_contrast, method=DBA_ALL_METHODS) 
+
+# summary of results
+> dba.show(db_analz, bContrasts=T) #处理两两组合
+#      Factor Group Samples Group2 Samples2 DB.edgeR DB.DESeq2
+# 1 Treatment  RACM       2     PC        2    12260      8265
+
+
+# overlapping peaks identified by the two different tools (DESeq2 and edgeR)
+> plot(db_analz, contrast = 1) #这里的1就是上面的colname对应的数字
+> dba.plotMA(db_analz, contrast = 1,method=DBA_DESEQ2) 
+> dba.plotMA(db_analz, contrast = 1,method=DBA_EDGER) 
+> dba.plotVenn(db_analz,contrast=1,method=DBA_ALL_METHODS)
+```
+* 结果解读：  
+
+`db_analz`显示，使用`FDR <= 0.05`的默认阈值，edgeR方法18428个位点中有`12260`个被确定为显著差异（DB），DESeq2方法18428个位点中有`8265`个被确定为显著差异（DB）。  
+
+* 未归一化
+```r
+> db_unnormed <- dba.contrast(db_count2, categories=DBA_TREATMENT, minMembers = 2)
+> db_unnormed <- dba.analyze(db_unnormed, method=DBA_ALL_METHODS)
+> dba.show(db_unnormed, bContrasts=T)
+#      Factor Group Samples Group2 Samples2 DB.edgeR DB.DESeq2
+# 1 Treatment  RACM       2     PC        2    11263      7064
+
+> dba.plotMA(db_unnormed, contrast = 1,method=DBA_DESEQ2) 
+> dba.plotMA(db_unnormed, contrast = 1,method=DBA_EDGER) 
+> dba.plotVenn(db_unnormed,contrast=1,method=DBA_ALL_METHODS)
+```
+
   
 
 ⑤ Plotting and reporting  
 
 一旦运行了一个或多个对比，DiffBind就提供了许多用于报告和绘制结果的功能。`MA图`和`火山图`给出了分析结果的概述，而相关`热图`和`PCA图`显示了这些组如何基于差异结合位点聚类。`箱线图`显示了差异结合位点内reads的分布，对应于两个样本组之间是否获得或失去的亲和力。`报告`能够提取差异结合位点用于进一步处理，如注释、motif和pathway分析。  
+```r
+# 火山图
+> dba.plotVolcano(db_analz, method=DBA_DESEQ2, contrast = 1)
+> dba.plotVolcano(db_analz, DBA_EDGER, contrast = 1)
+# 热图
+> hmap <- colorRampPalette(c("red", "black", "green"))(n = 13)
+> readscores <- dba.plotHeatmap(db_analz, contrast=1, method=DBA_DESEQ2,correlations=FALSE, scale="row", colScheme = hmap)
+```
+⑥ results
+* 代码：  
+
+```r
+# 提取结果，因为DESeq2更保守选择该办法
+> comp1.deseq <- dba.report(db_analz, method=DBA_DESEQ2, contrast = 1, th=1)
+
+> result <- as.data.frame(comp1.deseq)
+> write.table(result, file="D:/atac/r_analysize/all_DESeq2.txt", sep="\t", quote=F, col.names = NA)
+
+# Create bed files for each keeping only significant peaks (p < 0.05)
+result <- as.data.frame(comp1.deseq)
+deseq.bed <- result[ which(result$FDR < 0.05), c("seqnames", "start", "end", "strand", "Fold")]
+write.table(deseq.bed, file="D:/atac/r_analysize/diff_DESeq2.bed", sep="\t", quote=F, row.names=F, col.names=F)
+```
+* 结果解读：  
+```r
+> comp1.deseq
+GRanges object with 18017 ranges and 6 metadata columns:
+        seqnames              ranges strand |      Conc Conc_RACM   Conc_PC         Fold     p-value         FDR
+           <Rle>           <IRanges>  <Rle> | <numeric> <numeric> <numeric>    <numeric>   <numeric>   <numeric>
+   5090    chr14   54967608-54968008      * |   8.19810   8.98233   6.35035      2.38311 2.31414e-36 4.16939e-32
+  12045     chr4 148000251-148000651      * |   7.22101   8.07401   4.85321      2.63988 2.79559e-26 2.51841e-22
+  12046     chr4 148003384-148003784      * |   6.00546   6.89949   3.18581      2.59366 3.53774e-18 2.12465e-14
+  12041     chr4 147963688-147964088      * |   6.13833   7.00038   3.68333      2.41233 7.31248e-17 3.29372e-13
+  17000     chr9   58807686-58808086      * |   6.94419   5.33024   7.68688     -1.93608 1.90716e-15 6.87226e-12
+    ...      ...                 ...    ... .       ...       ...       ...          ...         ...         ...
+   8036    chr18   73470905-73471305      * |   4.10462   4.09486   4.11432 -7.00563e-04    0.998274    0.998495
+    318     chr1   73363673-73364073      * |   5.37576   5.37968   5.37182 -4.87191e-04    0.998652    0.998819
+  12242     chr5   12507515-12507915      * |   5.18559   5.18333   5.18784 -2.80057e-04    0.999242    0.999353
+   8506    chr19   37020817-37021217      * |   5.92300   5.93049   5.91547  1.66610e-04    0.999506    0.999561
+     78     chr1   34121123-34121523      * |   5.43745   5.44557   5.42928  6.94101e-05    0.999808    0.999808
+  -------
+  seqinfo: 25 sequences from an unspecified genome; no seqlengths
+```  
+结果文件包含所有位点的基因组坐标，以及差异富集的统计数据包括fold change、p值和FDR。其中Conc的表示read的平均浓度，即对peak 的read counts进行log2标准化。  
+
+metadata列显示了所有样本的平均read浓度(默认计算使用log2标准化read计数)和RACM组和PC组中每个样本的平均read浓度。Fold列显示了DESeq2分析计算的两组之间的log Foldchanges(LFCs)。对于ATAC-seq数据来说，正数表示RACM组的DNA的可接近性增加，负数表示PC组的DNA的可接近性增加。最后两列给出了识别这些位点为差异位点的置信度，是原始p值和经过多次测试修正的FDR(同样由DESeg2分析计算)。   
+
+
 
 
 
