@@ -2409,7 +2409,14 @@ dba.analyze(DBA, method=DBA$config$AnalysisMethod, design,
 ```
 * 结果解读：  
 
-`db_analz`显示，使用`FDR <= 0.05`的默认阈值，edgeR方法18428个位点中有`12260`个被确定为显著差异（DB），DESeq2方法18428个位点中有`8265`个被确定为显著差异（DB）。  
+`db_analz`显示，使用`FDR <= 0.05`的默认阈值，edgeR方法18428个位点中有`12260`个被确定为显著差异（DB），DESeq2方法18428个位点中有`8265`个被确定为显著差异（DB）。   
+
+
+![plotMA](./pictures/db_analz_DESEQ2.png)   
+
+![plotVenn](./pictures/edgeR_DESEQ2_venn.png)  
+
+
 
 * 未归一化
 ```r
@@ -2436,7 +2443,12 @@ dba.analyze(DBA, method=DBA$config$AnalysisMethod, design,
 # 热图
 > hmap <- colorRampPalette(c("red", "black", "green"))(n = 13)
 > readscores <- dba.plotHeatmap(db_analz, contrast=1, method=DBA_DESEQ2,correlations=FALSE, scale="row", colScheme = hmap)
-```
+```  
+
+![volcano](./pictures/db_analz_DESEQ2_volcano.png)  
+
+![heatmap](./pictures/heatmap_DESEQ2.png)  
+
 ⑥ results
 * 代码：  
 
@@ -2449,7 +2461,7 @@ dba.analyze(DBA, method=DBA$config$AnalysisMethod, design,
 
 # Create bed files for each keeping only significant peaks (p < 0.05)
 result <- as.data.frame(comp1.deseq)
-deseq.bed <- result[ which(result$FDR < 0.05), c("seqnames", "start", "end", "strand", "Fold")]
+deseq.bed <- result[which(result$FDR < 0.05), c("seqnames", "start", "end", "strand", "Fold")]
 write.table(deseq.bed, file="D:/atac/r_analysize/diff_DESeq2.bed", sep="\t", quote=F, row.names=F, col.names=F)
 ```
 * 结果解读：  
@@ -2472,12 +2484,10 @@ GRanges object with 18017 ranges and 6 metadata columns:
   -------
   seqinfo: 25 sequences from an unspecified genome; no seqlengths
 ```  
-结果文件包含所有位点的基因组坐标，以及差异富集的统计数据包括fold change、p值和FDR。其中Conc的表示read的平均浓度，即对peak 的read counts进行log2标准化。  
-
-metadata列显示了所有样本的平均read浓度(默认计算使用log2标准化read计数)和RACM组和PC组中每个样本的平均read浓度。Fold列显示了DESeq2分析计算的两组之间的log Foldchanges(LFCs)。对于ATAC-seq数据来说，正数表示RACM组的DNA的可接近性增加，负数表示PC组的DNA的可接近性增加。最后两列给出了识别这些位点为差异位点的置信度，是原始p值和经过多次测试修正的FDR(同样由DESeg2分析计算)。   
+结果文件包含所有位点的基因组坐标，以及差异富集的统计数据包括fold change、p值和FDR。其中Conc的表示read的平均浓度，即对peak 的read counts进行log2标准化。metadata列显示了所有样本的平均read浓度(默认计算使用log2标准化read计数)，和RACM组和PC组中每个样本的平均read浓度。Fold列显示了DESeq2分析计算的两组之间的log Foldchanges(LFCs)。  
 
 
-
+对于ATAC-seq数据来说，正数表示RACM组的DNA的可接近性增加，负数表示PC组的DNA的可接近性增加。最后两列给出了识别这些位点为差异位点的置信度，是原始p值和经过多次测试修正的FDR(同样由DESeg2分析计算)。   
 
 
 
@@ -2487,9 +2497,31 @@ metadata列显示了所有样本的平均read浓度(默认计算使用log2标准
 
 
 
-# peak annotation
 
-获得 Peak 后，Peak 的注释可将染色质的可及性与基因调控联系起来。通常，Peak 由最接近的基因或调控元件进行注释。ChIPseeker和 ChIPpeakAnno被广泛用于为最接近或重叠的基因、外显子、内含子、启动子、5'UTR、3'UTR 和其他基因组特征分配 Peak。ChIPseeker 和 ChIPpeakAnno 还具有丰富的可视化功能，可用于解释注释结果，例如带有注释的基因组特征的饼图。通常，来自 ATAC-seq 的 Peak 将代表不同的顺式调节元件的混合物，包括增强子和启动子 。在获得基因组特征列表之后，还可以使用 GO,KEGG和 Reactome等数据库进行功能富集分析。通常，Peak 注释会产生生物学和功能上有意义的结果，以供进一步研究。
+
+
+# 13. peak annotation
+
+1. 目的： 
+
+ 获得 Peak 后，Peak 的注释可将染色质的可及性与基因调控联系起来。通常，Peak 由最接近的基因或调控元件进行注释。通常，来自 ATAC-seq 的 Peak 将代表不同的顺式调节元件的混合物，包括增强子和启动子 。在获得基因组特征列表之后，还可以使用 GO,KEGG和 Reactome等数据库进行功能富集分析。通常，Peak 注释会产生生物学和功能上有意义的结果，以供进一步研究。
+
+2. 使用软件:   
+
+ `ChIPseeker`和 `ChIPpeakAnno`被广泛用于为最接近或重叠的基因、外显子、内含子、启动子、5'UTR、3'UTR 和其他基因组特征分配 Peak。ChIPseeker 和 ChIPpeakAnno 还具有丰富的可视化功能，可用于解释注释结果，例如带有注释的基因组特征的饼图。  
+
+
+3. 代码： 
+```r
+# Load libraries
+BiocManager::install("ChIPseeker")
+library(ChIPseeker)
+library(TxDb.Hsapiens.UCSC.hg19.knownGene)
+library(clusterProfiler)
+library(annotables)
+library(org.Hs.eg.db)
+```
+
 
 # Motifs 
 尽管 Peak 注释提供了功能解释，但它不能直接解释潜在的机制。开放的染色质可以通过影响 转录因子TF而影响转录，而 TF 通过识别并结合到 DNA 上的特定序列来促进转录。该序列称为 motif，结合位置称为 TF 结合位点（TFBS）。  
