@@ -365,6 +365,21 @@ pip install matplotlib #(3.6.2)
 pip install deeptools
 deeptools -h
 ```
+## 2.16 Homer
+* 下载
+```bash
+pip install homer
+# 或者
+conda install -c bioconda homer
+
+# 或者自己配置
+# perl /mnt/d/atac/motif/myhomer/configureHomer.pl -install
+# vi ~/.bashrc
+# export PATH=/mnt/d/atac/motif/myhomer/bin:$PATH
+# source ~/.bashrc
+```
+
+
 
 # 3. Data
 ## 3.1 sequence
@@ -2465,7 +2480,7 @@ dba.analyze(DBA, method=DBA$config$AnalysisMethod, design,
 # Create bed files for each keeping only significant peaks (p < 0.05)
 result <- as.data.frame(comp1.deseq)
 deseq.bed <- result[which(result$FDR < 0.05), c("seqnames", "start", "end", "strand", "Fold")]
-write.table(deseq.bed, file="D:/atac/r_analysize/diff_DESeq2.bed", sep="\t", quote=F, row.names=F, col.names=F)
+write.table(deseq.bed, file="D:/atac/r_analysize/diff_DESeq2.bed", sep="\t", quote=F, row.names=T, col.names=F)
 ```
 * 结果解读：  
 ```r
@@ -2665,18 +2680,81 @@ ekegg <- enrichKEGG(gene =
         pAdjustMethod = "BH")
 barplot(ekegg, showCategory = 20, title = "KEGG Pathway Enrichment Analysis")
 ```
-![很好的做GO分析的网站：GREAT](http://bejerano.stanford.edu/great/public/html/index.php)
+[很好的做GO分析的网站：GREAT](http://bejerano.stanford.edu/great/public/html/index.php)
 
-# Motifs 
-尽管 Peak 注释提供了功能解释，但它不能直接解释潜在的机制。开放的染色质可以通过影响`转录因子TF`而影响转录，而 TF 通过识别并结合到 DNA 上的特定序列来促进转录。该序列称为 motif，结合位置称为 TF 结合位点（TFBS）。 有两种类型的基于 motif 或基于 TF 的分析方法：基于序列的 motif 频率或活动预测以及针对 TF 占用的足迹。  
+# Motifs   
+1. motif 定义：  
+
+Motif是一段典型的序列或者一个结构。一般来说，我们称为基序。一般情况下是指构成任何一种特征序列的基本结构。通俗来讲，即是有特征的短序列，一般认为它是拥有生物学功能的保守序列，可能包含特异性的结合位点，或者是涉及某一个特定生物学过程的有共性的序列区段。比如蛋白质的序列特异性结合位点，如核酸酶和转录因子。   
+
+2. 目的：  
+
+尽管 Peak 注释提供了功能解释，但它不能直接解释潜在的机制。开放的染色质可以通过影响`转录因子TF`而影响转录，而 TF 通过识别并结合到 DNA 上的特定序列来促进转录。该序列称为 motif，结合位置称为 TF 结合位点（TFBS）。 
+
+3. 使用软件：  
+
+有两种类型的基于 motif 或基于 TF 的分析方法：基于序列的 motif 频率或活动预测以及针对 TF 占用的足迹。    
+
+`MEME suite`，其中包括`FIMO`用于搜索单个 motif，`MAST` 用于汇总来自多个 motif 的搜索结果，`MCAST` 用于推断由多个 motif 形成的调节模块。这些工具基于统计匹配生成推定的 TFBS 列表。由于 `MEME suite` 和 `PWMScan` 具有 Web 应用程序界面，因此更易于访问。`MEME-CentriMo` 是一个广泛使用的 web 应用程序，它可以生成可视化报告，而 `chromVAR` 可以作为 scATAC-seq 的替代方案。
+
+本流程使用 `HOMER` 预测motif。我们使用 Homer 子程序 findMotifsGenome.pl 进行motif分析， findMotifsGenome.pl 命令用于在基因组区域中寻找富集Motifs。HOMER 适用于在大规模数据中寻找 DNA 或 RNA 序列的 motif。    
+
+
+4. 注意：  
+
+到目前为止所提到的所有工具都间接地从 Peak 区域内发现的 motif 来预测假定的 TFBSs。这种 TFBSs 可能包含大量的误报，并且可能是不完整的和混淆的。这是因为并不是所有的 TFs 都有相同的 motif，来自同一家族的 TFs 可以共享非常相似的 motif。此外，预测的富集或活性变化可能具有微不足道的生物学意义，这妨碍了基于序列的 motif 分析结果的解释。  
+
+5. 代码：   
+
+
+* Homer运行报错
+```bash
+mkdir -p  /mnt/d/ATAC/motif
+find -name homer
+cd ~/miniconda3/share/homer #找到homer储存的目录，找到的很多都是文件，注意区分  
+cp ~/miniconda3/pkgs/homer-4.11-pl5321h9f5acd7_7/bin/findMotifsGenome.pl ~/miniconda3/share/homer/
+
+#下载参考基因组
+cd ~/miniconda3/share/homer 
+perl configureHomer.pl -install mm10 #储存在~/miniconda3/share/homer/data/genomes/mm10
+
+# 准备输入文件
+cd /mnt/d/ATAC/R_analysize
+awk '{print $1"\t"$2"\t"$3"\t"$4"\t."}' diff_DESeq2.bed > ../motif/homer_peaks.tmp
+# 第一列: Unique Peak ID (peak的ID) 手动用Excel改成peak_1-n
+# 第二列: chromosome (染色体)
+# 第三列: starting position (起始位置)
+# 第四列: ending position (结束位置)
+# 第五列: Strand (+/- or 0/1, where 0="+”,1="") (链)
+
+cd ~/miniconda3/share/homer 
+perl findMotifsGenome.pl /mnt/d/ATAC/motif/homer_peaks.tmp ./data/genomes/mm10 /mnt/d/ATAC/motif/ -len 8,10,12
+#报错，换网页运行
+```
+* [DREME网页](https://meme-suite.org/meme/tools/dreme)  
+
+```bash
+# 提取peak位置
+cd /mnt/d/ATAC/R_analysize
+cut -f 1,2,3 diff_DESeq2.bed > diff_DESeq2_only3.bed
+# 下载mm10基因组序列
+cd /mnt/d/ATAC/genome
+aria2c -d ./ -Z  http://ftp.ensembl.org/pub/release-96/fasta/mus_musculus/dna/Mus_musculus.GRCm38.dna.toplevel.fa.gz
+gzip -d Mus_musculus.GRCm38.dna.toplevel.fa.gz
+cat Mus_musculus.GRCm38.dna.toplevel.fa | perl -n -e 'if(m/^>(.+?)(?:\s|$)/){ print ">$1\n";}else{print}' > Mus38.fa
+rm Mus_musculus.GRCm38.dna.toplevel.fa
+
+# 提取peak序列
+cd /mnt/d/ATAC/genome/ 
+  bedtools getfasta -fi Mus38.fa \
+  -bed /mnt/d/ATAC/R_analysize/diff_DESeq2_only3.bed \
+  -fo /mnt/d/ATAC/motif/diff_DESeq2.fa
 
 
 
-`MEME suite`，其中包括`FIMO`用于搜索单个 motif，`MAST` 用于汇总来自多个 motif 的搜索结果，`MCAST` 用于推断由多个 motif 形成的调节模块。这些工具基于统计匹配生成推定的 TFBS 列表。由于 MEME suite 和 PWMScan 具有 Web 应用程序界面，因此更易于访问。
+```
 
-MEME-CentriMo 是一个广泛使用的 web 应用程序，它可以生成可视化报告，而 **chromVAR ** 可以作为 scATAC-seq 的替代方案。
 
-到目前为止所提到的所有工具都间接地从 Peak 区域内发现的 motif 来预测假定的 TFBSs。这种 TFBSs 可能包含大量的误报，并且可能是不完整的和混淆的。这是因为并不是所有的 TFs 都有相同的 motif，来自同一家族的 TFs 可以共享非常相似的 motif。此外，预测的富集或活性变化可能具有微不足道的生物学意义，这妨碍了基于序列的 motif 分析结果的解释
 
 # Footprints
 
