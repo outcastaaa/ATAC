@@ -2160,14 +2160,15 @@ sample sheet是一个列表，需要包括以下几列:"SamplelD"，"Tissue"，"
 ![sample](./pictures/sample.png) 
 
 
-* 输入：  
+* 输入：注意！！！一定把对照组放前面，把实验组放在后面  
+
 
 | SampleID | Tissue         | Factor              | Condition | Treatment | Replicate | bamReads                                | ControlID | bamControl | Peaks                                               | PeakCaller |
 |:--------:|:--------------:|:-------------------:|:---------:|:---------:|:---------:|:---------------------------------------:|:---------:|:----------:|:---------------------------------------------------:|:----------:|
-| PC1      | Sinus\_Node    | accessible\_regions | PC        | PC        | 1         | D:/ATAC/blklist/SRR11539111\.final\.bam |           |            | D:/ATAC/macs2_peaks/SRR11539111\_peaks\.narrowPeak | narrowPeak |
-| PC2      | Sinus\_Node    | accessible\_regions | PC        | PC        | 2         | D:/ATAC/blklist/SRR11539112\.final\.bam |           |            | D:/ATAC/macs2_peaks/SRR11539112\_peaks\.narrowPeak | narrowPeak |
 | RACM1    | cardiomyocytes | accessible\_regions | RACM      | RACM      | 1         | D:/ATAC/blklist/SRR11539115\.final\.bam |           |            | D:/ATAC/macs2_peaks/SRR11539115\_peaks\.narrowPeak | narrowPeak |
 | RACM2    | cardiomyocytes | accessible\_regions | RACM      | RACM      | 2         | D:/ATAC/blklist/SRR11539116\.final\.bam |           |            | D:/ATAC/macs2_peaks/SRR11539116\_peaks\.narrowPeak | narrowPeak |
+| PC1      | Sinus\_Node    | accessible\_regions | PC        | PC        | 1         | D:/ATAC/blklist/SRR11539111\.final\.bam |           |            | D:/ATAC/macs2_peaks/SRR11539111\_peaks\.narrowPeak | narrowPeak |
+| PC2      | Sinus\_Node    | accessible\_regions | PC        | PC        | 2         | D:/ATAC/blklist/SRR11539112\.final\.bam |           |            | D:/ATAC/macs2_peaks/SRR11539112\_peaks\.narrowPeak | narrowPeak |  
 
 
 将上面表格写入文件`/mnt/d/ATAC/R_analysize/sample_sheet.csv`，学会使用[格式转换器](https://tableconvert.com/zh-cn/csv-to-excel)，注意csv文件最后一行加一行空格，否则报错。  
@@ -2197,11 +2198,11 @@ getwd()
 > dbObj <- dba(sampleSheet = samples)  
 > dbObj
 # 4 Samples, 18428 sites in matrix (26394 total):
-#      ID         Tissue             Factor Condition Treatment Replicate    Intervals
-# 1   PC1     Sinus_Node accessible_regions        PC        PC         1       16974
-# 2   PC2     Sinus_Node accessible_regions        PC        PC         2       16136
-# 3 RACM1 cardiomyocytes accessible_regions      RACM      RACM         1       20384
-# 4 RACM2 cardiomyocytes accessible_regions      RACM      RACM         2       19063   
+#      ID         Tissue             Factor Condition    Treatment Replicate Intervals
+# 1 RACM1 cardiomyocytes accessible_regions      RACM         RACM         1     20384
+# 2 RACM2 cardiomyocytes accessible_regions      RACM         RACM         2     19063
+# 3   PC1     Sinus_Node accessible_regions        PC           PC         1     16974
+# 4   PC2     Sinus_Node accessible_regions        PC           PC         2     16136
 ``` 
 * 结果解读：    
 
@@ -2230,10 +2231,10 @@ The next step is to calculate a binding matrix with scores based on read counts 
 > db_count <- dba.count(dbObj)  #this step will take you a couple of minutes, be patient.
 # 4 Samples, 18428 sites in matrix:
 #      ID         Tissue             Factor Condition Treatment Replicate    Reads FRiP
-# 1   PC1     Sinus_Node accessible_regions        PC        PC         1 23998501 0.05
-# 2   PC2     Sinus_Node accessible_regions        PC        PC         2 23763576 0.05
-# 3 RACM1 cardiomyocytes accessible_regions      RACM      RACM         1 19056393 0.08
-# 4 RACM2 cardiomyocytes accessible_regions      RACM      RACM         2 13333003 0.10
+# 1 RACM1 cardiomyocytes accessible_regions      RACM      RACM         1 19056393 0.08
+# 2 RACM2 cardiomyocytes accessible_regions      RACM      RACM         2 13333003 0.10
+# 3   PC1     Sinus_Node accessible_regions        PC        PC         1 23998501 0.05
+# 4   PC2     Sinus_Node accessible_regions        PC        PC         2 23763576 0.05
 
 # 可能报错'package:stats' may not be available when loading，无需担心，
 # 这是 RStudio 本身中的一个错误（在保存环境时有一些内部代码运行使用 stats：：setNames（），这可能会触发此警告）。
@@ -2246,15 +2247,15 @@ The next step is to calculate a binding matrix with scores based on read counts 
 > db_count2
 # 4 Samples, 18428 sites in matrix:
 #      ID         Tissue             Factor Condition Treatment
-# 1   PC1     Sinus_Node accessible_regions        PC        PC
-# 2   PC2     Sinus_Node accessible_regions        PC        PC
-# 3 RACM1 cardiomyocytes accessible_regions      RACM      RACM
-# 4 RACM2 cardiomyocytes accessible_regions      RACM      RACM
+# 1 RACM1 cardiomyocytes accessible_regions      RACM      RACM
+# 2 RACM2 cardiomyocytes accessible_regions      RACM      RACM
+# 3   PC1     Sinus_Node accessible_regions        PC        PC
+# 4   PC2     Sinus_Node accessible_regions        PC        PC
 #   Replicate    Reads FRiP
-# 1         1 23998501 0.05
-# 2         2 23763576 0.05
-# 3         1 19056393 0.08
-# 4         2 13333003 0.10
+# 1         1 19056393 0.08
+# 2         2 13333003 0.10
+# 3         1 23998501 0.05
+# 4         2 23763576 0.05
 
 # 可能报错'display list redraw incomplete'，加载 dev.off() 即可消除  
 
@@ -2279,11 +2280,13 @@ This shows that all the samples are using the same, `18428` length consensus pea
 > rownames(libsizes) <- info$ID
 > libsizes
 #       LibReads FRiP PeakReads
-# PC1   23998501 0.05   1199925
-# PC2   23763576 0.05   1188179
 # RACM1 19056393 0.08   1524511
 # RACM2 13333003 0.10   1333300
+# PC1   23998501 0.05   1199925
+# PC2   23763576 0.05   1188179
 ```
+
+
 ## 差异结合亲和分析:   
 DiffBind的核心功能是差异结合亲和分析，它可以识别样本间显著的差异结合位点。这一步骤包括将实验数据标准化，建立模型设计和对比(或contrasts)。接下来执行底层的核心分析，默认情况下使用DESeq2。这将为每个候选结合位点分配一个p值和FDR，表明它们的差异结合置信度confidence。  
 
@@ -2335,11 +2338,11 @@ library(csaw)
 # [1] "lib"
 
 > $norm.factors
-# [1] 1.2261660 1.1886879 0.9244684 0.6606777
+# [1] 0.9244684 0.6606777 1.2261660 1.1886879
 > $lib.method
 # [1] "background"
 > $lib.sizes
-# [1] 20757536 20123077 15650154 11184491
+# [1] 15650154 11184491 20757536 20123077
 ```
 
 ④ Differential binding affinity analysis     
@@ -2362,20 +2365,20 @@ dba.contrast(DBA, design=missing(group1), contrast,
 > db_contrast <- dba.contrast(db_normed, categories=DBA_TREATMENT, minMembers = 2)
 > db_contrast
 # 4 Samples, 18428 sites in matrix:
-#      ID         Tissue             Factor Condition Treatment Replicate
-# 1   PC1     Sinus_Node accessible_regions        PC        PC         1
-# 2   PC2     Sinus_Node accessible_regions        PC        PC         2
-# 3 RACM1 cardiomyocytes accessible_regions      RACM      RACM         1
-# 4 RACM2 cardiomyocytes accessible_regions      RACM      RACM         2
-#      Reads FRiP
-# 1 23998501 0.05
-# 2 23763576 0.05
-# 3 19056393 0.08
-# 4 13333003 0.10
+#      ID         Tissue             Factor Condition Treatment
+# 1 RACM1 cardiomyocytes accessible_regions      RACM      RACM
+# 2 RACM2 cardiomyocytes accessible_regions      RACM      RACM
+# 3   PC1     Sinus_Node accessible_regions        PC        PC
+# 4   PC2     Sinus_Node accessible_regions        PC        PC
+#   Replicate    Reads FRiP
+# 1         1 19056393 0.08
+# 2         2 13333003 0.10
+# 3         1 23998501 0.05
+# 4         2 23763576 0.05
 
 # Design: [~Treatment] | 1 Contrast:
 #      Factor Group Samples Group2 Samples2
-# 1 Treatment  RACM       2     PC        2
+# 1 Treatment    PC       2   RACM        2
 ```
 * 结果解读：
 The `TREATMENT` metadata factor has two values, `RACM` and `PC`, that have at least `2 replicates` each.  本流程只针对treatment进行差异分析，如果需要进行`Multi-factor designs`，请参考[man5](https://rdrr.io/bioc/DiffBind/man/dba.html)。  
@@ -2398,7 +2401,7 @@ dba.analyze(DBA, method=DBA$config$AnalysisMethod, design,
 # summary of results
 > dba.show(db_analz, bContrasts=T) #处理两两组合
 #      Factor Group Samples Group2 Samples2 DB.edgeR DB.DESeq2
-# 1 Treatment  RACM       2     PC        2    12260      8265
+# 1 Treatment    PC       2   RACM        2    12260      8265
 
 
 # overlapping peaks identified by the two different tools (DESeq2 and edgeR)
@@ -2467,29 +2470,18 @@ write.table(deseq.bed, file="D:/atac/r_analysize/diff_DESeq2.bed", sep="\t", quo
 * 结果解读：  
 ```r
 > comp1.deseq
-GRanges object with 18017 ranges and 6 metadata columns:
-        seqnames              ranges strand |      Conc Conc_RACM   Conc_PC         Fold     p-value         FDR
-           <Rle>           <IRanges>  <Rle> | <numeric> <numeric> <numeric>    <numeric>   <numeric>   <numeric>
-   5090    chr14   54967608-54968008      * |   8.19810   8.98233   6.35035      2.38311 2.31414e-36 4.16939e-32
-  12045     chr4 148000251-148000651      * |   7.22101   8.07401   4.85321      2.63988 2.79559e-26 2.51841e-22
-  12046     chr4 148003384-148003784      * |   6.00546   6.89949   3.18581      2.59366 3.53774e-18 2.12465e-14
-  12041     chr4 147963688-147964088      * |   6.13833   7.00038   3.68333      2.41233 7.31248e-17 3.29372e-13
-  17000     chr9   58807686-58808086      * |   6.94419   5.33024   7.68688     -1.93608 1.90716e-15 6.87226e-12
-    ...      ...                 ...    ... .       ...       ...       ...          ...         ...         ...
-   8036    chr18   73470905-73471305      * |   4.10462   4.09486   4.11432 -7.00563e-04    0.998274    0.998495
-    318     chr1   73363673-73364073      * |   5.37576   5.37968   5.37182 -4.87191e-04    0.998652    0.998819
-  12242     chr5   12507515-12507915      * |   5.18559   5.18333   5.18784 -2.80057e-04    0.999242    0.999353
-   8506    chr19   37020817-37021217      * |   5.92300   5.93049   5.91547  1.66610e-04    0.999506    0.999561
-     78     chr1   34121123-34121523      * |   5.43745   5.44557   5.42928  6.94101e-05    0.999808    0.999808
-  -------
-  seqinfo: 25 sequences from an unspecified genome; no seqlengths
+#  GRanges object with 18017 ranges and 6 metadata columns:
+#         seqnames              ranges strand |      Conc   Conc_PC Conc_RACM
+#            <Rle>           <IRanges>  <Rle> | <numeric> <numeric> <numeric>
+#    5090    chr14   54967608-54968008      * |   8.19810   6.35035   8.98233
+#   -------
+#   seqinfo: 25 sequences from an unspecified genome; no seqlengths
 
 > diff_result
-      seqnames     start       end width strand     Conc Conc_RACM  Conc_PC       Fold      p.value          FDR
-5090     chr14  54967608  54968008   401      * 8.198097  8.982328 6.350350  2.3831149 2.314144e-36 4.169392e-32
-12045     chr4 148000251 148000651   401      * 7.221005  8.074010 4.853210  2.6398753 2.795588e-26 2.518406e-22
-12046     chr4 148003384 148003784   401      * 6.005460  6.899487 3.185806  2.5936647 3.537736e-18 2.124647e-14
-12041     chr4 147963688 147964088   401      * 6.138325  7.000377 3.683330  2.4123256 7.312482e-17 3.293725e-13
+#       seqnames     start       end width strand     Conc Conc_RACM  Conc_PC       Fold      p.value          FDR
+# 5090     chr14  54967608  54968008   401      * 8.198097  8.982328 6.350350  2.3831149 2.314144e-36 4.169392e-32
+# 12045     chr4 148000251 148000651   401      * 7.221005  8.074010 4.853210  2.6398753 2.795588e-26 2.518406e-22
+
 # 写入bed文件后，只包含五行：sequencename, start, end, strand, fold
 ```  
 结果文件包含所有位点的基因组坐标，以及差异富集的统计数据包括fold change、p值和FDR。其中Conc的表示read的平均浓度，即对peak 的read counts进行log2标准化。metadata列显示了所有样本的平均read浓度(默认计算使用log2标准化read计数)，和RACM组和PC组中每个样本的平均read浓度。Fold列显示了DESeq2分析计算的两组之间的log Foldchanges(LFCs)。  
@@ -2551,8 +2543,8 @@ library(clusterProfiler)
 
 # peak 在TSS位点附件的分布
 > txdb <- TxDb.Mmusculus.UCSC.mm10.knownGene
-> promoter <- getPromoters(TxDb=txdb, upstream=1000, downstream=1000)
-> tagMatrix <- getTagMatrix(peak, windows=promoter)
+  promoter <- getPromoters(TxDb=txdb, upstream=1000, downstream=1000)
+  tagMatrix <- getTagMatrix(peak, windows=promoter)
 > tagHeatmap(tagMatrix, xlim=c(-1000, 1000), color="red")
 > plotAvgProf(
   tagMatrix,
@@ -2634,7 +2626,7 @@ chr9    58807687 58808086   400     *       * -1.93607772246243   Distal Interge
 # 0.01% of input gene IDs are fail to map...转化了7261
 
 # 写入文件
-> write.csv(ensembl_id_transform(peakAnno$ENSEMBL), file="cluster_diff_DESeq2peak_ENTREZID.tsv", quote = F)
+> write.csv(ensembl_id_transform(peakAnno$ENSEMBL), file="cluster_diff_DESeq2peak_geneID.tsv", quote = F)
 
 
 # 使用ClusterProfiler包进行转化有一部分部分没有映射到，换biomaRt包试一下
@@ -2643,7 +2635,7 @@ library(biomaRt)
 mart <- useDataset( "mmusculus_gene_ensembl", useMart("ENSEMBL_MART_ENSEMBL"))
 
 biomart_ensembl_id_transform <- getBM(attributes=c("ensembl_gene_id","external_gene_name","entrezgene_id", "description"), filters = 'ensembl_gene_id', values = peakAnno$ENSEMBL, mart = mart) # 转化了7685
-write.csv(biomart_ensembl_id_transform, file="cluster_diff_DESeq2peak_geneID.tsv", quote = F)
+write.csv(biomart_ensembl_id_transform, file="biomart_diff_DESeq2peak_geneID.tsv", quote = F)
 ```
 
 
@@ -2663,24 +2655,22 @@ ego_BP <- enrichGO(
         qvalueCutoff = 0.05, 
         readable = TRUE)
 # bar visualization
-barplot(ego_BP, showCategory=20, font.size = 8, title = paste("The GO BP enrichment analysis", sep = ""))
+barplot(ego_BP, showCategory=40, font.size = 6, title = paste("The GO BP enrichment analysis", sep = ""))
 
 # Multiple samples KEGG analysis
-genes <- as.data.frame(peakAnno$geneId)
-compKEGG <- compareCluster(geneCluster = genes, 
-                         fun = "enrichKEGG",  
-                         organism = "mouse",
-                         pvalueCutoff  = 0.05, 
-                         pAdjustMethod = "BH")
-barplot(compKEGG, showCategory = 20, title = "KEGG Pathway Enrichment Analysis")
+ekegg <- enrichKEGG(gene =
+        biomart_ensembl_id_transform$entrezgene_id,
+        organism = 'mmu',
+        pvalueCutoff = 0.05,
+        pAdjustMethod = "BH")
+barplot(ekegg, showCategory = 20, title = "KEGG Pathway Enrichment Analysis")
 ```
-
-
+![很好的做GO分析的网站：GREAT](http://bejerano.stanford.edu/great/public/html/index.php)
 
 # Motifs 
-尽管 Peak 注释提供了功能解释，但它不能直接解释潜在的机制。开放的染色质可以通过影响 转录因子TF而影响转录，而 TF 通过识别并结合到 DNA 上的特定序列来促进转录。该序列称为 motif，结合位置称为 TF 结合位点（TFBS）。  
+尽管 Peak 注释提供了功能解释，但它不能直接解释潜在的机制。开放的染色质可以通过影响`转录因子TF`而影响转录，而 TF 通过识别并结合到 DNA 上的特定序列来促进转录。该序列称为 motif，结合位置称为 TF 结合位点（TFBS）。 有两种类型的基于 motif 或基于 TF 的分析方法：基于序列的 motif 频率或活动预测以及针对 TF 占用的足迹。  
 
-有两种类型的基于 motif 或基于 TF 的分析方法：基于序列的 motif 频率或活动预测以及针对 TF 占用的足迹。
+
 
 `MEME suite`，其中包括`FIMO`用于搜索单个 motif，`MAST` 用于汇总来自多个 motif 的搜索结果，`MCAST` 用于推断由多个 motif 形成的调节模块。这些工具基于统计匹配生成推定的 TFBS 列表。由于 MEME suite 和 PWMScan 具有 Web 应用程序界面，因此更易于访问。
 
