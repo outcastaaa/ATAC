@@ -381,7 +381,18 @@ source ~/.bashrc
 # 或者
 conda install -c bioconda homer
 ```
+## 2.17 RGT_HINT-ATAC
+* 下载
+```bash
+pip install --user RGT
+rgt-hint
+```
+* 报错[解决办法](https://blog.csdn.net/weixin_45454859/article/details/128546147)  
 
+```bash
+# ImportError: cannot import name 'int' from 'numpy' (/home/linuxbrew/.linuxbrew/opt/python@3.9/lib/python3.9/site-packages/numpy/__init__.py)
+pip install numpy==1.20
+```
 
 
 # 3. Data
@@ -1292,7 +1303,7 @@ $ wc -l SRR11539111.Tn5.bedpe
 # 8. call_peaks 
 1. 目的： 下一步需要在统计学上判断真实的peak，因为Tn5在染色体上结合是个概率事件，如何判断这个位置的reads足够为一个peak，这就需要用到统计检测。ATAC-seq 数据分析的第二个主要步骤是识别开放区域（也称为 Peak），后续高级分析以此为基础。  
 
-2. 软件：目前，`MACS2` 是 ENCODE ATAC-seq 流程的默认 Peak caller 程序。  
+2. 使用软件：目前，`MACS2` 是 ENCODE ATAC-seq 流程的默认 Peak caller 程序。  
 
 3. !!!重要：关于是否使用[-f BEDPE的讨论](https://github.com/macs3-project/MACS/issues/331)，可根据需要选择合适的callpeak参数。  
 
@@ -1492,7 +1503,7 @@ b: 片段大小在 100bp 和 200bp 左右有明显的富集，表示没有核小
   
 
 
-3. 软件：有很多种方式可以画出该图，且都很简单，本流程采用`Picard`统计，`R`画图.
+3. 使用软件：有很多种方式可以画出该图，且都很简单，本流程采用`Picard`统计，`R`画图.
 4. 代码：注：判断质量的分析步骤不需要Tn5位置转换过的bam，采用处理后的final.bam即可  
 
 ```bash
@@ -1568,7 +1579,7 @@ d <-read.table('../frag_length/SRR11539116.fragment_length_count.txt')
 * 定义：FRiP（Fraction of reads in peaks，Fraction of all mapped reads that fall into the called peak regions）表示的是位于peak区域的reads的比例，FRiP score是一个比值，其分子是位于peak区域的reads总数，分母是比对到参考基因组上的reads总数。
 * 数值大小范围：The fraction of reads in called peak regions (FRiP score) should be >0.3, though values greater than 0.2 are acceptable. 对于不符合FRiP score值的样本，应当结合TSS Enrichment score值等其他指标来进一步衡量其文库质量。 
 
-2. 软件：这些可以通过`bedtools intersect`工具进行评估。[intersect工作原理](https://bedtools.readthedocs.io/en/latest/content/tools/intersect.html)  
+2. 使用软件：这些可以通过`bedtools intersect`工具进行评估。[intersect工作原理](https://bedtools.readthedocs.io/en/latest/content/tools/intersect.html)  
 
 3. 代码：这里为了比较`picard等去重`和`未去重`两种数据分别进行了计算，实际操作时应使用`没有经过PCR去重等filter过程的原始比对文件`来计算    
 
@@ -1854,7 +1865,7 @@ e.g. 在Hcn4和Nppa位点的ATAC-seq信号可视化显示，在Hcn4附近的非�
 ## 11.1 filterbam2Bw    
 
 1. 目的： bw文件是用于方便可视化peak的文件，因为上游处理完的bam文件通常都较大，不方便于快速展示，而将其转变成bw(bigwig)或者wig就会方便的多，而bigWig文件的显示性能又相较wig文件快得多，故bw是更常用的。而相较于bed文件相说，它不只提供了peak的位置，还有peak的高低。 
-2. 软件：`deeptools`  
+2. 使用软件：`deeptools`  
 3. 代码：  
 
 * bam转bw: 因为此处不看细节位置，不看共同peak，所以使用final.bam文件  
@@ -2797,22 +2808,64 @@ Multiplicity：具有一个或多个结合位点的序列中每个序列的平�
 
 # Footprints
 
-解释 TF 调控的另一种方法是使用 footprint 。ATAC-seq 中的 footprint 指的是一个活跃的 TF 与 DNA 结合并阻止 Tn5 在结合位点内裂解的模式。这在开放的染色质区域留下了一个相对的消耗。因此，活性结合 TFs 的足迹可以用来重建特定样本的调控网络。(简单说就是，TF结合在开放染色质上影响了Tn5的结合)。  
+1. 目的：  
+
+解释 TF 调控的另一种方法是使用 footprint 。ATAC-seq footprints可以帮助我们查看转录因子在全基因组上结合的状态。ATAC-seg中的足迹是指活性TF与DNA结合，从而阻止Tn5在结合位点切割。所以客观上在开放的染色质区域留下了一个相对的消耗，形成一个被保护的区域个低coverage区域。在转录因子结合的位置是一个“低谷”的形状。因此，活性结合 TFs 的足迹可以用来重建特定样本的调控网络。(简单说就是，TF结合在开放染色质上影响了Tn5的结合)。   
 
 
-足迹分析工具主要分为两类: De novo 和 motif-centric。
+本流程将每一个样本call peak后的原始数据与bam文件做比对，
 
-## De novo
-De novo 方法根据典型足迹模式 (peak-dip-peak) 的特征，预测所有跨越 Peak 的足迹位置。然后这些假定的足迹位点被用来匹配已知的 motifs 或识别新的 motifs。  
-对于  de novo 方法，重要的是数学上定义什么是 footprint 并从 Tn5 裂解偏差中去除 footprint 模式。 在多种工具中，目前只有 HINT-ATAC 处理 ATAC-seq 特定的偏差。 
+![TF](./pictures/TF%20model.webp)  
 
-## motif-centric
+
+2. 使用软件：足迹分析工具主要分为两类: De novo 和 motif-centric。
+
+①  De novo  
+De novo 方法根据典型足迹模式 (peak-dip-peak) 的特征，预测所有跨越 Peak 的足迹位置。然后这些假定的足迹位点被用来匹配已知的 motifs 或识别新的 motifs。对于  de novo 方法，重要的是数学上定义什么是 footprint 并从 Tn5 裂解偏差中去除 footprint。 在多种工具中，目前只有 HINT-ATAC 处理 ATAC-seq 特定的偏差。 
+
+②  motif-centric  
 Motif-centric 以 motif 为中心的方法侧重于先验的 TFBSs（从motif里面找TFBS），与从头开始的方法相比，考虑到了TF特异性的footprint profiles。
 
-大部分工具都是使用 DNase-seq 数据进行训练的，因此应该使用 ATAC-seq 数据进行再训练，以考虑不同数据的固有偏差。一般来说，由于 TF 和 cell 类型特定的足迹模式具有很大的可变性，因此对它们进行建模仍然很困难。如果对整体 TF 足迹模式在不同条件之间的变化感兴趣，可以使用 BaGFoot[132]。在序列深度归一化和偏差校正后，计算所有 TF  的足迹深度和侧翼可及性。该方法对分析类型 (DNase-seq 或 ATAC-seq)、Peak caller 和偏差校正方法都不错。
+大部分工具都是使用 DNase-seq 数据进行训练的，因此应该使用 ATAC-seq 数据进行再训练，以考虑不同数据的固有偏差。一般来说，由于 TF 和 cell 类型特定的足迹模式具有很大的可变性，因此对它们进行建模仍然很困难。如果对整体 TF 足迹模式在不同条件之间的变化感兴趣，可以使用 BaGFoot。在序列深度归一化和偏差校正后，计算所有 TF  的足迹深度和侧翼可及性。该方法对分析类型 (DNase-seq 或 ATAC-seq)、Peak caller 和偏差校正方法都不错。
 
 
-de novo 方法对于低质量和 novel motifs 仍然具有优势。尽管由于所选择的分析工具、参数设置和评价指标，不同研究对足迹方法的评价并不一致，但作者认为，由于 HINT-ATAC 具有特定于 ATAC-seq 的偏差校正，因此它可能是一个不错的选择。
+de novo 方法对于低质量和 novel motifs 仍然具有优势。尽管由于所选择的分析工具、参数设置和评价指标，不同研究对足迹方法的评价并不一致，由于 `HINT-ATAC `具有特定于 ATAC-seq 的偏差校正，因此它可能是一个不错的选择。  
+
+3. 应用：上文已经找到了不同处理导致的差异 `motif`，该步通过寻找footprint，说明此处有TF结合上去，即此处是 转录因子结合位点（顺式作用因子），可能是 enhenser/silencer等，影响临近基因的表达情况。 上文 motif 反映了顺式作用因子的序列特征（8-12bp）；该步反映了顺式作用因子的位置（几十到一百多bp不等，但是有8-12bp的核心区域）。  
+
+
+4. 代码：
+
+```bash
+# 下载基因组信息
+cd ~/rgtdata
+python setupGenomicData.py --mm10
+
+mkdir -p /mnt/d/ATAC/footprint
+cd /mnt/d/ATAC/blklist
+cat config.raw | while read id;
+do echo $id 
+  arr=($id)
+  sample=${arr[0]}
+
+  rgt-hint footprinting --atac-seq --paired-end --organism=mm10 --output-location=/mnt/d/ATAC/footprint/ --output-prefix=${sample} ${sample}.final.bam ../macs2_peaks/${sample}_peaks.narrowPeak
+done
+
+# 生成bw文件
+cat config.raw | while read id;
+do echo $id 
+  arr=($id)
+  sample=${arr[0]}
+
+  rgt-hint tracks --bc --bigwig --organism=mm10 --output-location=/mnt/d/ATAC/footprint/ --output-prefix=${sample} ${sample}.final.bam ../macs2_peaks/${sample}_peaks.narrowPeak
+done
+```
+5. 结果解读：  
+
+用IGV打开生成的`bed文件(footprint)`和前文`可视化`步骤得到的`bw文件`。bw 文件反映该位置是否是开放区域；bed文件反映该位置是否有TF结合。    
+
+比如查看基因Zbtb46周围的peak情况，在bw文件中里两个处理的在这个基因附近都有peak，但是这个基因在PC里表达，在RACM不表达。bed文件反映了该不同：PC组在该基因区域有footprint，说明位置有TF的结合可能促进Zbtb46基因的表达。  
+
 
 
 
