@@ -516,17 +516,18 @@ NGTCATTACAAGCCCTTCAGATCTAACCCCATGAACCAGAGAAGTGTGAGGAACAGTGATGGGCACTTTACACTGCACAG
 #A<AFJJJJJJJJJJJJ<JJJFFJFJJJJJJJAJJJJJJJJJJJFFJJJFFJJJJJ7JJJFAFFJFJFJJJJJJJFAJJJJJJJJJJJAJ<-F7JFJJJ-
 ```
 格式转换原因：
-```
-1、sra数据
-sra数据是SRA数据库用于储存二代测序数据的原始数据的一种压缩格式，这种数据格式不能直接进行处理，需要转换成fastq才能进行质控以及去adapt等处理——相当于解压缩。
 
-2、fastq文件（简称fq文件）
-高通量测序得到的原始图像数据文件，经过碱基识别（base calling）分析转化为原始测序序列（sequenced reads），称之为raw data或raw reads，结果以fastq（简称fq）文件格式存储。
-链接：https://www.jianshu.com/p/bdfa8f7e5a61    
+1、sra数据  
+sra数据是SRA数据库用于储存二代测序数据的原始数据的一种压缩格式，这种数据格式不能直接进行处理，需要转换成fastq才能进行质控以及去adapt等处理——相当于解压缩。  
 
-3. 为何转格式、将fq文件压缩？
-因为sra是二进制文件，在Linux下如果用less去查看，它会显示这是个二进制文件，你是否确定打开它。一般我们分析测序数据，是用fastq文件打开分析，所以就需要转格式。没压缩的fq文件通常十几个G，文件一多硬盘就爆炸，所以希望能够以压缩好的gz文件存储，通常只有原始文件的1/8左右，只有原始SRA文件的2倍左右。如果利用gzip命令，处理是单线程，压缩起来很慢，因此需要parallel多线程提高速度。
-```
+2、fastq文件（简称fq文件）  
+高通量测序得到的原始图像数据文件，经过碱基识别（base calling）分析转化为原始测序序列（sequenced reads），称之为raw data或raw reads，结果以fastq（简称fq）文件格式存储。  
+链接：https://www.jianshu.com/p/bdfa8f7e5a61      
+
+3、 为何转格式、将fq文件压缩？  
+因为sra是二进制文件，在Linux下如果用less去查看，它会显示这是个二进制文件，你是否确定打开它。一般我们分析测序数据，是用fastq文件打开分析，所以就需要转格式。没压缩的fq文件通常十几个G，文件一多硬盘就爆炸，所以希望能够以压缩好的gz文件存储，通常只有原始文件的1/8左右，只有原始SRA文件的2倍左右。如果利用gzip命令，处理是单线程，压缩起来很慢，因此需要parallel多线程提高速度。   
+
+
 
 ## 3.2 genome
 
@@ -1162,7 +1163,7 @@ done
 
 
 cd /mnt/d/ATAC/bedpe
-# The bedtools command should extract the paired-end alignments as bedpe format, then the awk command should shift the fragments as needed
+# bedtools should extract the paired-end alignments as bedpe format, then awk should shift the fragments as needed
 parallel -j 6 "
   bedtools bamtobed -i {1} -bedpe > {1}.bedpe
 " ::: $( ls *.final.bam.named)
@@ -1773,20 +1774,19 @@ chr16   11143929        11144303        .       1000    .       -1      622.3336
 
 * 图片  
 ![12.idr.png](./pictures/12_pvalue.txt.png)  
-[12.idr.png](https://github.com/outcastaaa/ATAC/blob/main/pictures/12_pvalue.txt.png)  
+ 
 ![56.idr.png](./pictures/56_pvalue.txt.png)    
-[56.idr.png](https://github.com/outcastaaa/ATAC/blob/main/pictures/56_pvalue.txt.png)   
 
 
-```bash
-Upper Left: Replicate 1 peak ranks versus replicate 2 peak ranks - peaks that do not pass the specified idr threshold are colered red.黑色的才是要找的IDR<0.05的可重复（共有的）peak。  
 
-Upper Right: Replicate 1 log10 peak scores versus replicate 2 log10 peak scores - peaks that do not pass the specified idr threshold are colered red.
+Upper Left: Replicate 1 peak ranks versus replicate 2 peak ranks - peaks that do not pass the specified idr threshold are colered red.黑色的才是要找的IDR<0.05的可重复（共有的）peak。    
 
-Bottom Row: Peaks rank versus idr scores are plotted in black. The overlayed boxplots display the distribution of idr values in each 5% quantile. The idr values are thresholded at the optimization precision - 1e-6 bny default.
-```
+Upper Right: Replicate 1 log10 peak scores versus replicate 2 log10 peak scores - peaks that do not pass the specified idr threshold are colered red.  
 
-* 计算conmmon peaks
+Bottom Row: Peaks rank versus idr scores are plotted in black. The overlayed boxplots display the distribution of idr values in each 5% quantile. The idr values are thresholded at the optimization precision - 1e-6 bny default.  
+
+
+* 计算common peaks
 ```bash
 # 单个样本的peak总数
  wc -l *.narrowPeak
@@ -1796,7 +1796,7 @@ Bottom Row: Peaks rank versus idr scores are plotted in black. The overlayed box
   # 19063 SRR11539116_peaks.narrowPeak
   # 72557 total
 
-# 核算conmmon peaks的总数，该数据未更新
+# 核算common peaks的总数，该数据未更新
 wc -l *.txt
   # 13340 12_pvalue.txt
   # 13340 12_signal_value.txt
@@ -2637,7 +2637,8 @@ library(clusterProfiler)
 ```bash
 seqnames  start    end     width   strand   V4      V5            annotation          geneChr   geneStart    geneEnd geneLength    geneStrand   geneId  transcriptId         distanceToTSS   
 ENSEMBL                SYMBOL          GENENAME
-chr9    58807687 58808086   400     *       * -1.93607772246243   Distal Intergenic       9      58823412    58863175   39764           1       330953  ENSMUST00000034889.9    -15326  ENSMUSG00000032338      Hcn4    hyperpolarization-activated, cyclic nucleotide-gated K+ 4
+chr9    58807687 58808086   400     *       * -1.93607772246243   Distal Intergenic       9      58823412    58863175   39764           1       330953  ENSMUST00000034889.9    -15326 
+ ENSMUSG00000032338      Hcn4    hyperpolarization-activated, cyclic nucleotide-gated K+ 4
 ```
 ③ 基因ID转化  
 
@@ -2663,7 +2664,8 @@ BiocManager::install("biomaRt", force = TRUE)
 library(biomaRt)
 mart <- useDataset( "mmusculus_gene_ensembl", useMart("ENSEMBL_MART_ENSEMBL"))
 
-biomart_ensembl_id_transform <- getBM(attributes=c("ensembl_gene_id","external_gene_name","entrezgene_id", "description"), filters = 'ensembl_gene_id', values = peakAnno$ENSEMBL, mart = mart) # 转化了7685
+biomart_ensembl_id_transform <- getBM(attributes=c("ensembl_gene_id","external_gene_name","entrezgene_id", "description"), \
+filters = 'ensembl_gene_id', values = peakAnno$ENSEMBL, mart = mart) # 转化了7685
 write.csv(biomart_ensembl_id_transform, file="biomart_diff_DESeq2peak_geneID.tsv", quote = F)
 ```
 
@@ -2771,7 +2773,9 @@ cd /mnt/d/ATAC/genome/
 ```bash
 cd /mnt/d/ATAC/motif/xrzHOMER
 cat homerMotifs.all.motifs | head -n 5
->GGGGCGGGGC     1-GGGGCGGGGC    6.551488        -1862.690170    0       T:4273.0(51.70%),B:7630.8(21.18%),P:1e-808     Tpos:100.5,Tstd:53.3,Bpos:99.9,Bstd:92.2,StrandBias:-0.1,Multiplicity:1.83
+>GGGGCGGGGC     1-GGGGCGGGGC    6.551488        -1862.690170    0       T:4273.0(51.70%),B:7630.8(21.18%),P:1e-808  \
+   Tpos:100.5,Tstd:53.3,Bpos:99.9,Bstd:92.2,StrandBias:-0.1,\
+   Multiplicity:1.83
 0.295   0.001   0.564   0.140
 0.399   0.001   0.599   0.001
 0.001   0.001   0.997   0.001
@@ -2848,7 +2852,10 @@ do echo $id
   arr=($id)
   sample=${arr[0]}
 
-  rgt-hint footprinting --atac-seq --paired-end --organism=mm10 --output-location=/mnt/d/ATAC/footprint/ --output-prefix=${sample} ${sample}.final.bam ../macs2_peaks/${sample}_peaks.narrowPeak
+  rgt-hint footprinting --atac-seq --paired-end \
+   --organism=mm10 --output-location=/mnt/d/ATAC/footprint/ \
+   --output-prefix=${sample} ${sample}.final.bam \
+    ../macs2_peaks/${sample}_peaks.narrowPeak
 done
 
 # 生成bw文件
@@ -2857,16 +2864,17 @@ do echo $id
   arr=($id)
   sample=${arr[0]}
 
-  rgt-hint tracks --bc --bigwig --organism=mm10 --output-location=/mnt/d/ATAC/footprint/ --output-prefix=${sample} ${sample}.final.bam ../macs2_peaks/${sample}_peaks.narrowPeak
+  rgt-hint tracks --bc --bigWig --organism=mm10 \
+  --output-location=/mnt/d/ATAC/footprint/ \
+  --output-prefix=${sample} ${sample}.final.bam \
+  ../macs2_peaks/${sample}_peaks.narrowPeak
 done
 ```
 5. 结果解读：  
 
 用IGV打开生成的`bed文件(footprint)`和前文`可视化`步骤得到的`bw文件`。bw 文件反映该位置是否是开放区域；bed文件反映该位置是否有TF结合。    
 
-比如查看基因Zbtb46周围的peak情况，在bw文件中里两个处理的在这个基因附近都有peak，但是这个基因在PC里表达，在RACM不表达。bed文件反映了该不同：PC组在该基因区域有footprint，说明位置有TF的结合可能促进Zbtb46基因的表达。  
-
-
+比如查看基因Zbtb46周围的peak情况，在bw文件中里两个处理的在这个基因附近都有peak，但是这个基因在PC里表达，在RACM不表达。bed文件反映了该不同：PC组在该基因区域有footprint，说明位置有TF的结合可能促进Zbtb46基因的表达。
 
 
 # 核小体定位  
