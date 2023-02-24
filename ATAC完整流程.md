@@ -583,7 +583,7 @@ fastqc -t 4 -o /mnt/d/ATAC/fastqc/ *.gz
 cd /mnt/d/ATAC/fastqc/
 multiqc .
 ```
-4. 结果：分析看[该文章](https://github.com/outcastaaa/bioinformatics-learning/blob/main/RNA-seq/Tools/fastqc.md)  
+4. 结果解读：分析看[该文章](https://github.com/outcastaaa/bioinformatics-learning/blob/main/RNA-seq/Tools/fastqc.md)  
 
 可看到，四个样本拆分得到的8个测序数据：   
 
@@ -745,7 +745,7 @@ done
 # better alignment results are frequently achieved with --very-sensitive
 # use -X 2000 to allow larger fragment size (default is 500)
 ```
-4. 结果： [bam文件具体解读](https://luohao-brian.gitbooks.io/gene_sequencing_book/content/di-5-8282-li-jie-bing-cao-zuo-bam-wen-jian.html)   
+4. 结果解读： [bam文件具体解读](https://luohao-brian.gitbooks.io/gene_sequencing_book/content/di-5-8282-li-jie-bing-cao-zuo-bam-wen-jian.html)   
 
 [FLAG转换网站](https://broadinstitute.github.io/picard/explain-flags.html)  
 
@@ -871,7 +871,9 @@ parallel -j 6 "
 #将严格性设置为 SILENT 可以提高处理 BAM 文件时的性能，其中可变长度数据（读取、质量、标签）不需要解码。
 #默认值：严格。 可能的值：{STRICT、LENIENT、SILENT}
 ```
-4. 结果：  
+4. 结果解读：    
+
+
 可以得到的数据： unique mapping reads/rates唯一比对的reads或比例；duplicated read percentages 重复的reads百分比； fragment size distribution 片段大小分布  
 * 结果统计
 ```bash
@@ -1072,7 +1074,7 @@ do
 	samtools flagstat  -@ 7 ../blklist/${sample}.final.bam > ../blklist/${sample}.final.stat
 done
 ```
-6. 结果：  
+6. 结果解读：  
 ```bash
 # 原比对文件数据，以SRR11539111为例
 98013300 + 0 in total (QC-passed reads + QC-failed reads)
@@ -1274,7 +1276,9 @@ do echo $id
     > ../Tn5_shift/${sample}.Tn5.bedpe
 done
 ```
-* 结果：
+4. 结果解读：  
+
+
 ！注意，后续callpeak不可直接使用bedtools转化的bedpe文件，只能包含三行信息：chr,chrom_start,chrom_end
 ```bash
 cd /mnt/d/ATAC/Tn5_shift
@@ -1418,7 +1422,9 @@ nucleosome-seq，使用核小体一半大小进行小波分析获得核小体中
 
 
 
-* 结果： 
+5. 结果解读：   
+
+
 最终生成三个文件：narrowpeak，peaks.xls，summits.bed，[详细解释](https://github.com/hbctraining/In-depth-NGS-Data-Analysis-Course/blob/master/sessionV/lessons/04_peak_calling_macs.md) ，以及--cutoff-analysis 参数生成的txt文件。  
 
 `_peaks.narrowPeak`：BED6+4格式文件，其中包含峰值位置以及峰值峰值，p值和q值  
@@ -1577,12 +1583,18 @@ d <-read.table('../frag_length/SRR11539116.fragment_length_count.txt')
 
 ## 9.2 FRiP
 1. FRiP简介：  
-* 定义：FRiP（Fraction of reads in peaks，Fraction of all mapped reads that fall into the called peak regions）表示的是位于peak区域的reads的比例，FRiP score是一个比值，其分子是位于peak区域的reads总数，分母是比对到参考基因组上的reads总数。
-* 数值大小范围：The fraction of reads in called peak regions (FRiP score) should be >0.3, though values greater than 0.2 are acceptable. 对于不符合FRiP score值的样本，应当结合TSS Enrichment score值等其他指标来进一步衡量其文库质量。 
+* 定义：  
+
+FRiP（Fraction of reads in peaks，Fraction of all mapped reads that fall into the called peak regions）表示的是位于peak区域的reads的比例，FRiP score是一个比值，其分子是位于peak区域的reads总数，分母是比对到参考基因组上的reads总数。
+* 数值大小范围：  
+
+The fraction of reads in called peak regions (FRiP score) should be >0.3, though values greater than 0.2 are acceptable. 对于不符合FRiP score值的样本，应当结合TSS Enrichment score值等其他指标来进一步衡量其文库质量。 
 
 2. 使用软件：这些可以通过`bedtools intersect`工具进行评估。[intersect工作原理](https://bedtools.readthedocs.io/en/latest/content/tools/intersect.html)  
 
-3. 代码：这里为了比较`picard等去重`和`未去重`两种数据分别进行了计算，实际操作时应使用`没有经过PCR去重等filter过程的原始比对文件`来计算    
+3. 代码：  
+
+这里为了比较`picard等去重`和`未去重`两种数据分别进行了计算，实际操作时应使用`没有经过PCR去重等filter过程的原始比对文件`来计算    
 
 
 * 已去重，采用shifted bedpe，该结果肯定比实际未去重的bam文件callpeak小很多  
@@ -1756,7 +1768,7 @@ idr --samples SRR11539115_peaks.narrowPeak SRR11539116_peaks.narrowPeak \
 
 
 
-5. 结果：  
+5. 结果解读：  
 
 默认情况下统计IDR < 0.05的peak, 这个阈值可以通过​​​soft-idr-threshold​​参数来调整。在输出文件中，保存的是所有peak的结果，需要自己通过IDR value的值来进行筛选。0.05 IDR means that peak has a 5% chance of being an irreproducible discovery。  
 通过IDR软件可以很方便的处理生物学重复样本的peak calling结果，筛选出一组一致性高的peak。  
@@ -1915,7 +1927,7 @@ do echo $id
 done
 ```
 
-* 结果：  
+4. 结果解读：  
 
 ![igv](./pictures/igv.png)  
 ![igv2](./pictures/igv_snapshot.png)    
@@ -2090,7 +2102,7 @@ plotProfile -m /mnt/d/ATAC/genebody/SRR11539111_matrix.gz \
     #不太好看，还需要调整参数
 ```
 
-6. 结果：  
+6. 结果解读：  
 ① profile plot  
 ![profile](./pictures/all_profile.png)  
 
@@ -2698,7 +2710,7 @@ barplot(ekegg, showCategory = 20, title = "KEGG Pathway Enrichment Analysis")
 ```
 [很好的做GO分析的网站：GREAT](http://bejerano.stanford.edu/great/public/html/index.php)
 
-# Motifs   
+# 14. Motifs   
 1. motif 定义：  
 
 Motif是一段典型的序列或者一个结构。一般来说，我们称为基序。一般情况下是指构成任何一种特征序列的基本结构。通俗来讲，即是有特征的短序列，一般认为它是拥有生物学功能的保守序列，可能包含特异性的结合位点，或者是涉及某一个特定生物学过程的有共性的序列区段。比如蛋白质的序列特异性结合位点，如核酸酶和转录因子。   
@@ -2810,7 +2822,7 @@ Multiplicity：具有一个或多个结合位点的序列中每个序列的平�
 ![motifs](./pictures/motif.png)  
 
 
-# Footprints
+# 15. Footprints
 
 1. 目的：  
 
@@ -2822,7 +2834,9 @@ Multiplicity：具有一个或多个结合位点的序列中每个序列的平�
 ![TF](./pictures/TF%20model.webp)  
 
 
-2. 使用软件：足迹分析工具主要分为两类: De novo 和 motif-centric。
+2. 使用软件：  
+
+足迹分析工具主要分为两类: De novo 和 motif-centric。
 
 ①  De novo  
 De novo 方法根据典型足迹模式 (peak-dip-peak) 的特征，预测所有跨越 Peak 的足迹位置。然后这些假定的足迹位点被用来匹配已知的 motifs 或识别新的 motifs。对于  de novo 方法，重要的是数学上定义什么是 footprint 并从 Tn5 裂解偏差中去除 footprint。 在多种工具中，目前只有 HINT-ATAC 处理 ATAC-seq 特定的偏差。 
@@ -2835,7 +2849,9 @@ Motif-centric 以 motif 为中心的方法侧重于先验的 TFBSs（从motif里
 
 de novo 方法对于低质量和 novel motifs 仍然具有优势。尽管由于所选择的分析工具、参数设置和评价指标，不同研究对足迹方法的评价并不一致，由于 `HINT-ATAC `具有特定于 ATAC-seq 的偏差校正，因此它可能是一个不错的选择。  
 
-3. 应用：上文已经找到了不同处理导致的差异 `motif`，该步通过寻找footprint，说明此处有TF结合上去，即此处是 转录因子结合位点（顺式作用因子），可能是 enhenser/silencer等，影响临近基因的表达情况。 上文 motif 反映了顺式作用因子的序列特征（8-12bp）；该步反映了顺式作用因子的位置（几十到一百多bp不等，但是有8-12bp的核心区域）。  
+3. 应用：  
+
+上文已经找到了不同处理导致的差异 `motif`，该步通过寻找footprint，说明此处有TF结合上去，即此处是 转录因子结合位点（顺式作用因子），可能是 enhenser/silencer等，影响临近基因的表达情况。 上文 motif 反映了顺式作用因子的序列特征（8-12bp）；该步反映了顺式作用因子的位置（几十到一百多bp不等，但是有8-12bp的核心区域）。  
 
 
 4. 代码：
@@ -2874,12 +2890,12 @@ done
 
 用IGV打开生成的`bed文件(footprint)`和前文`可视化`步骤得到的`bw文件`。bw 文件反映该位置是否是开放区域；bed文件反映该位置是否有TF结合。    
 
-比如查看基因Zbtb46周围的peak情况，在bw文件中里两个处理的在这个基因附近都有peak，但是这个基因在PC里表达，在RACM不表达。bed文件反映了该不同：PC组在该基因区域有footprint，说明位置有TF的结合可能促进Zbtb46基因的表达。
+比如查看基因A周围的peak情况，在bw文件中里两个处理的在这个基因附近都有peak，但是这个基因在PC里表达，在RACM不表达。bed文件反映了该不同：PC组在该基因区域有footprint，说明位置有TF的结合可能促进A基因的表达。
 
 
 # 核小体定位  
 
- HMMRATAC 和 NucleoATAC都行，是专门针对ATAC-seq 的核小体检测工具。
+ `HMMRATAC` 和 `NucleoATAC` 都行，是专门针对ATAC-seq的核小体检测工具。本流程使用使用 `HMMRATAC` 进行核小体检测。
 
 
 
@@ -2908,28 +2924,6 @@ done
 ## 与 ChIP-seq 进行整合
 因为开放的染色质是大多数 TFs 结合的前提条件，所以 ATAC-seq Peak 通常与 TF ChIP-seq Peak 重叠，但通常更宽。因此，TF ChIP-seq 和 ATAC-seq 可以在同一个实验系统中相互验证彼此的质量和可靠性。
 
-
-第1篇：ATAC-seq的背景介绍以及与ChIP-Seq的异同
-
-第2篇：原始数据的质控、比对和过滤
-
-第3篇：用MACS2软件call peaks
-
-第4篇：对ATAC-Seq/ChIP-seq的质量评估（一）——phantompeakqualtools
-
-第5篇：对ATAC-Seq/ChIP-seq的质量评估（二）——ChIPQC
-
-第6篇：重复样本的处理——IDR
-
-第7篇：用Y叔的ChIPseeker做功能注释
-
-第8篇：用网页版工具进行motif分析
-
-第9篇：差异peaks分析——DiffBind
-
-第10篇：ATAC-Seq、ChIP-Seq、RNA-Seq整合分析
-
-额外篇：文献推荐和解读
 
 ```bash
 肿瘤资源文章的代码
