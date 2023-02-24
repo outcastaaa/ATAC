@@ -366,17 +366,20 @@ pip install deeptools
 deeptools -h
 ```
 ## 2.16 Homer
-* 下载
+* 下载 [官网教程](http://homer.ucsd.edu/homer/introduction/install.html)  
+
 ```bash
-pip install homer
+mkdir -p /mnt/d/biosoft/homer
+cd /mnt/d/biosoft/homer
+wget http://homer.ucsd.edu/homer/configureHomer.pl
+perl /mnt/d/biosoft/homer/configureHomer.pl -install
+
+vim ~/.bashrc
+PATH=$PATH:/mnt/d/biosoft/homer/bin/
+source ~/.bashrc
+
 # 或者
 conda install -c bioconda homer
-
-# 或者自己配置
-# perl /mnt/d/atac/motif/myhomer/configureHomer.pl -install
-# vi ~/.bashrc
-# export PATH=/mnt/d/atac/motif/myhomer/bin:$PATH
-# source ~/.bashrc
 ```
 
 
@@ -2695,9 +2698,10 @@ Motif是一段典型的序列或者一个结构。一般来说，我们称为基
 
 有两种类型的基于 motif 或基于 TF 的分析方法：基于序列的 motif 频率或活动预测以及针对 TF 占用的足迹。    
 
-`MEME suite`，其中包括`FIMO`用于搜索单个 motif，`MAST` 用于汇总来自多个 motif 的搜索结果，`MCAST` 用于推断由多个 motif 形成的调节模块。这些工具基于统计匹配生成推定的 TFBS 列表。由于 `MEME suite` 和 `PWMScan` 具有 Web 应用程序界面，因此更易于访问。`MEME-CentriMo` 是一个广泛使用的 web 应用程序，它可以生成可视化报告，而 `chromVAR` 可以作为 scATAC-seq 的替代方案。
+`MEME suite`，其中包括`FIMO`用于搜索单个 motif，`MAST` 用于汇总来自多个 motif 的搜索结果，`MCAST` 用于推断由多个 motif 形成的调节模块。这些工具基于统计匹配生成推定的 TFBS 列表。由于 `MEME suite` 和 `PWMScan` 具有 Web 应用程序界面，因此更易于访问。`MEME-CentriMo` 是一个广泛使用的 web 应用程序，它可以生成可视化报告，而 `chromVAR` 可以作为 scATAC-seq 的替代方案。[MEME工具选择](https://cloud.tencent.com/developer/article/1556654)。  
 
-本流程使用 `HOMER` 预测motif。我们使用 Homer 子程序 findMotifsGenome.pl 进行motif分析， findMotifsGenome.pl 命令用于在基因组区域中寻找富集Motifs。HOMER 适用于在大规模数据中寻找 DNA 或 RNA 序列的 motif。    
+
+本流程使用 `HOMER` 预测motif。我们使用 Homer 子程序 findMotifsGenome.pl 进行motif分析， findMotifsGenome.pl 命令用于在基因组区域中寻找富集Motifs。HOMER 适用于在大规模数据中寻找 DNA 或 RNA 序列的 motif。因为Homer运行报错，后采用网页版`MEME-CentriMo`。      
 
 
 4. 注意：  
@@ -2707,7 +2711,7 @@ Motif是一段典型的序列或者一个结构。一般来说，我们称为基
 5. 代码：   
 
 
-* Homer运行报错
+* Homer
 ```bash
 mkdir -p  /mnt/d/ATAC/motif
 find -name homer
@@ -2717,6 +2721,8 @@ cp ~/miniconda3/pkgs/homer-4.11-pl5321h9f5acd7_7/bin/findMotifsGenome.pl ~/minic
 #下载参考基因组
 cd ~/miniconda3/share/homer 
 perl configureHomer.pl -install mm10 #储存在~/miniconda3/share/homer/data/genomes/mm10
+perl configureHomer.pl -install mouse-o
+perl configureHomer.pl -install mouse-p
 
 # 准备输入文件
 cd /mnt/d/ATAC/R_analysize
@@ -2729,10 +2735,9 @@ awk '{print $1"\t"$2"\t"$3"\t"$4"\t."}' diff_DESeq2.bed > ../motif/homer_peaks.t
 
 cd ~/miniconda3/share/homer 
 perl findMotifsGenome.pl /mnt/d/ATAC/motif/homer_peaks.tmp ./data/genomes/mm10 /mnt/d/ATAC/motif/ -len 8,10,12
-#报错，换网页运行
 ```
-* [DREME网页](https://meme-suite.org/meme/tools/dreme)  
-
+* [MEME-CentriMo网页](https://meme-suite.org/meme/tools/centrimo)  
+用于分析已知的motif在输入序列上的富集情况。
 ```bash
 # 提取peak位置
 cd /mnt/d/ATAC/R_analysize
@@ -2749,11 +2754,45 @@ cd /mnt/d/ATAC/genome/
   bedtools getfasta -fi Mus38.fa \
   -bed /mnt/d/ATAC/R_analysize/diff_DESeq2_only3.bed \
   -fo /mnt/d/ATAC/motif/diff_DESeq2.fa
-
-
-
 ```
+6. 结果解读：  会得到2个文件夹+9个文件（移动到xrzHOMER文件夹内）
+* .motifs文件
+```bash
+cd /mnt/d/ATAC/motif/xrzHOMER
+cat homerMotifs.all.motifs | head -n 5
+>GGGGCGGGGC     1-GGGGCGGGGC    6.551488        -1862.690170    0       T:4273.0(51.70%),B:7630.8(21.18%),P:1e-808     Tpos:100.5,Tstd:53.3,Bpos:99.9,Bstd:92.2,StrandBias:-0.1,Multiplicity:1.83
+0.295   0.001   0.564   0.140
+0.399   0.001   0.599   0.001
+0.001   0.001   0.997   0.001
+0.001   0.001   0.997   0.001
+```
+```bash
+每个motif信息是一块，均以>开头，其他行是每个位置的各个核苷酸具体概率。
 
+motif首行信息解释：
+> 一致性序列：>GGGGCGGGGC
+Motif名称：1-GGGGCGGGGC
+log odds检测阈值，用于确定结合的vs未结合位点：6.551488
+P-value的log值：-1862.690170
+占位符：如上图得0，不具有任何信息，该基序没啥用
+
+逗号分隔得富集信息，如：T:4273.0(51.70%),B:7630.8(21.18%),P:1e-808
+T表示带有该motif的目标序列在总的目标序列（target）中的百分比
+B表示带有该motif的背景序列在总的背景序列（background）中的百分比
+P表示最终富集的p-value
+
+逗号分隔的motif统计信息，如：Tpos:100.5,Tstd:53.3,Bpos:99.9,Bstd:92.2,StrandBias:-0.1,Multiplicity:1.83
+Tpos：motif在目标序列中的平均位置（0=序列开始）
+Tstd：motif在目标序列中位置的标准差
+Bpos：motif在背景序列中的平均位置
+Bstd：motif在背景序列中位置的标准差
+StrandBias: 链偏好性，在正义链上的motif数与反义链motif数的比值的log
+Multiplicity：具有一个或多个结合位点的序列中每个序列的平均出现次数
+```
+* html分为 de novo 和 Known Motif两种   
+主要看`Homer Known Motif Enrichment Results`，文章中的motif都可在文件中找到。  
+
+![motifs](./pictures/motif.png)  
 
 
 # Footprints
