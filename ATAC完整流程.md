@@ -32,7 +32,7 @@
 - [5. Alignment](#5-Alignment)
 	- [5.1 alignment](#51-alignment)
 	- [5.2 sort_transfertobam_index](#52-sort_transfertobam_index)
-- [6. Post-alignment processing](#6-Post-alignment processing)
+- [6. Post-alignment processing](#6-post-alignment-processing)  
 	- [6.1 remove PCR-duplicate reads](#61-remove-pcr-duplicate-reads)
 	- [6.2 remove bad quality reads](#62-remove-bad-quality-reads)
   - [6.3 remove chrM reads](#63-remove-chrm-reads)
@@ -2826,7 +2826,8 @@ Multiplicity：具有一个或多个结合位点的序列中每个序列的平�
 
 本流程将每一个样本call peak后的原始数据与bam文件做比对，
 
-![TF](./pictures/TF%20model.webp)  
+![TF](./pictures/TF_model.png)   
+
 
 
 2. 使用软件：  
@@ -2846,7 +2847,7 @@ de novo 方法对于低质量和 novel motifs 仍然具有优势。尽管由于�
 
 3. 应用：  
 
-上文已经找到了不同处理导致的差异 `motif`，该步通过寻找footprint，说明此处有TF结合上去，即此处是 转录因子结合位点（顺式作用因子），可能是 enhenser/silencer等，影响临近基因的表达情况。 上文 motif 反映了顺式作用因子的序列特征（8-12bp）；该步反映了顺式作用因子的位置（几十到一百多bp不等，但是有8-12bp的核心区域）。  
+上文已经找到了不同处理导致的差异 `motif`，该步通过寻找footprint，说明此处有TF结合上去，即此处是 转录因子结合位点（顺式作用因子），可能是 enhanser/silencer等，影响临近基因的表达情况。 上文 motif 反映了顺式作用因子的序列特征（8-12bp）；该步反映了顺式作用因子的位置（几十到一百多bp不等，但是有8-12bp的核心区域）。  
 
 
 4. 代码：
@@ -3028,6 +3029,8 @@ wigToBigWig ${name}.bg $chrom_info ${name}.bw
 # Tn5_coverage
 awk 'BEGIN {OFS = "\t"} ; {if ($6 == "+") print $1, $2 + 4, $2 + 5; else print $1, $3 - 6, $3 - 5}' ${name}.bed > ${name}.Tn5.bed
 ```
+## gene structure
+![gene](./pictures/gene%20structure.jpg)  
 
 
 
