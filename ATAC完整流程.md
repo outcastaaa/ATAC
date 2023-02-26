@@ -1,10 +1,5 @@
 
 # ATAC-seq分析
-[很好的参考文章](https://yiweiniu.github.io/blog/2019/03/ATAC-seq-data-analysis-from-FASTQ-to-peaks/)    
-[术语列表](https://www.encodeproject.org/data-standards/terms/#enrichment)   
-[文件格式](https://deeptools.readthedocs.io/en/develop/content/help_glossary.html)   
-
-
 - [0. Introduction](#0-introduction)
 - [1. Prepare](#1-Prepare)
 - [2. Biotools](#2-Biotools)
@@ -2904,7 +2899,11 @@ done
 
 
 
-# References
+# References  
+
+[很好的参考文章](https://yiweiniu.github.io/blog/2019/03/ATAC-seq-data-analysis-from-FASTQ-to-peaks/)    
+[术语列表](https://www.encodeproject.org/data-standards/terms/#enrichment)   
+[文件格式](https://deeptools.readthedocs.io/en/develop/content/help_glossary.html)   
 
 
 ##  标准的生物信息学分析包括：
