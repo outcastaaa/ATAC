@@ -2904,6 +2904,7 @@ done
 [很好的参考文章](https://yiweiniu.github.io/blog/2019/03/ATAC-seq-data-analysis-from-FASTQ-to-peaks/)    
 [术语列表](https://www.encodeproject.org/data-standards/terms/#enrichment)   
 [文件格式](https://deeptools.readthedocs.io/en/develop/content/help_glossary.html)   
+[https://github.com/hbctraining/In-depth-NGS-Data-Analysis-Course/tree/master/sessionV](https://github.com/hbctraining/In-depth-NGS-Data-Analysis-Course/tree/master/sessionV)  
 
 
 ##  标准的生物信息学分析包括：
@@ -2922,7 +2923,12 @@ done
 
 ## 整合多组学数据重建调控网络
 ### 与 ChIP-seq 进行整合
-因为开放的染色质是大多数 TFs 结合的前提条件，所以 ATAC-seq Peak 通常与 TF ChIP-seq Peak 重叠，但通常更宽。因此，TF ChIP-seq 和 ATAC-seq 可以在同一个实验系统中相互验证彼此的质量和可靠性。
+因为开放的染色质是大多数 TFs 结合的前提条件，所以 ATAC-seq Peak 通常与 TF ChIP-seq Peak 重叠，但通常更宽。因此，TF ChIP-seq 和 ATAC-seq 可以在同一个实验系统中相互验证彼此的质量和可靠性。    
+
+ATAC-seq之后需要做ChIP-seq来做进一步的验证。比如ATAC-seq得到peak后，从motif筛到了转录因子，那么结合ChIP-seq查看转录因子的作用位点，就可以知道是作用在promoter区域呢还是enhancer区域。  
+
+除此之外，由于单细胞RNA-seq的普及，目前还出现了一些新兴的scATAC-seq+scRNA-seq，用来检测每个细胞的染色体开放情况。  
+
 
 
 ```bash
@@ -2978,6 +2984,12 @@ LD信息从haploreg 网站下载 http://archive.broadinstitute.org/mammals/haplo
 
 用PNAMER将“偏差分数”转换为p值，并使用Bejimi-HocHBG程序调整
 ```
+### 与 RNA-seq 进行整合
+
+一般，RNA-seq会优先于ATAC-seq先测，得到表达差异基因后，可以通过ATAC-seq来做motif分析，寻找是谁调控了目的基因，然后再进行后续的实验验证。  
+
+另一个思路是，看ATAC-seq测到的染色质开放DNA区域，对应的转录本表达量是否也有增加，这样再做RNA-seq可以找到对应的转录本相关基因，对富集到的基因进行功能分析，再结合实验表型验证，从而把一条线串起来：`表观调控-表达-功能-表型`.  
+
 
 
 ## 其他参考代码  
