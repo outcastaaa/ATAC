@@ -25,6 +25,8 @@
     - [2.13 parallel](#213-parallel)
     - [2.14 IDR](#214-IDR)
     - [2.15 deeptools](#215-deeptools)
+    - [2.16 Homer](#215-Homer)
+    - [2.15 RGT_HINT-ATAC](#215-RGT_HINT-ATAC)
 
 - [3. Data](#3-Data)
     - [3.1 sequence](#31-sequence)
@@ -39,12 +41,8 @@
 	- [6.1 remove_PCR-duplicate_reads](#61-remove_PCR-duplicate_reads)
 	- [6.2 remove_badquality_reads](#62-remove_badquality_reads)
   - [6.3 remove_chrM_reads](#63-remove_chrM_reads)
-  - [6.4 bamtobed](#64-bamtobed)
-
-
-
-
-
+  - [6.4 Blacklist_filtering](#64-blacklist_filtering)
+  - [6.5 bamtobed](#65-bamtobed)
 - [Merging BAMs (optional)](#merging-bams-optional)  
 - [7. shift_reads](#7-shift_reads)
 - [8. call_peaks](#8-call_peaks)
@@ -54,14 +52,16 @@
   - [9.3 IDR](#93-idr)
   - [9.4 TSS_enrichment](#94-tss_enrichment) 
   - [9.5 other_indexes](#95-other_indexes) 
-- [10. Blacklist_filtering](#10-blacklist_filtering)
+
 - [11. Visualization](#11-visualization)
   - [11.1 filterbam2Bw](#111-filterbam2bw)
   - [11.2 TSS_enrichment](#112-tss_enrichment)
 
-	- [Input data preparation](#input-data-preparation)
-	- [DML/DMR detection](#dmldmr-detection)
-- [Practical methylation information analysis](#practical-methylation-information-analysis)
+- [12. Peak differential analysis](#12-peak-differential-analysis)
+- [13. peak annotation](#13-peak-annotation)  
+- [14. Motifs](#14-motifs)
+- [15. Footprints](#15-footprints)  
+- [14. Motifs](#14-motifs)
 - [Reference](#reference)
 - [Author](#author)
 
@@ -2893,7 +2893,8 @@ done
 比如查看基因A周围的peak情况，在bw文件中里两个处理的在这个基因附近都有peak，但是这个基因在PC里表达，在RACM不表达。bed文件反映了该不同：PC组在该基因区域有footprint，说明位置有TF的结合可能促进A基因的表达。
 
 注意：peak经过shift，所使用的bam文件也应该经过shift。
-# 核小体定位  
+
+# 16. 核小体定位  
 
  `HMMRATAC` 和 `NucleoATAC` 都行，是专门针对ATAC-seq的核小体检测工具。若需要可以使用 `HMMRATAC` 进行核小体检测。
 
@@ -2903,10 +2904,10 @@ done
 
 
 
+# References
 
 
-
-# 标准的生物信息学分析包括：
+##  标准的生物信息学分析包括：
 
 序列分析：将测序读段比对到基因组，并删除重复的reads。
 峰发现： 使用MACS 2.1.0，将双端测序中的两个reads用于peak calling。
@@ -2920,8 +2921,8 @@ done
  作者建议研究人员可以建立一个有效的工作流程，结合 FastQC、trimmomatic 和 BWA-MEM 进行预处理，MACS2 进行 Peak calleing。对于高级分析，作者建议使用 csaw 进行差异 Peak 分析，使用 MEME suite 进行 motif 检测和富集，使用 ChIPseeker 进行注释和可视化，使用 HMMRATAC 进行核小体检测，使用 HINT-ATAC 进行足迹分析。如果 RNA-seq 数据可用，可以使用 PECA 方法重建调控网络。
 
 
-# 整合多组学数据重建调控网络
-## 与 ChIP-seq 进行整合
+## 整合多组学数据重建调控网络
+### 与 ChIP-seq 进行整合
 因为开放的染色质是大多数 TFs 结合的前提条件，所以 ATAC-seq Peak 通常与 TF ChIP-seq Peak 重叠，但通常更宽。因此，TF ChIP-seq 和 ATAC-seq 可以在同一个实验系统中相互验证彼此的质量和可靠性。
 
 
@@ -2980,21 +2981,7 @@ LD信息从haploreg 网站下载 http://archive.broadinstitute.org/mammals/haplo
 ```
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# 其他参考代码  
+## 其他参考代码  
 
 上面FastQC➔ trimmomatic➔BWA-MEM➔ATACseqQC
 
@@ -3033,3 +3020,7 @@ awk 'BEGIN {OFS = "\t"} ; {if ($6 == "+") print $1, $2 + 4, $2 + 5; else print $
 
 
 
+# Author   
+
+* 邮箱：xuruizhi30454X@163.com  
+* [GitHub](https://github.com/outcastaaa)  
