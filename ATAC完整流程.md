@@ -2886,16 +2886,16 @@ do echo $id
   ../macs2_peaks/${sample}_peaks.narrowPeak
 done
 ```
-5. 结果解读：  
+5. 结果解读：   
 
 用IGV打开生成的`bed文件(footprint)`和前文`可视化`步骤得到的`bw文件`。bw 文件反映该位置是否是开放区域；bed文件反映该位置是否有TF结合。    
 
 比如查看基因A周围的peak情况，在bw文件中里两个处理的在这个基因附近都有peak，但是这个基因在PC里表达，在RACM不表达。bed文件反映了该不同：PC组在该基因区域有footprint，说明位置有TF的结合可能促进A基因的表达。
 
-
+注意：peak经过shift，所使用的bam文件也应该经过shift。
 # 核小体定位  
 
- `HMMRATAC` 和 `NucleoATAC` 都行，是专门针对ATAC-seq的核小体检测工具。本流程使用使用 `HMMRATAC` 进行核小体检测。
+ `HMMRATAC` 和 `NucleoATAC` 都行，是专门针对ATAC-seq的核小体检测工具。若需要可以使用 `HMMRATAC` 进行核小体检测。
 
 
 
@@ -2906,7 +2906,7 @@ done
 
 
 
-标准的生物信息学分析包括：
+# 标准的生物信息学分析包括：
 
 序列分析：将测序读段比对到基因组，并删除重复的reads。
 峰发现： 使用MACS 2.1.0，将双端测序中的两个reads用于peak calling。
@@ -2994,7 +2994,9 @@ LD信息从haploreg 网站下载 http://archive.broadinstitute.org/mammals/haplo
 
 
 
-# 上面FastQC➔ trimmomatic➔BWA-MEM➔ATACseqQC
+# 其他参考代码  
+
+上面FastQC➔ trimmomatic➔BWA-MEM➔ATACseqQC
 
 https://github.com/schmitzlab/The-prevalence-evolution-and-chromatin-signatures-of-plant-regulatory-elements/blob/master/Alighment_ATAC-seq_reads/Alighment_ATAC-seq_reads.sh
 ```
