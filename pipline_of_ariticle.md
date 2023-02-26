@@ -21,7 +21,7 @@ counts per sample38
 files were downloaded from GEO11 or the ENCODE18,39
 database as bigwig files. If bigwig files could not be 
 downloaded, bam files were downloaded and converted to bigwig files using bamCoverage in the deeptools package. 
-Datasets previously aligned to mm10 were converted to mm9 using crossmap40 to facilitate comparison with our ATACseq dataset. 
+Datasets previously aligned to mm10 were converted to mm9 using crossmap40 to facilitate comparison with our ATAC-seq dataset. 
 Transcription factor binding site enrichment analysis was performed using Hypergeometric Optimization of Motif 
 Enrichment (HOMER) 14 using 50,000 randomly selected background sequences matched for distance from TSS and GC 
 content. 
