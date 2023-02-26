@@ -32,37 +32,37 @@
     - [3.1 sequence](#31-sequence)
     - [3.2 genome](#32-genome)
 - [4. Pre-alinment](#4-Pre-alinment)
-    - [4.1 quality_control_checking](#41-quality_control_checking)
-    - [4.2 pre-alinment_QC](#42-pre-alinment_QC)
+    - [4.1 quality control checking](#41-quality-control-checking)
+    - [4.2 pre-alinment QC](#42-pre-alinment-qc)
 - [5. Alignment](#5-Alignment)
 	- [5.1 alignment](#51-alignment)
 	- [5.2 sort_transfertobam_index](#52-sort_transfertobam_index)
-- [6. Post-alignment_processing](#6-Post-alignment_processing)
-	- [6.1 remove_PCR-duplicate_reads](#61-remove_PCR-duplicate_reads)
-	- [6.2 remove_badquality_reads](#62-remove_badquality_reads)
-  - [6.3 remove_chrM_reads](#63-remove_chrM_reads)
-  - [6.4 Blacklist_filtering](#64-blacklist_filtering)
+- [6. Post-alignment processing](#6-Post-alignment processing)
+	- [6.1 remove PCR-duplicate reads](#61-remove-pcr-duplicate-reads)
+	- [6.2 remove bad quality reads](#62-remove-bad-quality-reads)
+  - [6.3 remove chrM reads](#63-remove-chrm-reads)
+  - [6.4 Blacklist filtering](#64-blacklist-filtering)
   - [6.5 bamtobed](#65-bamtobed)
 - [Merging BAMs (optional)](#merging-bams-optional)  
-- [7. shift_reads](#7-shift_reads)
-- [8. call_peaks](#8-call_peaks)
-- [9. Quality_check](#9-Quality_check)
-	- [9.1 fragment_length_distribution](#91-fragment_length_distribution)
+- [7. shift reads](#7-shift-reads)
+- [8. Call peaks](#8-call-peaks)
+- [9. Quality check](#9-quality-check)
+	- [9.1 fragment length distribution](#91-fragment-length-distribution)
 	- [9.2 FRiP](#92-FRiP)
   - [9.3 IDR](#93-idr)
-  - [9.4 TSS_enrichment](#94-tss_enrichment) 
+  - [9.4 TSS enrichment](#94-tss-enrichment) 
   - [9.5 other_indexes](#95-other_indexes) 
 
 - [11. Visualization](#11-visualization)
   - [11.1 filterbam2Bw](#111-filterbam2bw)
-  - [11.2 TSS_enrichment](#112-tss_enrichment)
+  - [11.2 TSS enrichment](#112-tss-enrichment)
 
 - [12. Peak differential analysis](#12-peak-differential-analysis)
 - [13. peak annotation](#13-peak-annotation)  
 - [14. Motifs](#14-motifs)
 - [15. Footprints](#15-footprints)  
-- [14. Motifs](#14-motifs)
-- [Reference](#reference)
+- [16. 核小体定位](#16-核小体定位)  
+- [References](#references)
 - [Author](#author)
 
 
@@ -565,7 +565,7 @@ rm mm10.zip
 
 # 4. Pre-alinment
 
-## 4.1 quality_control_checking  
+## 4.1 quality control checking  
 
 1. 目的：whether the sequencing quality is qualified or not    
 
@@ -598,7 +598,7 @@ multiqc .
 
 
 
-## 4.2 pre-alinment_QC
+## 4.2 pre-alinment QC
 1. 目的：adapters and low quality reads trimming
 2. 使用软件：`Trim Galore`，因为在最后一部卡住，选择使用`cutadapt + trimmomatic`分步修剪  [参考1](https://www.jianshu.com/p/4ee2f4d2292f)  
 
@@ -812,7 +812,7 @@ rm *.sam
 ```
 
 
-# 6. Post-alignment_processing 
+# 6. Post-alignment processing 
 1. 目的：  
 
 去除没有匹配到的、匹配得分较低的、重复的reads(如果两条reads具有相同的长度而且比对到了基因组的同一位置，那么就认为这样的reads是由PCR扩增而来)；去除线粒体中染色质可及区域及ENCODE blacklisted regions。    
@@ -829,7 +829,7 @@ Inconsistencies in the underlying annotation exist at regions where assembly has
 
 
 
-## 6.1 remove_PCR-duplicate_reads
+## 6.1 remove PCR-duplicate reads
 目的：去除因为PCR偏好性导致的reads重复扩增  
 
 ```bash
@@ -889,7 +889,7 @@ samtools view SRR11539111.sort.bam | grep -w 'SRR11539111.1808287'
 samtools view SRR11539111.sort.bam | grep -w '某个pos' 多个reads比对到同一个位置
 samtools view SRR11539111.sort.bam | grep -w '某个pos' | less -S
 ```
-## 6.2 remove_badquality_reads
+## 6.2 remove bad quality reads
 * 目的：保留都比对到同一个染色体的paired reads（proper paired），同时质量较高的reads (mapping quality>=30) 
 
 ```bash
@@ -898,7 +898,7 @@ samtools view -f 2 -q 30 -o test.filter.bam test.rmdup.bam
 # -q 取mapping质量大于30的reads
 # Remove reads unmapped, mate unmapped, not primary alignment, reads failing platform, duplicates (-F 1804) 看情况取舍
 ```
-## 6.3 remove_chrM_reads
+## 6.3 remove chrM reads
 * 目的：去除比对到线粒体上的reads，这一步一定要做，线粒体上长度小，极大概率覆盖很多reads，造成虚假peak。由于mtDNA读段的百分比是文库质量的指标，我们通常在比对后删除线粒体读段。  
 
 * 统计chrM reads，使用没有去除PCR重复的数据
@@ -981,14 +981,14 @@ done
 0 + 0 with mate mapped to a different chr (mapQ>=5)
 ```
 
-## 6.4 Blacklist_filtering
+## 6.4 Blacklist filtering
 
 1. 目的：去除ENCODE blacklisted 区域，通过blacklist的过滤，可以进一步降低peak calling的假阳性。    
 
 2. blacklist 区域：  
 
 ① 详细：  
-参考`#6.Post-alignment_processing` 中对`ENCODE blacklisted区域`的介绍。  
+参考`#6.Post-alignment processing` 中对`ENCODE blacklisted区域`的介绍。  
 传统的二代测序由于其读长短的特点，对于基因组上的重复区域，在序列比对时无法有效区分到底来自哪一段区域。在比对时不同的软件会有不同算法，或者随机选择一个位置，或者两个位置都计算一次测序深度，造成的结果就是重复区域的测序深度无法准确衡量，这对于后续的数据分析肯定会有一定程度的影响。   
 
 从测序深度分布来看，这些重复区域的测序深度普遍是一种虚高的现象，而且这种虚高无关样本类型，实验处理等条件，只是和物种有关。科学家通过分析各种实验处理，不同样本类型的NGS数据，找出了在所有样本中测序深度普遍偏高的基因组区域，将其定义为blacklist region，这些区域是二代测序技术的软肋，其中的reads信息无法有效利用。
@@ -1233,7 +1233,7 @@ samtools index -@ 6 condition1.merged.bam
 
 
 
-# 7. shift_reads
+# 7. shift reads
 1. 目的：  
 
 由于Tn5酶是以二聚体的形式结合到染色体上的，其跨度大致是9bp，在第一篇ATAC-seq出来的时候，作者就考虑到了这个问题，在分析的时候，需要回补这个9个bp的碱基差。具体做法就是将正链正向移动4bp，将负链负向移动5个bp。一般用alignmentSieve 一步到位。注意，不做reads shift 对单碱基分辨高的分析会有影响，例如TF motif footprinting，但也不是所有TF footprinting分析软件需要shifted reads，很多可以自己转换，e.g. NucleoATAC。   
@@ -1305,7 +1305,7 @@ $ wc -l SRR11539111.Tn5.bedpe
 
 
 
-# 8. call_peaks 
+# 8. Call peaks 
 1. 目的： 下一步需要在统计学上判断真实的peak，因为Tn5在染色体上结合是个概率事件，如何判断这个位置的reads足够为一个peak，这就需要用到统计检测。ATAC-seq 数据分析的第二个主要步骤是识别开放区域（也称为 Peak），后续高级分析以此为基础。  
 
 2. 使用软件：目前，`MACS2` 是 ENCODE ATAC-seq 流程的默认 Peak caller 程序。  
@@ -1466,7 +1466,7 @@ wc -l SRR11539111_peaks.narrowPeak
 
 
 
-# 9. Quality_check
+# 9. Quality check
 判断ATAC-seq是否合格的几个[Current Standards](https://www.encodeproject.org/atac-seq/)  
 
 * 实验重复 Experiments should have two or more biological replicates. Assays performed using EN-TEx samples may be exempted due to limited availability of experimental material, but at least two technical replicates are required. 
@@ -1501,7 +1501,7 @@ wc -l SRR11539111_peaks.narrowPeak
 | mm10 Refseq TSS annotation   | 10--15 | Acceptable             |
 | mm10 Refseq TSS annotation   | > 15   | Ideal                  |
 
-## 9.1 fragment_length_distribution
+## 9.1 fragment length distribution
 1. 目的： 查看片段长度的分布情况  
 2. 原理：通常，一个成功的 ATAC-seq 实验应该生成一个片段大小分布图，其峰值与无核小体区域 (nucleosome-free regions: NFR) (<100 bp) 和单、二、三核小体 (~ 200、400、600 bp)[ (Fig. 1b) ](https://github.com/outcastaaa/ATAC/blob/main/pictures/1b.png)相对应，呈递减和周期性。 
 
@@ -1837,7 +1837,7 @@ https://github.com/hbctraining/In-depth-NGS-Data-Analysis-Course/blob/master/ses
 
 
 
-## 9.4 TSS_enrichment  
+## 9.4 TSS enrichment  
 1. 目的：通过观察 peaks 围绕 TSS 的分布情况，判断数据与理论推理是否一致；若一致则证明测序正常。  
 
 2. 原理：   
@@ -1934,7 +1934,7 @@ done
 与文章中峰图几乎一致。  
 
 
-## 11.2 TSS_enrichment  
+## 11.2 TSS enrichment  
 
 1. 目的：通过观察 peaks 围绕 TSS 的分布情况，判断数据与理论推理是否一致；若一致则证明测序正常。  
 
