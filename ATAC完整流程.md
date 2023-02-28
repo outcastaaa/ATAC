@@ -2525,7 +2525,7 @@ write.table(deseq.bed, file="D:/atac/r_analysize/diff_DESeq2.bed", sep="\t", quo
 
 对于ATAC-seq数据来说，正数表示RACM组的DNA的可接近性增加，负数表示PC组的DNA的可接近性增加。最后两列给出了识别这些位点为差异位点的置信度，是原始p值和经过多次测试修正的FDR(同样由DESeg2分析计算)。   
 
-
+## !!!找差异基因可以再精确一点，p<0.05 & abs(log2FoldChange) > 1
 
 
 
