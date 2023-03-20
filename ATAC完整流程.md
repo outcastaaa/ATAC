@@ -2905,7 +2905,9 @@ done
 [很好的参考文章](https://yiweiniu.github.io/blog/2019/03/ATAC-seq-data-analysis-from-FASTQ-to-peaks/)    
 [术语列表](https://www.encodeproject.org/data-standards/terms/#enrichment)   
 [文件格式](https://deeptools.readthedocs.io/en/develop/content/help_glossary.html)   
-[https://github.com/hbctraining/In-depth-NGS-Data-Analysis-Course/tree/master/sessionV](https://github.com/hbctraining/In-depth-NGS-Data-Analysis-Course/tree/master/sessionV)  
+[https://github.com/hbctraining/In-depth-NGS-Data-Analysis-Course/tree/master/sessionV](https://github.com/hbctraining/In-depth-NGS-Data-Analysis-Course/tree/master/sessionV)   
+
+[标准流程](https://docs.google.com/document/d/1f0Cm4vRyDQDu0bMehHD7P7KOMxTOP-HiNoIvL1VcBt8/edit)  
 
 
 ##  标准的生物信息学分析包括：
