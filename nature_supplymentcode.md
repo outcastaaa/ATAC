@@ -361,5 +361,164 @@ def fragment_length_plot(data_file, prefix, peaks=None):
 
     return plot_png
 ```
+![frag_length](./pictures/frag_length.png)  
+
+
+# Call peaks on replicates, self-pseudoreplicates, pooled data and pooled-pseudoreplicates  
+## Peak calling - MACS2 : function macs2()
+```bash
+prefix_sig = “$prefix”
+
+peakfile     = "$prefix.narrowPeak.gz"
+pval_thresh = 0.01
+NPEAKS=300000 # capping number of peaks called from MACS2
+
+fc_bedgraph     = "$prefix.fc.signal.bedgraph"
+fc_bedgraph_srt    = "$prefix.fc.signal.srt.bedgraph"    
+fc_bigwig     = "$prefix_sig.fc.signal.bigwig"
+
+pval_bedgraph     = "$prefix.pval.signal.bedgraph"
+pval_bedgraph_srt     = "$prefix.pval.signal.srt.bedgraph"    
+pval_bigwig     = "$prefix_sig.pval.signal.bigwig"
+
+smooth_window=150 # default
+shiftsize=$(( -$smooth_window/2 ))
+
+macs2 callpeak \
+    -t $tag -f BED -n "$prefix" -g "$gensz" -p $pval_thresh \
+   --shift $shiftsize  --extsize $smooth_window --nomodel -B --SPMR --keep-dup all --call-summits
+
+# Sort by Col8 in descending order and replace long peak names in Column 4 with Peak_<peakRank>
+sort -k 8gr,8gr "$prefix"_peaks.narrowPeak | awk 'BEGIN{OFS="\t"}{$4="Peak_"NR ; print $0}' | head -n ${NPEAKS} | gzip -nc > $peakfile
+rm -f "$prefix"_peaks.narrowPeak
+rm -f "$prefix"_peaks.xls
+rm -f "$prefix"_summits.bed
+
+
+macs2 bdgcmp -t "$prefix"_treat_pileup.bdg -c "$prefix"_control_lambda.bdg
+    --o-prefix "$prefix" -m FE
+slopBed -i "$prefix"_FE.bdg -g "$chrsz" -b 0 | bedClip stdin "$chrsz" $fc_bedgraph
+rm -f "$prefix"_FE.bdg
+
+sort -k1,1 -k2,2n $fc_bedgraph > $fc_bedgraph_srt
+bedGraphToBigWig $fc_bedgraph_srt "$chrsz" "$fc_bigwig"
+rm -f $fc_bedgraph $fc_bedgraph_srt
+
+# sval counts the number of tags per million in the (compressed) BED file
+sval=$(wc -l <(zcat -f "$tag") | awk '{printf "%f", $1/1000000}')
+
+macs2 bdgcmp
+    -t "$prefix"_treat_pileup.bdg -c "$prefix"_control_lambda.bdg
+    --o-prefix "$prefix" -m ppois -S "${sval}"
+slopBed -i "$prefix"_ppois.bdg -g "$chrsz" -b 0 | bedClip stdin "$chrsz" $pval_bedgraph
+rm -f "$prefix"_ppois.bdg
+
+sort -k1,1 -k2,2n $pval_bedgraph > $pval_bedgraph_srt
+bedGraphToBigWig $pval_bedgraph_srt "$chrsz" "$pval_bigwig"
+rm -f $pval_bedgraph $pval_bedgraph_srt
+
+
+rm -f "$prefix"_treat_pileup.bdg "$prefix"_control_lambda.bdg
+```
+![peakcalling](./pictures/peakcalling.png)  
+
+## Blacklist filtering for peaks : function blacklist_filter_peak()  
+
+![blklist](./pictures/blklist.png)  
+
+
+## bed to bigbed conversion for narrowpeaks : function _narrowpeak_to_bigbed() 
+
+![bigbed](./pictures/bigbed.png)  
+
+## Naive overlap thresholding for MACS2 peak calls : function naive_overlap_peak()
+
+These are peaks in the pooled data (reads pooled across reps) that overlap peaks in BOTH true replicates OR overlap peaks in BOTH pooled pseudoreplicates. Repeat this procedure for 4 sets of peaks described in Section 4. ——对可重复peaak的筛选过程  
+
+```bash
+# ======================
+# For narrowPeak files
+# ======================
+
+# Find pooled peaks that overlap Rep1 and Rep2 where overlap is defined as the fractional overlap wrt any one of the overlapping peak pairs  >= 0.5
+
+intersectBed -wo -a Pooled.narrowPeak.gz -b Rep1.narrowPeak.gz | 
+awk 'BEGIN{FS="\t";OFS="\t"}{s1=$3-$2; s2=$13-$12; if (($21/s1 >= 0.5) || ($21/s2 >= 0.5)) {print $0}}' | cut -f 1-10 | sort | uniq | 
+intersectBed -wo -a stdin -b Rep2.narrowPeak.gz | 
+awk 'BEGIN{FS="\t";OFS="\t"}{s1=$3-$2; s2=$13-$12; if (($21/s1 >= 0.5) || ($21/s2 >= 0.5)) {print $0}}' | cut -f 1-10 | sort | uniq > PooledInRep1AndRep2.narrowPeak.gz
+
+# =============================
+# Filter using black list
+# =============================
+bedtools intersect -v -a PooledInRep1AndRep2.narrowPeak.gz -b ${BLACKLIST} | awk 'BEGIN{OFS="\t"} {if ($5>1000) $5=1000; print $0}' | grep -P 'chr[\dXY]+[ \t]'  | gzip -nc > PooledInRep1AndRep2.filt.narrowPeak.gz
+
+
+
+# 下面不用管
+# ======================
+For BroadPeak files (there is just a difference is the awk commands wrt the column numbers)
+# ======================
+
+# Find pooled peaks that overlap Rep1 and Rep2 where overlap is defined as the fractional overlap wrt any one of the overlapping peak pairs  >= 0.5
+
+intersectBed -wo -a Pooled.broadPeak.gz -b Rep1.broadPeak.gz | 
+awk 'BEGIN{FS="\t";OFS="\t"}{s1=$3-$2; s2=$12-$11; if (($19/s1 >= 0.5) || ($19/s2 >= 0.5)) {print $0}}' | cut -f 1-9 | sort | uniq | 
+intersectBed -wo -a stdin -b Rep2.broadPeak.gz | 
+awk 'BEGIN{FS="\t";OFS="\t"}{s1=$3-$2; s2=$12-$11; if (($19/s1 >= 0.5) || ($19/s2 >= 0.5)) {print $0}}' | cut -f 1-9 | sort | uniq > PooledInRep1AndRep2.broadPeak.gz
+
+# Find pooled peaks that overlap PooledPseudoRep1 and PooledPseudoRep2 where overlap is defined as the fractional overlap wrt any one of the overlapping peak pairs  >= 0.5
+
+intersectBed -wo -a Pooled.broadPeak.gz -b PsRep1.broadPeak.gz | 
+awk 'BEGIN{FS="\t";OFS="\t"}{s1=$3-$2; s2=$12-$11; if (($19/s1 >= 0.5) || ($19/s2 >= 0.5)) {print $0}}' | cut -f 1-9 | sort | uniq | 
+intersectBed -wo -a stdin -b PsRep2.broadPeak.gz | 
+awk 'BEGIN{FS="\t";OFS="\t"}{s1=$3-$2; s2=$12-$11; if (($19/s1 >= 0.5) || ($19/s2 >= 0.5)) {print $0}}' | cut -f 1-9 | sort | uniq > PooledInPsRep1AndPsRep2.broadPeak.gz
+
+# Combine peak lists
+
+zcat PooledInRep1AndRep2.broadPeak.gz PooledInPsRep1AndPsRep2.broadPeak.gz | sort | uniq | awk 'BEGIN{OFS="\t"} {if ($5>1000) $5=1000; print $0}' \
+| grep -P 'chr[0-9XY]+(?!_)' > finalPeakList.broadPeak.gz
+
+
+
+# ======================
+For gappedPeak files (there is just a difference is the awk commands wrt the column numbers)
+# ======================
+
+# Find pooled peaks that overlap Rep1 and Rep2 where overlap is defined as the fractional overlap wrt any one of the overlapping peak pairs  >= 0.5
+
+intersectBed -wo -a Pooled.gappedPeak.gz -b Rep1.gappedPeak.gz | 
+awk 'BEGIN{FS="\t";OFS="\t"}{s1=$3-$2; s2=$18-$17; if (($31/s1 >= 0.5) || ($31/s2 >= 0.5)) {print $0}}' | cut -f 1-15 | sort | uniq | 
+intersectBed -wo -a stdin -b Rep2.gappedPeak.gz | 
+awk 'BEGIN{FS="\t";OFS="\t"}{s1=$3-$2; s2=$18-$17; if (($31/s1 >= 0.5) || ($31/s2 >= 0.5)) {print $0}}' | cut -f 1-15 | sort | uniq > PooledInRep1AndRep2.gappedPeak.gz
+
+# Find pooled peaks that overlap PooledPseudoRep1 and PooledPseudoRep2 where overlap is defined as the fractional overlap wrt any one of the overlapping peak pairs  >= 0.5
+
+intersectBed -wo -a Pooled.gappedPeak.gz -b PsRep1.gappedPeak.gz | 
+awk 'BEGIN{FS="\t";OFS="\t"}{s1=$3-$2; s2=$18-$17; if (($31/s1 >= 0.5) || ($31/s2 >= 0.5)) {print $0}}' | cut -f 1-15 | sort | uniq | 
+intersectBed -wo -a stdin -b PsRep2.gappedPeak.gz | 
+awk 'BEGIN{FS="\t";OFS="\t"}{s1=$3-$2; s2=$18-$17; if (($31/s1 >= 0.5) || ($31/s2 >= 0.5)) {print $0}}' | cut -f 1-15 | sort | uniq > PooledInPsRep1AndPsRep2.gappedPeak.gz
+
+# Combine peak lists
+
+zcat PooledInRep1AndRep2.gappedPeak.gz PooledInPsRep1AndPsRep2.gappedPeak.gz | sort | uniq | awk 'BEGIN{OFS="\t"} {if ($5>1000) $5=1000; print $0}' \
+| grep -P 'chr[0-9XY]+(?!_)' > finalPeakList.gappedPeak.gz
+```
+![peakselect](./pictures/peakselect.png)  
+
+# Run IDR on all pairs of replicates, self-pseudoreplicates and pooled pseudoreplicates  
+
+IDR is optional. The IDR peaks are a subset of the naive overlap peaks that pass a specific IDR threshold of 5%.
+
+```Use IDR to compare all pairs of matched replicates : function _idr()
+(1) True replicates narrowPeak files: ${REP1_PEAK_FILE} vs. ${REP2_PEAK_FILE} IDR results transferred to Pooled-replicates narrowPeak file  ${POOLED_PEAK_FILE}
+(2) Pooled-pseudoreplicates: ${PPR1_PEAK_FILE} vs. ${PPR2_PEAK_FILE} IDR results transferred to Pooled-replicates narrowPeak file ${POOLED_PEAK_FILE}
+(3) Rep1 self-pseudoreplicates: ${REP1_PR1_PEAK_FILE} vs. ${REP1_PR2_PEAK_FILE} IDR results transferred to Rep1 narrowPeak file ${REP1_PEAK_FILE}
+(4) Rep2 self-pseudoreplicates: ${REP2_PR1_PEAK_FILE} vs. ${REP2_PR2_PEAK_FILE} IDR results transferred to Rep2 narrowPeak file ${REP2_PEAK_FILE}
+
+IDR Threshold: Use IDR threshold of 5% for all pairwise analyses
+```
+
+
+
 
 
