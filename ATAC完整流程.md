@@ -1509,7 +1509,7 @@ b: 片段大小在 100bp 和 200bp 左右有明显的富集，表示没有核小
 4. 代码：注：判断质量的分析步骤不需要Tn5位置转换过的bam，采用处理后的final.bam即可  
 
 ```bash
-# 再Linux中画图  
+# 在Linux中画图  
 mkdir -p /mnt/d/ATAC/frag_length
 cd /mnt/d/ATAC/blklist
 cp /mnt/d/ATAC/rmdup/config.raw /mnt/d/ATAC/blklist/config.raw
