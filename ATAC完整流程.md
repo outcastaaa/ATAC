@@ -975,7 +975,7 @@ done
 0 + 0 with mate mapped to a different chr
 0 + 0 with mate mapped to a different chr (mapQ>=5)
 ```
-
+## 可在该步添加计算PBC步骤（Compute library complexity）
 ## 6.4 Blacklist filtering
 
 1. 目的：去除ENCODE blacklisted 区域，通过blacklist的过滤，可以进一步降低peak calling的假阳性。    
@@ -1427,9 +1427,9 @@ nucleosome-seq，使用核小体一半大小进行小波分析获得核小体中
 `_summits.bed`：每个山峰的峰顶位置。要找到结合位点的基序，建议使用此文件  
 1. narrowpeak  
 ```bash
-chr1    3670812 3672021 SRR11539111_peak_1      125     .       5.29808 15.80135        12.55760        799
-chr1    4785447 4785897 SRR11539111_peak_2      153     .       6.79600 18.76433        15.34334        249
-# 染色体 起始位点 结束位点（Tn5转化过）peak名称  score   链 signal_value（fold-change）  -log10(pvalue) -log10qvalue 峰位与peak起点的距离
+chr1    3670812 3672021     SRR11539111_peak_1   125     .       5.29808                15.80135        12.55760        799
+chr1    4785447 4785897     SRR11539111_peak_2   153     .       6.79600                18.76433        15.34334        249
+# 染色体 起始位点 结束位点（Tn5转化过）peak名称  score   链    signal_value（fold-change）  -log10(pvalue) -log10qvalue 峰位与peak起点的距离
 ```
 2. peaks.xls
 ```bash
