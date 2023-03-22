@@ -322,15 +322,15 @@ pip install numpy
 cd /mnt/d/biosoft/idr-2.0.3/bin
 sudo chmod 777 idr 
 # 写入环境
-export PATH=/mnt/d/biosoft/idr-2.0.3/bin/:$PATH
+vim ~/.bashrc
+export PATH="/mnt/d/biosoft/idr-2.0.3/bin/:$PATH"
+source ~/.bashrc
 ```
 * conda 安装
 ```bash
-# miniconda3/bin/conda install -c bioconda idr
-conda create -n py3 python=3 idr
-conda activate py3
-# 使用idr报错
-# conda install numpy 解决不了
+conda activate
+miniconda3/bin/conda install -c bioconda idr 
+# base环境可以使用idr
 conda deactivate
 ```
 * 不要使用`pip install`安装，版本太老了  
@@ -1738,9 +1738,10 @@ idr --samples SRR11539115_peaks.narrowPeak.8thsorted SRR11539116_peaks.narrowPea
 --output-file 56_pvalue.txt \
 --log-output-file 56_pvalue.log \
 --plot
+
 ```
 
-* signal.value排序
+* signal.value排序 不推荐
 ```bash
 # do not run this
 mkdir -p /mnt/d/ATAC/IDR
@@ -1759,6 +1760,18 @@ idr --samples SRR11539115_peaks.narrowPeak SRR11539116_peaks.narrowPeak \
 --log-output-file 56_signal_value.log \
 --plot
 ```
+
+* 注：  
+
+① --peak-list is not provided   
+
+Peaks are grouped by overlap and then merged. The merged peak aggregate value is determined by --peak-merge-method.  
+
+Peaks that don't overlap another peak in every other replicate are not included unless --use-nonoverlapping-peaks is set.  
+
+② --peak-list is provided 推荐加上    
+
+For each oracle peak a single peak from each replicate is chosen that overlaps the oracle peak. If there are multiple peaks that overlap the oracle, then ties are broken by applying the following criteria in order: 1) choose the replicate peak with a summit closest to the oracle peak's summit 2) choose the replicate peak that has the largest overlap with the oracle peak 3) choose the replicate peak with the highest score
 
 
 

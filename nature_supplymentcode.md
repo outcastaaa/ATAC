@@ -518,6 +518,32 @@ IDR is optional. The IDR peaks are a subset of the naive overlap peaks that pass
 IDR Threshold: Use IDR threshold of 5% for all pairwise analyses
 ```
 
+## For True Replicates
+
+```bash
+IDR_THRESH=0.05
+
+# =============================
+# Perform IDR analysis.
+# Generate a plot and IDR output with additional columns including IDR scores.
+# =============================
+idr --samples ${REP1_PEAK_FILE} ${REP2_PEAK_FILE} --peak-list ${POOLED_PEAK_FILE} --input-file-type narrowPeak --output-file ${IDR_OUTPUT} --rank p.value --soft-idr-threshold ${IDR_THRESH} --plot --use-best-multisummit-IDR
+
+# =============================
+# Get peaks passing IDR threshold of 5%
+# =============================
+IDR_THRESH_TRANSFORMED=$(awk -v p=${IDR_THRESH} 'BEGIN{print -log(p)/log(10)}')
+
+awk 'BEGIN{OFS="\t"} $12>='"${IDR_THRESH_TRANSFORMED}"' {print $1,$2,$3,$4,$5,$6,$7,$8,$9,$10}' ${IDR_OUTPUT} | sort | uniq | sort -k7n,7n | gzip -nc > ${REP1_VS_REP2}.IDR0.05.narrowPeak.gz
+
+NPEAKS_IDR=$(zcat ${REP1_VS_REP2}.IDR0.05.narrowPeak.gz | wc -l)
+
+# =============================
+# Filter using black list
+# =============================
+bedtools intersect -v -a ${REP1_VS_REP2}.IDR0.05.narrowPeak.gz -b ${BLACKLIST} | awk 'BEGIN{OFS="\t"} {if ($5>1000) $5=1000; print $0}' | grep -P 'chr[\dXY]+[ \t]'  | gzip -nc > ${REP1_VS_REP2}.IDR0.05.filt.narrowPeak.gz
+```
+
 
 
 
