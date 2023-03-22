@@ -13,7 +13,7 @@ Rscript $(which run_spp.R) -c=${SUBSAMPLED_TA_FILE} -p=${NTHREADS} -filtchr=chrM
 sed -r 's/,[^\t]+//g' ${CC_SCORES_FILE} > temp
 mv temp ${CC_SCORES_FILE}
 ```  
-![qccode](./pictures/QC_code.png)  
+![qccode](./pictures/qccode.png)    
 
 
 
