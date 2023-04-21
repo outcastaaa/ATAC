@@ -235,8 +235,9 @@ python setup.py install
 cd /mnt/d/biosoft/MACS2/MACS2-2.2.7.1/bin
 sudo chmod 777 macs2 
 # 写入环境
+vim ~/.bashrc
 export PATH=/mnt/d/biosoft/MACS2/MACS2-2.2.7.1/bin:$PATH
-
+source ~/.bashrc
 # 安装成功
 macs2
 usage: macs2 [-h] [--version]
@@ -249,7 +250,7 @@ usage: macs2 [-h] [--version]
 3. 下载
 mkdir -p /mnt/d/biosoft/miniconda
 cd /mnt/d/biosoft/miniconda
-wget wget https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/Miniconda3-latest-Linux-x86_64.sh
+wget https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/Miniconda3-latest-Linux-x86_64.sh
 bash Miniconda3-latest-Linux-x86_64.sh
 # Miniconda3 will now be installed into this location:/home/xuruizhi/miniconda3
 source ~/miniconda3/bin/activate
@@ -476,7 +477,7 @@ do
  echo "fastq-dump --gzip --split-3 -X 25000 -O ${fqdir} ${id}"
 done >sra2fq.sh
 # 提交后台运行命令，脚本文件后缀为.sh，日志文件后缀为.log，运行脚本的命令为sh
-nohup sh sra2fq.sh>sra2fq.log & 
+nohup sh sra2fq.sh > sra2fq.log & 
 
 #查看输出的fastq的gz压缩文件，用zless命令
 zless -S SRRxxx.fastq.gz
@@ -487,7 +488,7 @@ zless -S SRRxxx.fastq.gz
 ```bash
 # 查看下载好的gz文件
 cd ~/data/sra
- gzip -d -c SRR11539111_1.fastq.gz | head -n 8
+ gzip -dc SRR11539111_1.fastq.gz | head -n 8
 
 # gzip
 -c或--stdout或--to-stdout 　把压缩后的文件输出到标准输出设备，不去更动原始文件。
@@ -571,7 +572,7 @@ FastQC可用于可视化测序数据中的`碱基质量评分`、`GC含量`、�
 # 新建目录  
 mkdir /mnt/d/ATAC/fastqc
 
-# ！注意！一定在存储fastqc.gz的文件夹路径下执行下面的命令
+# ！注意！一定在存储fastq.gz的文件夹路径下执行下面的命令
 cd ~/data/sra
 fastqc -t 4 -o /mnt/d/ATAC/fastqc/ *.gz
 
@@ -2766,9 +2767,11 @@ awk '{print $1"\t"$2"\t"$3"\t"$4"\t."}' diff_DESeq2.bed > ../motif/homer_peaks.t
 # 第四列: ending position (结束位置)
 # 第五列: Strand (+/- or 0/1, where 0="+”,1="") (链)
 
-cd ~/miniconda3/share/homer 
-perl findMotifsGenome.pl /mnt/d/ATAC/motif/homer_peaks.tmp ./data/genomes/mm10 /mnt/d/ATAC/motif/ -len 8,10,12
+cd /mnt/d/biosoft/homer/bin  # 必须在这个目录下，有HomerConfig.pm文件
+perl findMotifsGenome.pl /mnt/d/ATAC/motif/homer_peaks.tmp  ~/miniconda3/share/homer/data/genomes/mm10 /mnt/d/ATAC/motif_try/ -len 8,10,12
 ```
+
+
 * [MEME-CentriMo网页](https://meme-suite.org/meme/tools/centrimo)  
 用于分析已知的motif在输入序列上的富集情况。
 ```bash
