@@ -909,7 +909,6 @@ do
   arr=($id)
   sample=${arr[0]}
 
-
   samtools idxstats ../alignment/${sample}.sort.bam | grep 'chrM' | cut -f 3  
   # 第一列是染色体名称，第二列是序列长度，第三列是mapped reads数，第四列是unmapped reads数
   samtools idxstats ../alignment/${sample}.sort.bam | awk '{SUM += $3} END {print SUM}' 
@@ -1430,7 +1429,7 @@ nucleosome-seq，使用核小体一半大小进行小波分析获得核小体中
 ```bash
 chr1    3670812 3672021     SRR11539111_peak_1   125     .       5.29808                15.80135        12.55760        799
 chr1    4785447 4785897     SRR11539111_peak_2   153     .       6.79600                18.76433        15.34334        249
-# 染色体 起始位点 结束位点（Tn5转化过）peak名称  score   链    signal_value（fold-change）  -log10(pvalue) -log10qvalue 峰位与peak起点的距离
+# 染色体 起始位点 结束位点（Tn5转化过）peak名称  score   链    signal_value（fold-change）  -log10(pvalue) -log10(qvalue) 峰位与peak起点的距离
 ```
 2. peaks.xls
 ```bash
@@ -1903,7 +1902,7 @@ do
   --smoothLength 60 \
   --normalizeUsing RPKM \
   --centerReads 
-  1 > ../bw/${id%%.*}_bamCoverage.log
+  # 1 > ../bw/${id%%.*}_bamCoverage.log
 done
 
 # bamCoverage注意大小写
