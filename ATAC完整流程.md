@@ -318,13 +318,13 @@ python setup.py install
 # 报错 AttributeError: module 'numpy' has no attribute 'get_include'
 # 解决方法：卸载旧版本的numpy，安装最新的numpy，再加载py就可以了
 pip uninstall numpy
-pip install numpy  
+pip install numpy==1.19.5
 
 cd /mnt/d/biosoft/idr-2.0.3/bin
 sudo chmod 777 idr 
 # 写入环境
 vim ~/.bashrc
-export PATH="/mnt/d/biosoft/idr-2.0.3/bin/:$PATH"
+export PATH="/mnt/d/biosoft/idr-2.0.3/bin/idr:$PATH"
 source ~/.bashrc
 ```
 * conda 安装
@@ -333,6 +333,11 @@ conda activate
 miniconda3/bin/conda install -c bioconda idr 
 # base环境可以使用idr
 conda deactivate
+
+conda search idr
+conda create -n py3.8 python=3.8
+conda activate py3.8
+conda install idr
 ```
 * 不要使用`pip install`安装，版本太老了  
 * [详细用法](https://github.com/outcastaaa/ATAC/blob/main/biotools/idr.md)  
@@ -1725,12 +1730,12 @@ sort -k8,8nr {1} > ../IDR/{1}.8thsorted
 
 # 处理1：1&2
 cd /mnt/d/ATAC/IDR
-idr --samples SRR11539111_peaks.narrowPeak.8thsorted SRR11539112_peaks.narrowPeak.8thsorted \
+idr --samples /mnt/d/ATAC/IDR/SRR11539111_peaks.narrowPeak.8thsorted /mnt/d/ATAC/IDR/SRR11539112_peaks.narrowPeak.8thsorted \
 --input-file-type narrowPeak \
 --rank p.value \
---output-file 12_pvalue.txt \
---log-output-file 12_pvalue.log \
---plot
+--output-file /mnt/d/ATAC/IDR/12_pvalue.txt \
+--log-output-file /mnt/d/ATAC/IDR/12_pvalue.log 
+# --plot
 # 处理2：5&6
 idr --samples SRR11539115_peaks.narrowPeak.8thsorted SRR11539116_peaks.narrowPeak.8thsorted \
 --input-file-type narrowPeak \
@@ -1750,8 +1755,8 @@ cp ../macs2_peaks/*.narrowPeak ./
 # 处理1：1&2
 idr --samples SRR11539111_peaks.narrowPeak SRR11539112_peaks.narrowPeak \
 --input-file-type narrowPeak \
---output-file 12_signal_value.txt \
---log-output-file 12_signal_value.log \
+--output-file 12_signal_value_2.txt \
+--log-output-file 12_signal_value_2.log \
 --plot
 # 处理2：5&6
 idr --samples SRR11539115_peaks.narrowPeak SRR11539116_peaks.narrowPeak \
@@ -1759,6 +1764,23 @@ idr --samples SRR11539115_peaks.narrowPeak SRR11539116_peaks.narrowPeak \
 --output-file 56_signal_value.txt \
 --log-output-file 56_signal_value.log \
 --plot
+
+# 注意：务必在(py3.8)的conda环境中使用idr，否则报错
+
+/home/xuruizhi/miniconda3/envs/py3.9/bin/idr --samples SRR11539111_peaks.narrowPeak SRR11539112_peaks.narrowPeak --input-file-type narrowPeak --output-file 12_signal_value_2.txt --log-output-file 12_signal_value_2.log --plot
+Traceback (most recent call last):
+  File "/home/xuruizhi/miniconda3/envs/py3.9/bin/idr", line 10, in <module>
+    idr.idr.main()
+  File "/home/xuruizhi/miniconda3/envs/py3.9/lib/python3.9/site-packages/idr/idr.py", line 846, in main
+    r1, r2 = build_rank_vectors(merged_peaks)
+  File "/home/xuruizhi/miniconda3/envs/py3.9/lib/python3.9/site-packages/idr/idr.py", line 299, in build_rank_vectors
+    return ( numpy.array(rank1, dtype=numpy.int),
+  File "/home/xuruizhi/miniconda3/envs/py3.9/lib/python3.9/site-packages/numpy/__init__.py", line 305, in __getattr__
+    raise AttributeError(__former_attrs__[attr])
+AttributeError: module 'numpy' has no attribute 'int'.
+`np.int` was a deprecated alias for the builtin `int`. To avoid this error in existing code, use `int` by itself. Doing this will not modify any behavior and is safe. When replacing `np.int`, you may wish to use e.g. `np.int64` or `np.int32` to specify the precision. If you wish to review your current use, check the release note link for additional information.
+The aliases was originally deprecated in NumPy 1.20; for more details and guidance see the original release note at:
+    https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
 ```
 
 * 注：  
@@ -1772,7 +1794,7 @@ Peaks that don't overlap another peak in every other replicate are not included 
 ② --peak-list is provided 推荐加上    
 
 For each oracle peak a single peak from each replicate is chosen that overlaps the oracle peak. If there are multiple peaks that overlap the oracle, then ties are broken by applying the following criteria in order: 1) choose the replicate peak with a summit closest to the oracle peak's summit 2) choose the replicate peak that has the largest overlap with the oracle peak 3) choose the replicate peak with the highest score
-
+对于每个预设峰值，从每个重复样本中选择一个与预设峰值重叠的峰值。如果有多个与预设峰值重叠的峰值，则按照以下顺序应用以下准则进行选择：1）选择与预设峰值峰顶最接近的重复样本峰值；2）选择与预设峰值重叠最多的重复样本峰值；3）选择具有最高得分的重复样本峰值。
 
 
 
