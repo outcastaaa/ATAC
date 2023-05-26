@@ -1350,11 +1350,17 @@ done
 
 # 如果用的不是专门双端测序的bedpe，而是bed文件，采用下面代码
 # 单个样本
-mkdir -p /mnt/d/ATAC/macs2_peaks2/
 cd /mnt/d/ATAC/Tn5_shift/
 macs2 callpeak  -g mm --nomodel \
   --shift -100 --extsize 200 -n SRR11539111 -t ./SRR11539111.Tn5.bed \
   --outdir /mnt/d/ATAC/macs2_peaks2/
+
+macs2 callpeak  -g mm --nomodel \
+  --shift -75 --extsize 150 -n SRR11539111 -t ./SRR11539111.Tn5.bed \
+  --outdir /mnt/d/ATAC/macs2_peaks2_bed/
+macs2 callpeak  -g mm --nomodel \
+  --shift -75 --extsize 150 -n SRR11539112 -t ./SRR11539112.Tn5.bed \
+  --outdir /mnt/d/ATAC/macs2_peaks2_bed/
 
 # 循环
 cp /mnt/d/ATAC/rmdup/config.raw /mnt/d/ATAC/Tn5_shift/config.raw
@@ -1735,7 +1741,7 @@ idr --samples /mnt/d/ATAC/IDR/SRR11539111_peaks.narrowPeak.8thsorted /mnt/d/ATAC
 --rank p.value \
 --output-file /mnt/d/ATAC/IDR/12_pvalue.txt \
 --log-output-file /mnt/d/ATAC/IDR/12_pvalue.log 
-# --plot
+--plot
 # 处理2：5&6
 idr --samples SRR11539115_peaks.narrowPeak.8thsorted SRR11539116_peaks.narrowPeak.8thsorted \
 --input-file-type narrowPeak \
@@ -1745,7 +1751,21 @@ idr --samples SRR11539115_peaks.narrowPeak.8thsorted SRR11539116_peaks.narrowPea
 --plot
 
 ```
-
+* -log10(p-value)排序,bed文件
+```bash
+cd /mnt/d/ATAC/macs2_peaks2_bed
+parallel -j 6 "
+sort -k8,8nr {1} > ../IDR/{1}.8thsorted.bed
+" ::: $(ls *.narrowPeak)
+# 处理1：1&2
+cd /mnt/d/ATAC/IDR
+idr --samples ./SRR11539111_peaks.narrowPeak.8thsorted.bed ./SRR11539112_peaks.narrowPeak.8thsorted.bed \
+--input-file-type narrowPeak \
+--rank p.value \
+--output-file ./12_pvalue_bed.txt \
+--log-output-file ./12_pvalue_bed.log \
+--plot
+```
 * signal.value排序 不推荐
 ```bash
 # do not run this
@@ -1766,7 +1786,6 @@ idr --samples SRR11539115_peaks.narrowPeak SRR11539116_peaks.narrowPeak \
 --plot
 
 # 注意：务必在(py3.8)的conda环境中使用idr，否则报错
-
 /home/xuruizhi/miniconda3/envs/py3.9/bin/idr --samples SRR11539111_peaks.narrowPeak SRR11539112_peaks.narrowPeak --input-file-type narrowPeak --output-file 12_signal_value_2.txt --log-output-file 12_signal_value_2.log --plot
 Traceback (most recent call last):
   File "/home/xuruizhi/miniconda3/envs/py3.9/bin/idr", line 10, in <module>
