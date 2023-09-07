@@ -317,6 +317,8 @@ cd idr-2.0.3/
 python setup.py install
 # 报错 AttributeError: module 'numpy' has no attribute 'get_include'
 # 解决方法：卸载旧版本的numpy，安装最新的numpy，再加载py就可以了
+# 类似报错的根源在于：有些包需要高版本的numpy，但是1.20版本以上存在`np.int`更新
+# 另一种方法：修改源码将`np.int`改为`np.int64`或者`int`
 pip uninstall numpy
 pip install numpy==1.19.5
 
@@ -895,9 +897,9 @@ samtools view SRR11539111.sort.bam | grep -w '某个pos' | less -S
 
 ```bash
 samtools view -f 2 -q 30 -o test.filter.bam test.rmdup.bam
-# -f Retain properly paired reads -f 2
+# -f Retain properly paired reads -f 2看情况取舍，单端不可
 # -q 取mapping质量大于30的reads
-# Remove reads unmapped, mate unmapped, not primary alignment, reads failing platform, duplicates (-F 1804) 看情况取舍
+# Remove reads unmapped, mate unmapped, not primary alignment, reads failing platform, duplicates (-F 1804) 
 ```
 ## 6.3 remove chrM reads
 * 目的：去除比对到线粒体上的reads，这一步一定要做，线粒体上长度小，极大概率覆盖很多reads，造成虚假peak。由于mtDNA读段的百分比是文库质量的指标，我们通常在比对后删除线粒体读段。  
@@ -1830,7 +1832,7 @@ For each oracle peak a single peak from each replicate is chosen that overlaps t
 chr16   11143929        11144303        .       1000    .       -1      622.33362       -1      185     5.000000       5.000000 11143929        11144303        759.39752       187     11143932        11144299        622.33362       180
 # chr， 起始位置， 终止位置， name， score， 链， signalValue float， p-value float，q-value float，summit，Local IDR value，Global IDR value，rep1_chromStart，rep1_chromEnd，rep2_chromStart，rep2_chromEnd  
 ```
-！ 注意：第五列score int —— Contains the scaled IDR value, min(int(log2(-125IDR), 1000). e.g. peaks with an IDR of 0 have a score of 1000, idr 0.05 have a score of int(-125log2(0.05)) = 540, and idr 1.0 has a score of 0.即，idr数值越大，不可重复性越高；筛选的是IDR数值小于0.05的peaks。  
+！ 注意：第五列score int —— Contains the scaled IDR value, min(int(log2(-125IDR)), 1000). e.g. peaks with an IDR of 0 have a score of 1000, idr 0.05 have a score of int(-125log2(0.05)) = 540, and idr 1.0 has a score of 0.即，idr数值越大，不可重复性越高；筛选的是IDR数值小于0.05的peaks。  
 
 
 * 图片  
