@@ -2811,6 +2811,8 @@ awk '{print $1"\t"$2"\t"$3"\t"$4"\t."}' diff_DESeq2.bed > ../motif/homer_peaks.t
 
 cd /mnt/d/biosoft/homer/bin  # 必须在这个目录下，有HomerConfig.pm文件
 perl findMotifsGenome.pl /mnt/d/ATAC/motif/homer_peaks.tmp  ~/miniconda3/share/homer/data/genomes/mm10 /mnt/d/ATAC/motif_try/ -len 8,10,12
+
+#  − size 400 − len 8,10,12
 ```
 
 
